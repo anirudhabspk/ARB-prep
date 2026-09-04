@@ -13,6 +13,7 @@
 .metric-plot{min-width:0}.cost-axis-title{font:11px var(--sans);fill:var(--muted)}.cost-frontier{fill:none;stroke:var(--ink);stroke-width:2}.cost-dominated{opacity:.28}.cost-point{stroke:#fff;stroke-width:2}.cost-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px 18px;margin:12px 0 4px;font-size:12px;color:var(--muted)}.cost-legend span{display:flex;align-items:center;gap:7px}.cost-legend i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}.cost-scroll{max-width:100%;overflow-x:auto}
 .pending-label{display:inline-block;margin-bottom:16px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}.todo-list{max-width:790px;padding-left:22px;font-size:17px}.todo-list li+li{margin-top:10px}.todo-items{max-width:790px;font-size:17px}.todo-items p{margin:0 0 12px}.todo-table{width:100%;margin:22px 0 34px;border-collapse:collapse;font-size:13px}.todo-table th,.todo-table td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}.todo-table th{color:var(--muted);font-weight:600}.todo-table td:not(:first-child){color:var(--muted)}
 .category-distribution{display:grid;gap:10px;margin:28px 0}.category-row{display:grid;grid-template-columns:minmax(230px,1fr) minmax(180px,2fr) 32px;gap:14px;align-items:center;font-size:13px}.category-bar{height:10px;background:var(--soft)}.category-bar i{display:block;height:100%;background:var(--accent)}.category-count{text-align:right;font-variant-numeric:tabular-nums}.category-source{font-size:12px;color:var(--muted)}
+.task-details-pending{margin:28px 0 0;padding:20px;border:1px solid var(--line);background:var(--soft)}.task-details-pending p{max-width:790px;margin:0}.task-details-pending p+p{margin-top:8px;color:var(--muted);font-size:13px}
 @media(max-width:1000px){.page{display:block;width:min(900px,calc(100% - 36px))}.contents{display:none}.hero{padding-top:90px}.aggregate-grid,.charts{grid-template-columns:1fr}.toplinks{display:none}}
 @media(max-width:640px){.topbar{padding:0 18px}.hero{padding:72px 18px 50px}.hero::before{inset:18px 0 8px;background-image:linear-gradient(90deg,#fffffff7 0%,#ffffffc9 62%,#ffffff42 100%),linear-gradient(0deg,#fff 0%,#ffffff00 35%),url("assets/autoresearch-hero.jpg");background-position:60% center;opacity:.58}.hero h1{font-size:54px}.hero h1 span{display:block}.hero h1 span+span{margin-left:0}.deck{font-size:23px}.hero-meta{display:block}.hero-meta span{display:block;margin-top:5px}.measure-grid,.result-lead{grid-template-columns:1fr}.section{padding:54px 0}.prose{font-size:16px}.task-view{padding:18px}.release{padding:34px 24px}.plot-label{font-size:9.5px}}
 @media(max-width:640px){.cost-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -94,6 +95,11 @@
       <p class="task-intro">Click a model name to hide or show its curve.</p>
       <div class="task-tabs" id="task-tabs" role="tablist"></div>
       <div id="task-view"></div>
+      <div class="task-details-pending">
+        <span class="pending-label">Pending</span>
+        <p>Add a separate full task details page as a headline tab. Link this Representative tasks section to it. Keep the full task details off this page.</p>
+        <p>References: <a href="https://deepswe.datacurve.ai">DeepSWE</a> and <a href="https://www.autoresearch-bench.com">AutoResearch Bench</a>.</p>
+      </div>
     </section>
     <section class="section" id="harness-ablations">
       <span class="pending-label">Pending</span>
