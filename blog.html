@@ -12,12 +12,12 @@
 .task-tabs select{max-width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 12px;font:inherit}
 .metric-plot{min-width:0}.cost-axis-title{font:11px var(--sans);fill:var(--muted)}.cost-frontier{fill:none;stroke:var(--ink);stroke-width:2}.cost-dominated{opacity:.28}.cost-point{stroke:#fff;stroke-width:2}.cost-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px 18px;margin:12px 0 4px;font-size:12px;color:var(--muted)}.cost-legend span{display:flex;align-items:center;gap:7px}.cost-legend i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}.cost-scroll{max-width:100%;overflow-x:auto}
 .pending-label{display:inline-block;margin-bottom:16px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em}.todo-list{max-width:790px;padding-left:22px;font-size:17px}.todo-list li+li{margin-top:10px}.todo-items{max-width:790px;font-size:17px}.todo-items p{margin:0 0 12px}.todo-table{width:100%;margin:22px 0 34px;border-collapse:collapse;font-size:13px}.todo-table th,.todo-table td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}.todo-table th{color:var(--muted);font-weight:600}.todo-table td:not(:first-child){color:var(--muted)}
-.category-distribution{display:grid;gap:10px;margin:28px 0}.category-row{display:grid;grid-template-columns:minmax(230px,1fr) minmax(180px,2fr) 32px;gap:14px;align-items:center;font-size:13px}.category-bar{height:10px;background:var(--soft)}.category-bar i{display:block;height:100%;background:var(--accent)}.category-count{text-align:right;font-variant-numeric:tabular-nums}.category-source{font-size:12px;color:var(--muted)}
+.taxonomy-wheel{display:grid;grid-template-columns:minmax(320px,1.08fr) minmax(230px,.92fr);gap:34px;align-items:center;margin:34px 0 0;padding:28px 0;border-top:1px solid var(--line)}.taxonomy-wheel figure{margin:0;min-width:0}.taxonomy-wheel svg{display:block;width:100%;height:auto;overflow:visible}.wheel-segment{cursor:pointer;outline:none;transform-box:fill-box;transform-origin:center;transition:opacity .15s ease,transform .15s ease}.wheel-segment:hover,.wheel-segment:focus{opacity:1;transform:scale(1.025)}.wheel-segment.is-muted{opacity:.48}.wheel-segment.is-active{opacity:1}.wheel-label{fill:var(--ink);font:650 10.5px var(--sans);pointer-events:none;text-anchor:middle}.wheel-center{fill:var(--paper);stroke:var(--line);stroke-width:1}.wheel-center-kicker{fill:var(--accent);font:650 9px var(--sans);letter-spacing:.12em;text-anchor:middle}.wheel-center-title{fill:var(--ink);font:400 23px var(--serif);text-anchor:middle}.wheel-center-note{fill:var(--muted);font:10px var(--sans);text-anchor:middle}.wheel-caption{margin:8px 6px 0;color:var(--muted);font-size:12px;line-height:1.45}.taxonomy-detail{min-width:0;padding-left:30px;border-left:1px solid var(--line)}.taxonomy-overline{margin:0 0 12px;color:var(--accent);font-size:11px;font-weight:650;letter-spacing:.12em;text-transform:uppercase}.taxonomy-detail h3{margin:0 0 12px;font:400 32px/1.05 var(--serif);letter-spacing:-.035em}.taxonomy-description{margin:0 0 20px;color:var(--muted);font-size:14px;line-height:1.55}.taxonomy-count{margin:0 0 15px;padding-top:10px;border-top:2px solid var(--ink);font:400 20px var(--serif)}.taxonomy-specimens{margin:0;padding:0;list-style:none}.taxonomy-specimens li{padding:10px 0;border-top:1px solid var(--line);font-size:13px;line-height:1.35}.taxonomy-specimens li::before{content:"•";margin-right:7px;color:var(--accent)}.taxonomy-note,.category-source{font-size:12px;color:var(--muted)}.taxonomy-note{margin:18px 0 0}
 .task-details-pending{margin:28px 0 0;padding:20px;border:1px solid var(--line);background:var(--soft)}.task-details-pending p{max-width:790px;margin:0}.task-details-pending p+p{margin-top:8px;color:var(--muted);font-size:13px}
 @media(max-width:1000px){.page{display:block;width:min(900px,calc(100% - 36px))}.contents{display:none}.hero{padding-top:90px}.aggregate-grid,.charts{grid-template-columns:1fr}.toplinks{display:none}}
 @media(max-width:640px){.topbar{padding:0 18px}.hero{padding:72px 18px 50px}.hero::before{inset:18px 0 8px;background-image:linear-gradient(90deg,#fffffff7 0%,#ffffffc9 62%,#ffffff42 100%),linear-gradient(0deg,#fff 0%,#ffffff00 35%),url("assets/autoresearch-hero.jpg");background-position:60% center;opacity:.58}.hero h1{font-size:54px}.hero h1 span{display:block}.hero h1 span+span{margin-left:0}.deck{font-size:23px}.hero-meta{display:block}.hero-meta span{display:block;margin-top:5px}.measure-grid,.result-lead{grid-template-columns:1fr}.section{padding:54px 0}.prose{font-size:16px}.task-view{padding:18px}.release{padding:34px 24px}.plot-label{font-size:9.5px}}
 @media(max-width:640px){.cost-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.category-row{grid-template-columns:1fr 32px}.category-bar{grid-column:1/-1;grid-row:2}}
+@media(max-width:640px){.taxonomy-wheel{grid-template-columns:1fr;gap:24px;padding-top:22px}.taxonomy-detail{padding:22px 0 0;border-top:1px solid var(--line);border-left:0}}
 </style>
 </head>
 <body>
@@ -84,11 +84,22 @@
     </section>
     <section class="section" id="tasks">
       <h2>Task areas</h2>
-      <p class="task-intro">Tasks by research area.</p>
-      <div class="category-distribution" id="category-distribution"></div>
+      <p class="task-intro">Explore the kinds of research problems represented in the preview.</p>
+      <div class="taxonomy-wheel">
+        <figure aria-labelledby="taxonomy-caption">
+          <svg id="taxonomy-wheel-svg" viewBox="0 0 420 420" role="img" aria-label="Interactive task taxonomy wheel"></svg>
+          <figcaption class="wheel-caption" id="taxonomy-caption">Hover over, focus, or select a segment to inspect the research area and example tasks.</figcaption>
+        </figure>
+        <section class="taxonomy-detail" aria-live="polite" aria-labelledby="taxonomy-detail-title">
+          <p class="taxonomy-overline">Research area</p>
+          <h3 id="taxonomy-detail-title"></h3>
+          <p class="taxonomy-description" id="taxonomy-detail-description"></p>
+          <p class="taxonomy-count" id="taxonomy-detail-count"></p>
+          <ul class="taxonomy-specimens" id="taxonomy-detail-specimens"></ul>
+        </section>
+      </div>
+      <p class="taxonomy-note">Every segment has the same size. The wheel shows category membership, not a task-count distribution.</p>
       <p class="category-source">Source: <a href="https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks">AutoResearchBench Preview Tasks</a>.</p>
-      <div class="category-tabs" id="category-tabs" role="tablist"></div>
-      <div class="category-panel" id="category-panel"></div>
     </section>
     <section class="section" id="examples">
       <h2>Representative tasks</h2>
