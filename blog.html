@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
+<title>AutoResearchBench</title>
+<style>
+:root{--paper:#fff;--ink:#181817;--muted:#6f716f;--line:#dedfdb;--soft:#f6f6f3;--accent:#bc5547;--serif:Georgia,"Times New Roman",serif;--sans:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 var(--sans)}a{color:inherit;text-underline-offset:3px}button{font:inherit}.topbar{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;background:#fffffff0;backdrop-filter:blur(12px);z-index:20}.brand{font-weight:650;letter-spacing:-.02em}.toplinks{display:flex;gap:22px;font-size:13px;color:var(--muted)}.toplinks a{text-decoration:none}.hero{max-width:1120px;margin:0 auto;padding:108px 24px 62px;position:relative;isolation:isolate}.hero::before{content:"";position:absolute;inset:24px 0 12px;background-image:linear-gradient(90deg,#fff 0%,#fffffff5 27%,#ffffffa8 54%,#ffffff24 100%),linear-gradient(0deg,#fff 0%,#ffffff00 35%),url("assets/autoresearch-hero.jpg");background-size:cover;background-position:center right;z-index:-1;opacity:.78}.hero h1{font:400 clamp(58px,8.2vw,104px)/.92 var(--serif);letter-spacing:-.055em;margin:0}.hero h1 span+span{margin-left:.13em}.deck{font:400 clamp(24px,3.1vw,38px)/1.18 var(--serif);max-width:760px;margin:38px 0 54px}.hero-meta{border-top:1px solid #cacbc7;padding-top:18px;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:13px}.page{width:min(1440px,calc(100% - 48px));margin:auto;display:grid;grid-template-columns:190px minmax(0,1000px);gap:30px;justify-content:center}.contents{position:sticky;top:92px;align-self:start}.contents strong{display:block;text-transform:uppercase;letter-spacing:.15em;font-size:10px;color:var(--muted);margin-bottom:16px}.contents a{display:block;border-left:1px solid var(--line);padding:5px 0 5px 14px;color:var(--muted);font-size:13px;text-decoration:none}.contents a:hover{color:var(--ink);border-color:var(--ink)}main{min-width:0}.section{padding:68px 0;border-top:1px solid var(--line);scroll-margin-top:82px}.section:first-child{border-top:0}.section h2{font:400 clamp(36px,5vw,58px)/1.04 var(--serif);letter-spacing:-.035em;margin:0 0 28px;max-width:850px}.prose{max-width:790px;font-size:18px;line-height:1.7}.prose p{margin:0 0 24px}.cite{font-size:.65em;vertical-align:super;text-decoration:none;color:var(--accent)}.measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:34px 0}.measure{border-top:3px solid var(--ink);background:var(--soft);padding:24px}.measure .number{font:400 34px/1 var(--serif);color:var(--accent)}.measure h3{font-size:18px;margin:34px 0 8px}.measure p{margin:0;color:var(--muted)}.result-lead{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:28px 0 48px}.result-stat{border:1px solid var(--line);padding:22px}.result-stat span{font-size:12px;color:var(--muted)}.result-stat strong{display:block;font:400 42px/1.05 var(--serif);margin-top:8px}.result-stat p{font-size:13px;color:var(--muted);margin:8px 0 0}.plot-note,.method-note{font-size:13px;color:var(--muted);margin:0 0 20px}.aggregate-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px 24px}.metric-plot{border-top:1px solid var(--line);padding-top:14px}.metric-plot h3{font-size:16px;margin:0}.metric-plot p{font-size:12px;color:var(--muted);margin:2px 0 8px}.metric-plot svg{width:100%;height:auto;overflow:visible}.plot-frame{fill:none;stroke:var(--line)}.grid{stroke:#ecece8;stroke-width:1}.plot-label,.plot-value,.plot-tick{font-family:var(--sans);fill:var(--ink);font-size:10.5px}.plot-tick{fill:var(--muted);font-size:9.5px}.whisker{stroke:#898b87;stroke-width:1.5}.estimate{stroke:#fff;stroke-width:2}.category-tabs,.task-tabs,.legend{display:flex;gap:8px;flex-wrap:wrap}.category-tabs button,.task-tabs button,.legend button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:8px 12px;cursor:pointer}.category-tabs button[aria-selected="true"],.task-tabs button[aria-selected="true"]{border-color:var(--ink);background:var(--ink);color:#fff}.category-panel{margin-top:18px;background:var(--soft);padding:28px;min-height:130px}.category-panel h3{font:400 27px/1.15 var(--serif);margin:0 0 10px}.category-panel p{margin:0;color:var(--muted)}.task-intro{max-width:760px;color:var(--muted);margin-bottom:28px}.task-tabs{margin:28px 0 16px}.task-view{border:1px solid var(--line);padding:26px}.task-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent)}.task-view h3{font:400 34px/1.1 var(--serif);margin:8px 0}.task-description{margin:0;color:var(--muted)}.task-note{max-width:780px;margin:18px 0 24px}.scale-block{margin-top:30px}.scale-head{display:flex;align-items:baseline;justify-content:space-between;gap:18px;border-top:2px solid var(--ink);padding-top:12px;margin-bottom:12px}.scale-head h4{font-size:17px;margin:0}.scale-head p{font-size:12px;color:var(--muted);margin:0}.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px}.chart-card{min-width:0}.chart-card h4{font-size:14px;margin:0 0 8px}.chart-card svg{display:block;width:100%;height:auto;overflow:visible}.axis{stroke:#babbb7;stroke-width:1}.axis-break{fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.curve{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}.point{stroke:#fff;stroke-width:1.25}.tick{font:9.5px var(--sans);fill:var(--muted)}.legend{margin-top:18px}.legend button{display:flex;align-items:center;gap:6px;padding:5px 9px;font-size:11px}.legend button.off{opacity:.35}.swatch{width:10px;height:3px;border-radius:2px}.lineage{margin-top:34px;border-top:2px solid var(--ink);padding-top:12px}.lineage-head{display:flex;align-items:center;justify-content:space-between;gap:18px}.lineage-head h4{font-size:17px;margin:0}.lineage-head label{font-size:12px;color:var(--muted)}.lineage-head select{margin-left:8px;border:1px solid var(--line);background:#fff;padding:6px 8px}.lineage svg{display:block;width:100%;height:auto;margin-top:14px}.lineage-note{font-size:12px;color:var(--muted);margin:8px 0 0}.lineage-edge{fill:none;stroke:#969894;stroke-width:1.5}.lineage-edge.continued{stroke-dasharray:4 4}.lineage-label{font:10px var(--sans);fill:var(--ink)}.release{background:var(--ink);color:#fff;padding:56px;margin:34px 0 90px}.release h2{color:#fff}.release p{color:#c8c8c3;max-width:660px}.references{font-size:13px;color:var(--muted);padding-bottom:80px}.references ol{padding-left:20px}.references li{margin:6px 0}
+.result-points{max-width:790px;margin:0 0 38px;padding-left:22px;font-size:18px}.result-points li+li{margin-top:12px}.result-notes{margin-top:32px}.results-intro{max-width:790px;margin:0 0 32px;font-size:18px}.metric-plot-wide{grid-column:1/-1}.turn-note{max-width:760px;color:var(--muted);font-size:13px;margin:-18px 0 28px}#benchmark{padding-bottom:0}#measurement{border-top:0;padding-top:0}
+.task-tabs select{max-width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 12px;font:inherit}
+.metric-plot{min-width:0}.cost-axis-title{font:11px var(--sans);fill:var(--muted)}.cost-frontier{fill:none;stroke:var(--ink);stroke-width:2}.cost-dominated{opacity:.28}.cost-point{stroke:#fff;stroke-width:2}.cost-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px 18px;margin:12px 0 4px;font-size:12px;color:var(--muted)}.cost-legend span{display:flex;align-items:center;gap:7px}.cost-legend i{width:8px;height:8px;border-radius:50%;flex:0 0 auto}.cost-scroll{max-width:100%;overflow-x:auto}
+@media(max-width:1000px){.page{display:block;width:min(900px,calc(100% - 36px))}.contents{display:none}.hero{padding-top:90px}.aggregate-grid,.charts{grid-template-columns:1fr}.toplinks{display:none}}
+@media(max-width:640px){.topbar{padding:0 18px}.hero{padding:72px 18px 50px}.hero::before{inset:18px 0 8px;background-image:linear-gradient(90deg,#fffffff7 0%,#ffffffc9 62%,#ffffff42 100%),linear-gradient(0deg,#fff 0%,#ffffff00 35%),url("assets/autoresearch-hero.jpg");background-position:60% center;opacity:.58}.hero h1{font-size:54px}.hero h1 span{display:block}.hero h1 span+span{margin-left:0}.deck{font-size:23px}.hero-meta{display:block}.hero-meta span{display:block;margin-top:5px}.measure-grid,.result-lead{grid-template-columns:1fr}.section{padding:54px 0}.prose{font-size:16px}.task-view{padding:18px}.release{padding:34px 24px}.plot-label{font-size:9.5px}}
+@media(max-width:640px){.cost-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">AutoResearchBench</div>
+  <nav class="toplinks" aria-label="Primary"><a href="#benchmark">Benchmark</a><a href="#results">Preliminary results</a><a href="#tasks">Tasks</a></nav>
+</header>
+<section class="hero">
+  <h1><span>AutoResearchBench</span></h1>
+  <p class="deck">Measuring agents' ability to improve and generalize on open ended ML research tasks.</p>
+  <div class="hero-meta"><span>Bespoke Labs</span><span>Research preview</span></div>
+</section>
+<div class="page">
+  <aside class="contents" aria-label="Contents">
+    <strong>Contents</strong>
+    <a href="#benchmark">Overview</a>
+    <a href="#measurement">Evaluation</a>
+    <a href="#setup">Experimental setup</a>
+    <a href="#results">Preliminary results</a>
+    <a href="#tasks">Prospective categories</a>
+    <a href="#examples">Representative tasks</a>
+    <a href="#release">Full release</a>
+  </aside>
+  <main>
+    <section class="section" id="benchmark">
+      <div class="prose">
+        <p>Progress toward Recursive Self Improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
+        <p>Open-ended research rewards persistent and compounding effort. The predominant paradigm of open-ended task evaluation in ML focuses on attempting these problems in a 1-shot to few-shot setting <a class="cite" href="https://mls-bench.com/">[1]</a>, but these are long-horizon problems, and evals should focus on treating them as such. PostTrainBench studies long horizon agents, but only for LLM post training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. A model that is able to compound its efforts more efficiently, and do so for longer, can significantly outperform one that initially appears stronger. This is often experienced in the real-world in ways that are not captured by benchmarks.</p>
+        <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
+        <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over long AutoResearch runs while still generalizing to hidden test data.</p>
+      </div>
+    </section>
+    <section class="section" id="measurement">
+      <div class="prose"><p>Measuring both requires separating the feedback the agent can see from the hidden performance used to rank it. We therefore evaluate each run along two axes:</p></div>
+      <div class="measure-grid">
+        <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
+        <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
+      </div>
+    </section>
+    <section class="section" id="setup">
+      <h2>Experimental setup</h2>
+      <div class="prose">
+        <p>Each task uses the Harbor format, with separate work and verifier containers. We run Terminus 2 on each task for 15 research iterations. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. Terminus 2 gives the model 20 to 40 agent turns, with up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
+        <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
+        <p>These preliminary results standardize 15 submitted experiments rather than agent time or wall clock time. We are still deciding whether the final evaluation should use a submission limit, an agent time limit, a wall clock time limit, or a combination of these.</p>
+        <p>The runs use high effort for Claude Opus 5, GPT-5.6-Sol, Qwen3.8-Max, and Kimi K3. Grok 4.6, GLM-5.3, Gemini 3.7 Flash, and Muse-Spark-1.2 use their provider defaults. For the final release, we will rerun every model at its highest supported effort. This preview reports one run for each model and task.</p>
+        <p>We welcome feedback on what would make this the fairest assessment of your model.</p>
+      </div>
+    </section>
+    <section class="section" id="results">
+      <h2>Preliminary results</h2>
+      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it by averaging the best score reached at each of the 15 iterations. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test score of the checkpoint selected by validation at each iteration.</p>
+      <div class="result-lead">
+        <article class="result-stat"><span>Highest task-relative Elo</span><strong id="leader-score"></strong><p id="leader-name"></p></article>
+        <article class="result-stat"><span>Spearman rank correlation</span><strong id="rho-score"></strong><p id="rho-range"></p></article>
+      </div>
+      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show raw means across tasks. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
+      <div class="aggregate-grid" id="aggregate-plots"></div>
+      <ul class="result-points result-notes" id="result-notes"></ul>
+    </section>
+    <section class="section" id="tasks">
+      <h2>Prospective categories</h2>
+      <p class="task-intro">The categories span major areas of open ended ML research.</p>
+      <div class="category-tabs" id="category-tabs" role="tablist"></div>
+      <div class="category-panel" id="category-panel"></div>
+    </section>
+    <section class="section" id="examples">
+      <h2>Representative tasks</h2>
+      <p class="task-intro">Click a model name to hide or show its curve.</p>
+      <div class="task-tabs" id="task-tabs" role="tablist"></div>
+      <div id="task-view"></div>
+    </section>
+    <section class="release" id="release">
+      <h2>Full benchmark coming soon</h2>
+      <p>This preview shares aggregate results and three representative tasks. The full release will include every task, the evaluation code, and detailed results.</p>
+    </section>
+    <footer class="references">
+      <strong>References</strong>
+      <ol><li><a href="https://mls-bench.com/">MLSBench</a></li><li><a href="https://arxiv.org/abs/2603.08640">PostTrainBench</a></li><li><a href="https://github.com/karpathy/autoresearch">autoresearch</a></li><li><a href="https://edge-bench.org/">EdgeBench</a></li></ol>
+    </footer>
+  </main>
+</div>
+<script src="site-data.js"></script>
+<script src="results.js"></script>
+</body>
+</html>
