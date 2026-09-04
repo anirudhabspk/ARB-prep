@@ -9,14 +9,14 @@ from pathlib import Path
 
 
 COLORS = [
-    "#5b4bdb",
-    "#d45b73",
-    "#1677b8",
-    "#cf4055",
-    "#238564",
-    "#8b5a2b",
-    "#7a4ea3",
-    "#0f766e",
+    "#6A3D9A",
+    "#D95F02",
+    "#1F78B4",
+    "#E7298A",
+    "#1B9E77",
+    "#A6761D",
+    "#00A6D6",
+    "#4D4D4D",
 ]
 
 
@@ -182,8 +182,8 @@ def aggregate_data(payload):
 
     values = model_values(complete)
     point_elo = elo(complete, model_keys, 700)
-    reference_key = sorted(model_keys, key=point_elo.get)[len(model_keys) // 2]
-    shift = 1000 - point_elo[reference_key]
+    center = quantile(list(point_elo.values()), 0.5)
+    shift = 1000 - center
     point_elo = {key: value + shift for key, value in point_elo.items()}
 
     elo_samples = {key: [] for key in model_keys}
@@ -191,7 +191,7 @@ def aggregate_data(payload):
     for _ in range(300):
         sample = [rng.choice(complete) for _ in complete]
         estimate = elo(sample, model_keys, 200)
-        sample_shift = 1000 - estimate[reference_key]
+        sample_shift = 1000 - quantile(list(estimate.values()), 0.5)
         for key in model_keys:
             elo_samples[key].append(estimate[key] + sample_shift)
 
@@ -240,7 +240,7 @@ def aggregate_data(payload):
     payload["aggregates"] = aggregates
     payload["rank_rho"] = spearman(validation_means, test_means)
     payload["rank_rho_ci"] = [quantile(rho_samples, 0.025), quantile(rho_samples, 0.975)]
-    payload["elo_reference"] = next(model["name"] for model in payload["models"] if model["codename"] == reference_key)
+    payload["elo_reference"] = "rating midpoint"
     payload["complete_task_count"] = len(complete)
 
 
