@@ -2,12 +2,12 @@ const DATA=window.ARB_DATA;
 const COLORS=["#6A3D9A","#D95F02","#1F78B4","#E7298A","#1B9E77","#A6761D","#00A6D6","#4D4D4D"];
 const MODEL=Object.fromEntries(DATA.models.map((model,index)=>[model.codename,{...model,key:model.codename,color:COLORS[index%COLORS.length]}]));
 const ORDER=DATA.models.map(model=>model.codename);
-// Sync with the "Task areas" block in bespokelabsai/AutoResearchBench-Preview-Tasks.
+// Sync with the "Task areas" block, excluding SCFA while its task error is unresolved.
 const CATEGORIES=[
   {name:"Model training",count:8},
   {name:"Algorithms and optimization",count:6},
   {name:"Data engineering and curation",count:6},
-  {name:"Systems and efficiency",count:5},
+  {name:"Systems and efficiency",count:4},
   {name:"Evaluation, calibration, and robustness",count:3},
   {name:"AI safety and alignment",count:1},
   {name:"Interpretability",count:1}

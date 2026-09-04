@@ -19,6 +19,10 @@ COLORS = [
     "#4D4D4D",
 ]
 
+EXCLUDED_TASK_IDS = {
+    "2c24a9c8-abba-433b-869e-879ea3a33af9",  # SCFA attention speedup
+}
+
 
 def parse_time(value):
     return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
@@ -258,6 +262,8 @@ def main() -> None:
         "tasks": [],
     }
     for task in source["tasks"]:
+        if task.get("task_id") in EXCLUDED_TASK_IDS:
+            continue
         clean_task = {
             key: task.get(key)
             for key in ("name", "horizon_name", "task_id", "version", "compute")
