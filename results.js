@@ -87,7 +87,8 @@ function solveProfiles(){
   const workloads=DATA.tasks.map(task=>{
     const runs=task.models.map(run=>({key:run.model,points:run.points.map(point=>({...point,value:difficultyAdjustedValidation(task,point)})).filter(point=>Number.isFinite(point.value))})).filter(run=>run.points.length);
     if(runs.length<3)return null;
-    const target=Math.min(...runs.map(run=>Math.max(...run.points.map(point=>point.value))));
+    const peaks=runs.map(run=>Math.max(...run.points.map(point=>point.value))).sort((a,b)=>b-a);
+    const target=(peaks[3]+peaks[4])/2;
     const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.value>=target)?.seconds??Infinity]));
     const fastest=Math.min(...Object.values(hitTimes));
     return{target,ratios:Object.fromEntries(ORDER.map(key=>{const hit=hitTimes[key];return[key,Number.isFinite(hit)?Math.max(hit,1)/Math.max(fastest,1):Infinity]}))};
@@ -139,7 +140,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the lowest model peak difficulty-adjusted validation score on that workload. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the midpoint between its fourth- and fifth-highest model peak difficulty-adjusted validation scores. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -167,7 +168,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const overview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These views summarize all ${profile.count} workloads using difficulty-adjusted validation reward. Each task’s last submitted score is carried forward through the shared 24-hour window. The fitted mean curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}${logTimeFitPlot(overview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the minimum, across models, of that model’s peak difficulty-adjusted validation score. This ensures every model with a usable trajectory reaches its workload target at least once. The log-time plot keeps the score axis unnormalized, so each fitted ceiling remains comparable across models.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These views summarize all ${profile.count} workloads using difficulty-adjusted validation reward. Each task’s last submitted score is carried forward through the shared 24-hour window. The fitted mean curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}${logTimeFitPlot(overview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the midpoint between the fourth- and fifth-highest peak difficulty-adjusted validation scores across models. The log-time plot keeps the score axis unnormalized, so each fitted ceiling remains comparable across models.</p></section>`;
   bindOverviewTooltips(target);
 }
 
