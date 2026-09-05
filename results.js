@@ -95,4 +95,70 @@ function renderTasks(){
   selectCategory(0);
 }
 
+const ROLLOUT_INSIGHTS=window.ARB_ROLLOUT_INSIGHTS||{};
+const ROLLOUT_INSIGHT_SOURCE=window.ARB_ROLLOUT_INSIGHT_SOURCE||"";
+
+function highlightIterationByModel(task){
+  const highlights=new Map();
+  for(const stat of taskStats(task)){
+    const points=stat.points.filter(point=>Number.isFinite(point.bestValidation));
+    if(!points.length)continue;
+    let selected=points[0],largestIncrease=-Infinity;
+    for(let index=1;index<points.length;index++){
+      const increase=points[index].bestValidation-points[index-1].bestValidation;
+      if(increase>largestIncrease){largestIncrease=increase;selected=points[index]}
+    }
+    if(largestIncrease<=0)selected=points.at(-1);
+    highlights.set(stat.key,selected.iteration);
+  }
+  return highlights;
+}
+
+function taskChart(task,title,key,highlights){
+  const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
+  if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
+  const domain=taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
+  let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">Score</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
+  for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
+  if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
+  const hourStep=maxHours<=6?1:maxHours<=12?2:4;
+  for(const value of ticks(0,maxHours,hourStep))body+=`<text class="tick" x="${x(value)}" y="303" text-anchor="middle">${Math.round(value)}</text>`;
+  body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
+  for(const stat of stats){
+    const points=stat.points.filter(point=>point[key]!=null),color=MODEL[stat.key].color;
+    if(!points.length)continue;
+    let path=`M${x(points[0].seconds/3600)} ${y(points[0][key])}`;
+    for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1][key])}L${x(points[index].seconds/3600)} ${y(points[index][key])}`;
+    path+=`L${x(stat.hours)} ${y(points.at(-1)[key])}`;
+    body+=`<path class="curve" stroke="${color}" d="${path}"/>`;
+    for(const point of points){
+      const hours=point.seconds/3600,isHighlight=highlights.get(stat.key)===point.iteration,markerLabel=`${MODEL[stat.key].name}, iteration ${point.iteration}, ${hours.toFixed(1)} hours`;
+      body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point[key])}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${fmt(point[key])}</title></circle>`;
+      if(isHighlight)body+=`<g class="insight-marker" role="button" tabindex="0" data-model="${esc(stat.key)}" data-iteration="${point.iteration}" data-hours="${hours.toFixed(1)}" data-score="${fmt(point[key])}" data-chart-title="${esc(title)}" aria-label="Show rollout insight for ${esc(markerLabel)}"><circle class="insight-halo" cx="${x(hours)}" cy="${y(point[key])}" r="6.5"/><circle class="insight-center" fill="${color}" cx="${x(hours)}" cy="${y(point[key])}" r="3.1"/><title>Rollout insight: ${esc(markerLabel)}</title></g>`;
+    }
+  }
+  return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
+}
+
+function updateRolloutInsight(marker,task){
+  const panel=document.getElementById("rollout-insight");
+  if(!panel)return;
+  const model=MODEL[marker.dataset.model]?.name||marker.dataset.model;
+  panel.querySelector(".rollout-insight-run").textContent=`${model}, iteration ${marker.dataset.iteration}, ${marker.dataset.hours} hours. ${marker.dataset.chartTitle} was ${marker.dataset.score}.`;
+  panel.querySelector(".rollout-insight-note").textContent=ROLLOUT_INSIGHTS[task.name];
+}
+
+function renderTask(index){
+  activeTask=index;
+  const task=DATA.tasks[index],insight=ROLLOUT_INSIGHTS[task.name],highlights=highlightIterationByModel(task),legend=ORDER.map(key=>`<button class="${hiddenModels.has(key)?"off":""}" data-model="${key}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),source=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-insight-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"";
+  const insightBlock=insight?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">From the rollout evaluations</span><h4>What the rollouts found</h4><p class="rollout-insight-run">Hover or focus a highlighted ring. Each ring marks the largest validation score increase in one displayed rollout.</p><p class="rollout-insight-note">${esc(insight)}</p>${source}</aside>`:"";
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend">${legend}</div>${insightBlock}<section class="scale-block"><div class="charts">${taskChart(task,"Best validation score so far","bestValidation",highlights)}${taskChart(task,"Hidden test score at that checkpoint","testAtBest",highlights)}</div></section></article>`;
+  document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
+  document.querySelectorAll(".insight-marker").forEach(marker=>{
+    const show=()=>updateRolloutInsight(marker,task);
+    marker.addEventListener("mouseenter",show);marker.addEventListener("focus",show);marker.addEventListener("click",show);
+    marker.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();show()}});
+  });
+}
+
 renderAggregates();renderCategories();renderTasks();
