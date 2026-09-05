@@ -98,33 +98,57 @@ function renderTasks(){
 const ROLLOUT_INSIGHTS=window.ARB_ROLLOUT_INSIGHTS||{};
 const ROLLOUT_INSIGHT_SOURCE=window.ARB_ROLLOUT_INSIGHT_SOURCE||"";
 const ROLLOUT_MOMENTS=window.ARB_ROLLOUT_MOMENTS||{};
+const RAW_SCORE_MAPS=window.ARB_RAW_SCORE_MAPS||{};
+let chartMode="reward";
 
 function rolloutMoment(task,model,iteration){
   const moment=ROLLOUT_MOMENTS[task.name];
   return moment&&moment.model===model&&moment.iteration===iteration?moment:null;
 }
 
+function chartSplit(key){return key==="bestValidation"?"intermediate":"final"}
+function rawScoreMap(task){return RAW_SCORE_MAPS[task.name]||null}
+function plotValue(task,key,point){
+  if(chartMode!=="raw")return point[key];
+  const map=rawScoreMap(task);
+  return map?.invert(point[key],chartSplit(key))??null;
+}
+function rawScoreFormat(value,map){
+  if(value==null||!Number.isFinite(value))return"n/a";
+  const precision=map?.precision??3;
+  const adjustedPrecision=Math.abs(value)>0&&Math.abs(value)<.01?Math.max(precision,4):precision;
+  return value.toFixed(adjustedPrecision);
+}
+function rawScoreDomain(stats,task,key){
+  const values=stats.flatMap(stat=>stat.points.map(point=>plotValue(task,key,point)).filter(Number.isFinite));
+  if(!values.length)return{lo:0,hi:1,ticks:[0,.2,.4,.6,.8,1],broken:false};
+  const min=Math.min(...values),max=Math.max(...values),spread=Math.max(max-min,Math.abs(max)*.04,.01),step=niceStep(spread/5);
+  let lo=Math.floor((min-spread*.08)/step)*step,hi=Math.ceil((max+spread*.08)/step)*step;
+  if(lo===hi){lo-=step;hi+=step}
+  return{lo,hi,ticks:ticks(lo,hi,step),broken:false};
+}
+
 function taskChart(task,title,key){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
-  const domain=taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
-  let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">Scaled reward</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
-  for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
+  const map=rawScoreMap(task),domain=chartMode==="raw"?rawScoreDomain(stats,task,key):taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel=chartMode==="raw"?map?.label||"Raw metric":"Scaled reward",formatValue=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value);
+  let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">${esc(axisLabel)}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
+  for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
   const hourStep=maxHours<=6?1:maxHours<=12?2:4;
   for(const value of ticks(0,maxHours,hourStep))body+=`<text class="tick" x="${x(value)}" y="303" text-anchor="middle">${Math.round(value)}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
   for(const stat of stats){
-    const points=stat.points.filter(point=>point[key]!=null),color=MODEL[stat.key].color;
+    const points=stat.points.map(point=>({...point,plot:plotValue(task,key,point)})).filter(point=>point.plot!=null),color=MODEL[stat.key].color;
     if(!points.length)continue;
-    let path=`M${x(points[0].seconds/3600)} ${y(points[0][key])}`;
-    for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1][key])}L${x(points[index].seconds/3600)} ${y(points[index][key])}`;
-    path+=`L${x(stat.hours)} ${y(points.at(-1)[key])}`;
+    let path=`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
+    for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
+    path+=`L${x(stat.hours)} ${y(points.at(-1).plot)}`;
     body+=`<path class="curve" stroke="${color}" d="${path}"/>`;
     for(const point of points){
       const hours=point.seconds/3600,moment=rolloutMoment(task,stat.key,point.iteration),markerLabel=`${MODEL[stat.key].name}, iteration ${point.iteration}, ${hours.toFixed(1)} hours`;
-      body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point[key])}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${fmt(point[key])}</title></circle>`;
-      if(moment)body+=`<g class="insight-marker" role="button" tabindex="0" data-model="${esc(stat.key)}" data-iteration="${point.iteration}" data-hours="${hours.toFixed(1)}" data-score="${fmt(point[key])}" data-chart-title="${esc(title)}" data-note="${esc(moment.note)}" data-metric="${esc(moment.metric||"")}" data-source="${esc(moment.source)}" aria-label="Show verified rollout moment for ${esc(markerLabel)}"><circle class="insight-halo" cx="${x(hours)}" cy="${y(point[key])}" r="6.5"/><circle class="insight-center" fill="${color}" cx="${x(hours)}" cy="${y(point[key])}" r="3.1"/><title>Verified rollout moment: ${esc(markerLabel)}</title></g>`;
+      body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${esc(axisLabel)} ${formatValue(point.plot)}</title></circle>`;
+      if(moment)body+=`<g class="insight-marker" role="button" tabindex="0" data-model="${esc(stat.key)}" data-iteration="${point.iteration}" data-hours="${hours.toFixed(1)}" data-score="${formatValue(point.plot)}" data-chart-title="${esc(title)}" data-note="${esc(moment.note)}" data-metric="${esc(moment.metric||"")}" data-source="${esc(moment.source)}" aria-label="Show verified rollout moment for ${esc(markerLabel)}"><circle class="insight-halo" cx="${x(hours)}" cy="${y(point.plot)}" r="6.5"/><circle class="insight-center" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="3.1"/><title>Verified rollout moment: ${esc(markerLabel)}</title></g>`;
     }
   }
   return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
@@ -145,11 +169,12 @@ function updateRolloutInsight(marker,task){
 
 function renderTask(index){
   activeTask=index;
-  const task=DATA.tasks[index],insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button class="${hiddenModels.has(key)?"off":""}" data-model="${key}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"";
+  const task=DATA.tasks[index],map=rawScoreMap(task),insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button class="${hiddenModels.has(key)?"off":""}" data-model="${key}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"",visibleTitle=chartMode==="raw"?"Best visible raw metric so far":"Best visible reward so far",hiddenTitle=chartMode==="raw"?"Hidden-test raw metric at that checkpoint":"Hidden-test reward at that checkpoint",plotNote=chartMode==="raw"?`The curves reconstruct the raw ${esc(map?.label||"task metric")} by inverting the published reward map. Zero reward is not uniquely invertible: it can mean an invalid result or one at or below the baseline, so those points are omitted.`:"The curves show Horizon's scaled rewards. Switch to raw metric to see the underlying task value recovered from each task's published reward map.";
   const momentBlock=moment?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">One verified rollout</span><h4>What this experiment tried</h4><p class="rollout-insight-run">The highlighted rings are the same ${esc(MODEL[moment.model].name)} experiment in the two score panels. Hover or focus either ring for its record.</p><p class="rollout-insight-note">${esc(moment.note)}</p><p class="rollout-insight-metric"${moment.metric?"":" hidden"}>${esc(moment.metric||"")}</p><p class="rollout-insight-source"><a href="${esc(moment.source)}" target="_blank" rel="noreferrer">Open the source rollout.</a></p></aside>`:"";
   const patternBlock=insight?`<aside class="rollout-pattern"><span class="rollout-insight-kicker">Pattern across rollouts</span><p>${esc(insight)}</p><p class="rollout-pattern-note">This is a task-level synthesis, not a claim about any one model or iteration.</p>${patternSource}</aside>`:"";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><p class="plot-note">The curves show Horizon's scaled rewards. A verified rollout card reports its raw task metric when that record includes one.</p><div class="charts">${taskChart(task,"Best visible reward so far","bestValidation")}${taskChart(task,"Hidden-test reward at that checkpoint","testAtBest")}</div></section></article>`;
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reward" aria-pressed="${chartMode==="reward"}">Scaled reward</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
+  document.querySelectorAll("[data-chart-mode]").forEach(button=>button.addEventListener("click",()=>{chartMode=button.dataset.chartMode;renderTask(activeTask)}));
   document.querySelectorAll(".insight-marker").forEach(marker=>{
     const show=()=>updateRolloutInsight(marker,task);
     marker.addEventListener("mouseenter",show);marker.addEventListener("focus",show);marker.addEventListener("click",show);
