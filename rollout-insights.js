@@ -30,3 +30,16 @@ window.ARB_ROLLOUT_INSIGHTS={
 "TIES CLIP model merging":"Scalar weights on task vectors can only trade interference between domains, never remove it, because the conflicting directions are not separable by any reweighting."
 };
 window.ARB_ROLLOUT_INSIGHT_SOURCE="https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/main/autoresearch-evaluations";
+
+// These are deliberately run-specific.  They are not the task-level patterns
+// above: each item names one model, one submitted iteration, and the change
+// described in that rollout's post-grading record.
+window.ARB_ROLLOUT_MOMENTS={
+"CPU LLM decode throughput":{model:"lumen",iteration:2,note:"Moved only the small decode GEMMs to oneDNN while keeping the larger prefill GEMMs on MKL, where they were faster.",metric:"Raw throughput speedup: 13.27×",source:"https://horizon.bespokelabs.ai/evaluations/4015d5cf-c5c2-4b92-af7c-b35f5ca3e3f1"},
+"Budgeted imputation MCAR 50":{model:"lumen",iteration:2,note:"Combined a Gaussian EM imputer with a boosted residual correction instead of relying on the Gaussian model alone.",source:"https://horizon.bespokelabs.ai/evaluations/830a29ed-0b08-4da1-8bf6-d6b3289ee809"},
+"Shortest valid CI L2 ECE":{model:"lumen",iteration:2,note:"Used a 0.92 nominal level and bisection to tighten the interval while keeping every visible setting above its coverage requirement.",metric:"Mean relative length: 0.015757 (lower is better)",source:"https://horizon.bespokelabs.ai/evaluations/2082b3fe-ac32-4952-850f-aa643aa3226d"},
+"HiCARD latent encoder":{model:"skylark",iteration:2,note:"Replaced random category fingerprints with seven weighted-PCA components of shrunk category covariate means.",metric:"Mean MSE reduction versus one-hot: 27.59%",source:"https://horizon.bespokelabs.ai/evaluations/8fb52cfe-bfad-4213-af41-fdb4241edf4e"},
+"Sketched Newton covariance estimator":{model:"kittiwake",iteration:2,note:"Recovered the noise parameters with OLS, then computed the limiting covariance through a closed-form Lyapunov solve rather than estimating it by replaying the optimiser.",metric:"Covariance error: 0.000893 (lower is better)",source:"https://horizon.bespokelabs.ai/evaluations/9c2002ee-c110-4309-ab05-5d7c89ba3234"},
+"Label efficient risk estimator":{model:"vesper-pro",iteration:2,note:"Reworked the estimator into a self-contained fast version with an embedded prior bank, pinned BLAS threads, adaptive refits, and wall-clock safeguards.",metric:"Median relative risk-estimation error: 0.2455",source:"https://horizon.bespokelabs.ai/evaluations/7c6d2efe-6a0f-4a1e-9cf2-357182da9f5a"},
+"ACT tensor sparse panel imputation":{model:"skylark",iteration:2,note:"Added an adaptive temporal and cross-characteristic covariance model, calibrated with annual-block pseudo-validation.",metric:"Mean R² improvement: 0.4423",source:"https://horizon.bespokelabs.ai/evaluations/686eb06e-c6ec-4b6e-b863-8cef3a1cb8a7"}
+};
