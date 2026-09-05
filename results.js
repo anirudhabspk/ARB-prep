@@ -26,6 +26,77 @@ function derive(run){let best=-Infinity,pick=null;const points=[];for(const row 
 function timeAuc(points,key,endSeconds){if(!points.length||!endSeconds)return null;let total=0,previousTime=0,previousValue=0;for(const point of points){const time=Math.min(endSeconds,Math.max(previousTime,point.seconds||0));total+=previousValue*(time-previousTime);if(point[key]!=null)previousValue=point[key];previousTime=time}total+=previousValue*Math.max(0,endSeconds-previousTime);return total/endSeconds}
 function runStats(run){return{key:run.model,hours:run.hours,points:run.points}}
 const taskStats=task=>task.models.map(runStats);
+
+function overviewTrajectories(){
+  const maxHours=Math.ceil(Math.max(1,...DATA.tasks.flatMap(task=>task.models.map(run=>run.hours).filter(Number.isFinite))));
+  const hours=Array.from({length:maxHours+1},(_,hour)=>hour);
+  const series=ORDER.map(key=>{
+    const runs=DATA.tasks.map(task=>task.models.find(run=>run.model===key)).filter(run=>run?.points?.some(point=>Number.isFinite(point.bestValidation)));
+    const valueAt=(run,seconds)=>{
+      let value=0;
+      for(const point of run.points){
+        if(point.seconds>seconds)break;
+        if(Number.isFinite(point.bestValidation))value=point.bestValidation;
+      }
+      return value;
+    };
+    return{key,name:MODEL[key].name,color:MODEL[key].color,count:runs.length,points:hours.map(hour=>({hour,value:mean(runs.map(run=>valueAt(run,hour*3600)))}))};
+  });
+  return{maxHours,series};
+}
+
+function solveProfiles(){
+  const workloads=DATA.tasks.map(task=>{
+    const runs=task.models.map(run=>({key:run.model,points:run.points.filter(point=>Number.isFinite(point.bestValidation))})).filter(run=>run.points.length);
+    if(runs.length<3)return null;
+    const ranked=runs.map(run=>({...run,peak:Math.max(...run.points.map(point=>point.bestValidation))})).sort((a,b)=>b.peak-a.peak);
+    const target=ranked[2].peak;
+    const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.bestValidation>=target)?.seconds??Infinity]));
+    const fastest=Math.min(...Object.values(hitTimes));
+    return{target,ratios:Object.fromEntries(ORDER.map(key=>{const hit=hitTimes[key];return[key,Number.isFinite(hit)?Math.max(hit,1)/Math.max(fastest,1):Infinity]}))};
+  }).filter(Boolean);
+  const allRatios=workloads.flatMap(workload=>Object.values(workload.ratios).filter(Number.isFinite));
+  const maxRatio=Math.max(2,...allRatios),maxFactor=2**Math.ceil(Math.log2(maxRatio));
+  return{count:workloads.length,maxFactor,series:ORDER.map(key=>({key,name:MODEL[key].name,color:MODEL[key].color,ratios:workloads.map(workload=>workload.ratios[key])}))};
+}
+
+function overviewLegend(series){
+  return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>`<span><i style="background:${item.color}"></i>${esc(item.name)}</span>`).join("")}</div>`;
+}
+
+function meanTrajectoryPlot(overview){
+  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,values=overview.series.flatMap(series=>series.points.map(point=>point.value)).filter(Number.isFinite),hi=Math.max(.1,...values),step=niceStep(hi/5),yMax=Math.ceil(hi/step)*step,x=hour=>L+hour/overview.maxHours*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=ticks(0,overview.maxHours,overview.maxHours<=12?2:4),scoreTicks=ticks(0,yMax,step);
+  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
+  for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
+  for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean reported validation reward</text>`;
+  for(const series of overview.series){const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");body+=`<path class="curve" stroke="${series.color}" d="${d}"><title>${esc(series.name)}: mean of ${series.count} usable task trajectories</title></path>`}
+  return`<article class="metric-plot"><h3>Mean validation trajectory</h3><p>One curve per model, formed by averaging its best validation reward across task trajectories over the 24-hour evaluation window.</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mean validation trajectory by model">${body}</svg></article>`;
+}
+
+function performanceProfilePlot(profile){
+  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,x=factor=>L+Math.log2(factor)/Math.log2(profile.maxFactor)*(W-L-R),y=fraction=>plotB-fraction*(plotB-T),factors=[];
+  for(let factor=1;factor<=profile.maxFactor;factor*=2)factors.push(factor);
+  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
+  for(const fraction of [0,.25,.5,.75,1]){const yy=y(fraction);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${Math.round(fraction*100)}%</text>`}
+  for(const factor of factors){const xx=x(factor);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${factor}×</text>`}
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Time relative to fastest solver</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Workloads solved</text>`;
+  for(const series of profile.series){
+    const ratios=series.ratios.filter(Number.isFinite).sort((a,b)=>a-b);let solved=0,path=`M${x(1)} ${y(0)}`;
+    for(let index=0;index<ratios.length;){const ratio=ratios[index];while(index<ratios.length&&Math.abs(ratios[index]-ratio)<1e-10)index++;const xx=x(Math.min(profile.maxFactor,ratio));path+=`L${xx} ${y(solved/profile.count)}L${xx} ${y(index/profile.count)}`;solved=index;}
+    path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
+    body+=`<path class="curve" stroke="${series.color}" d="${path}"><title>${esc(series.name)}: solves ${solved} of ${profile.count} workloads by ${profile.maxFactor}× the fastest time</title></path>`;
+  }
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the third-highest model peak validation score. Higher is better; a curve farther left reaches that target faster.</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg></article>`;
+}
+
+function renderTrajectoryOverview(){
+  const target=document.getElementById("trajectory-overview");
+  if(!target)return;
+  const overview=overviewTrajectories(),profile=solveProfiles();
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These two views summarize all ${profile.count} workloads. They use reported validation reward: each task’s last submitted score is carried forward through the shared 24-hour window.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the highest validation score reached by the model ranked third on that workload. A model that never reaches that threshold remains unsolved, so its final plateau is its solved-workload coverage.</p></section>`;
+}
+
 function ranks(values){const order=values.map((value,index)=>({value,index})).sort((a,b)=>a.value-b.value),out=Array(values.length);for(let i=0;i<order.length;){let j=i+1;while(j<order.length&&order[j].value===order[i].value)j++;const rank=(i+j-1)/2+1;for(let k=i;k<j;k++)out[order[k].index]=rank;i=j}return out}
 function spearman(xs,ys){if(xs.length<2||xs.length!==ys.length)return null;const a=ranks(xs),b=ranks(ys),ma=mean(a),mb=mean(b);let numerator=0,da=0,db=0;for(let i=0;i<a.length;i++){numerator+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2}return da&&db?numerator/Math.sqrt(da*db):null}
 function bootstrap(values,seed){if(!values.length)return[null,null];let state=seed>>>0;const samples=[];for(let b=0;b<1200;b++){let total=0;for(let i=0;i<values.length;i++){state=(1664525*state+1013904223)>>>0;total+=values[Math.floor(state/4294967296*values.length)]}samples.push(total/values.length)}return[quantile(samples,.025),quantile(samples,.975)]}
@@ -189,4 +260,4 @@ function renderTask(index){
   });
 }
 
-renderAggregates();renderCategories();renderTasks();
+renderTrajectoryOverview();renderAggregates();renderCategories();renderTasks();
