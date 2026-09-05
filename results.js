@@ -27,31 +27,69 @@ function timeAuc(points,key,endSeconds){if(!points.length||!endSeconds)return nu
 function runStats(run){return{key:run.model,hours:run.hours,points:run.points}}
 const taskStats=task=>task.models.map(runStats);
 
+function difficultyAdjustedValidation(task,point){
+  const raw=RAW_SCORE_MAPS[task.name]?.invert(point.bestValidation,"intermediate")??null;
+  if(raw==null)return point.bestValidation===0?0:null;
+  return DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,"intermediate")??null;
+}
+
+const sigmoid=value=>value>=0?1/(1+Math.exp(-value)):Math.exp(value)/(1+Math.exp(value));
+const logit=value=>Math.log(value/(1-value));
+
+function fitLogSigmoid(points){
+  const observations=points.filter(point=>point.hour>0&&Number.isFinite(point.value));
+  const maxObserved=Math.max(...observations.map(point=>point.value)),meanObserved=mean(observations.map(point=>point.value)),minimumCeiling=Math.min(.9995,Math.max(maxObserved+.001,.05));
+  const linearFit=ceiling=>{
+    const xs=observations.map(point=>Math.log(point.hour)),ys=observations.map(point=>logit(Math.min(.999,Math.max(.001,point.value/ceiling)))),mx=mean(xs),my=mean(ys),denominator=xs.reduce((sum,value)=>sum+(value-mx)**2,0),beta=denominator?xs.reduce((sum,value,index)=>sum+(value-mx)*(ys[index]-my),0)/denominator:0,intercept=my-beta*mx;
+    return{ceiling,beta:Math.max(.01,beta),logMid:-intercept/Math.max(.01,beta)};
+  };
+  const normalize=params=>({ceiling:Math.min(1,Math.max(minimumCeiling,params.ceiling)),beta:Math.min(30,Math.max(.01,params.beta)),logMid:Math.min(Math.log(1e5),Math.max(Math.log(.01),params.logMid))});
+  const error=params=>observations.reduce((sum,point)=>{const estimate=params.ceiling*sigmoid(params.beta*(Math.log(point.hour)-params.logMid));return sum+(point.value-estimate)**2},0);
+  let best=null;
+  for(let index=0;index<=240;index++){
+    const params=normalize(linearFit(minimumCeiling+(1-minimumCeiling)*index/240)),sse=error(params);
+    if(!best||sse<best.sse)best={...params,sse};
+  }
+  let steps={ceiling:.06,logMid:.8,logBeta:.55};
+  let current={ceiling:best.ceiling,logMid:best.logMid,logBeta:Math.log(best.beta),sse:best.sse};
+  for(let pass=0;pass<28;pass++){
+    let improved=false;
+    for(const key of ["ceiling","logMid","logBeta"]){
+      let candidate=current;
+      for(const direction of [-1,1]){
+        const proposal={...current,[key]:current[key]+direction*steps[key]},params=normalize({ceiling:proposal.ceiling,beta:Math.exp(proposal.logBeta),logMid:proposal.logMid}),sse=error(params);
+        if(sse<candidate.sse-1e-12)candidate={ceiling:params.ceiling,logMid:params.logMid,logBeta:Math.log(params.beta),sse};
+      }
+      if(candidate!==current){current=candidate;improved=true;}
+    }
+    if(!improved)steps={ceiling:steps.ceiling*.6,logMid:steps.logMid*.6,logBeta:steps.logBeta*.6};
+  }
+  const params=normalize({ceiling:current.ceiling,beta:Math.exp(current.logBeta),logMid:current.logMid}),variance=observations.reduce((sum,point)=>sum+(point.value-meanObserved)**2,0),r2=variance>1e-12?1-error(params)/variance:null;
+  return{...params,tmid:Math.exp(params.logMid),r2,predict:hour=>hour<=0?0:params.ceiling*sigmoid(params.beta*(Math.log(hour)-params.logMid))};
+}
+
 function overviewTrajectories(){
   const maxHours=Math.ceil(Math.max(1,...DATA.tasks.flatMap(task=>task.models.map(run=>run.hours).filter(Number.isFinite))));
   const hours=Array.from({length:maxHours+1},(_,hour)=>hour);
   const series=ORDER.map(key=>{
-    const runs=DATA.tasks.map(task=>task.models.find(run=>run.model===key)).filter(run=>run?.points?.some(point=>Number.isFinite(point.bestValidation)));
-    const valueAt=(run,seconds)=>{
-      let value=0;
-      for(const point of run.points){
-        if(point.seconds>seconds)break;
-        if(Number.isFinite(point.bestValidation))value=point.bestValidation;
-      }
-      return value;
-    };
-    return{key,name:MODEL[key].name,color:MODEL[key].color,count:runs.length,points:hours.map(hour=>({hour,value:mean(runs.map(run=>valueAt(run,hour*3600)))}))};
+    const runs=DATA.tasks.map(task=>{
+      const run=task.models.find(candidate=>candidate.model===key),points=run?.points.map(point=>({...point,value:difficultyAdjustedValidation(task,point)})).filter(point=>Number.isFinite(point.value))||[];
+      return points.length?{points}:null;
+    }).filter(Boolean);
+    const valueAt=(run,seconds)=>{let value=0;for(const point of run.points){if(point.seconds>seconds)break;value=point.value}return value};
+    const points=hours.map(hour=>({hour,value:mean(runs.map(run=>valueAt(run,hour*3600)))}));
+    return{key,name:MODEL[key].name,color:MODEL[key].color,count:runs.length,points,fit:fitLogSigmoid(points)};
   });
   return{maxHours,series};
 }
 
 function solveProfiles(){
   const workloads=DATA.tasks.map(task=>{
-    const runs=task.models.map(run=>({key:run.model,points:run.points.filter(point=>Number.isFinite(point.bestValidation))})).filter(run=>run.points.length);
+    const runs=task.models.map(run=>({key:run.model,points:run.points.map(point=>({...point,value:difficultyAdjustedValidation(task,point)})).filter(point=>Number.isFinite(point.value))})).filter(run=>run.points.length);
     if(runs.length<3)return null;
-    const ranked=runs.map(run=>({...run,peak:Math.max(...run.points.map(point=>point.bestValidation))})).sort((a,b)=>b.peak-a.peak);
+    const ranked=runs.map(run=>({...run,peak:Math.max(...run.points.map(point=>point.value))})).sort((a,b)=>b.peak-a.peak);
     const target=ranked[2].peak;
-    const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.bestValidation>=target)?.seconds??Infinity]));
+    const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.value>=target)?.seconds??Infinity]));
     const fastest=Math.min(...Object.values(hitTimes));
     return{target,ratios:Object.fromEntries(ORDER.map(key=>{const hit=hitTimes[key];return[key,Number.isFinite(hit)?Math.max(hit,1)/Math.max(fastest,1):Infinity]}))};
   }).filter(Boolean);
@@ -74,9 +112,19 @@ function meanTrajectoryPlot(overview){
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
-  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean reported validation reward</text>`;
-  for(const series of overview.series){const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");body+=overviewLine(series,d,`Mean of ${series.count} usable task trajectories.`)}
-  return`<article class="metric-plot"><h3>Mean validation trajectory</h3><p>One curve per model, formed by averaging its best validation reward across task trajectories over the 24-hour evaluation window.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mean validation trajectory by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean difficulty-adjusted reward</text>`;
+  for(const series of overview.series){for(const point of series.points.slice(1))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,d,`Log-sigmoid fit: R² ${series.fit.r2?.toFixed(3)??"n/a"}, ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h.`)}
+  return`<article class="metric-plot"><h3>Fitted mean validation trajectory</h3><p>Dots are hourly task means; solid curves are fitted log-sigmoids.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fitted mean difficulty-adjusted validation trajectory by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+}
+
+function linearizedFitPlot(overview){
+  const W=940,H=360,L=72,R=22,T=16,B=48,plotB=H-B,transformed=overview.series.flatMap(series=>series.points.filter(point=>point.hour>0).map(point=>({series,x:Math.log(point.hour/series.fit.tmid),y:logit(Math.min(.999,Math.max(.001,point.value/series.fit.ceiling)))}))),rawX=transformed.map(point=>point.x),rawY=transformed.map(point=>point.y),xPad=Math.max(.2,(Math.max(...rawX)-Math.min(...rawX))*.08),yPad=Math.max(.4,(Math.max(...rawY)-Math.min(...rawY))*.08),xLo=Math.min(...rawX)-xPad,xHi=Math.max(...rawX)+xPad,yLo=Math.min(...rawY)-yPad,yHi=Math.max(...rawY)+yPad,x=value=>L+(value-xLo)/(xHi-xLo)*(W-L-R),y=value=>T+(yHi-value)/(yHi-yLo)*(plotB-T),xStep=niceStep((xHi-xLo)/5),yStep=niceStep((yHi-yLo)/5);
+  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
+  for(const value of ticks(Math.ceil(xLo/xStep)*xStep,Math.floor(xHi/xStep)*xStep,xStep)){const xx=x(value);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${value.toFixed(1)}</text>`}
+  for(const value of ticks(Math.ceil(yLo/yStep)*yStep,Math.floor(yHi/yStep)*yStep,yStep)){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">log(t / t_mid)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">logit(S / S_max)</text>`;
+  for(const series of overview.series){const points=transformed.filter(point=>point.series===series);for(const point of points)body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.x)}" cy="${y(point.y)}" r="2.4"/>`;const path=`M${x(xLo)} ${y(series.fit.beta*xLo)}L${x(xHi)} ${y(series.fit.beta*xHi)}`;body+=overviewLine(series,path,`Linearized log-sigmoid: slope β = ${series.fit.beta.toFixed(2)}; R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
+  return`<article class="metric-plot metric-plot-wide"><h3>Log-sigmoid linearization</h3><p>After each model’s fitted reparameterization, the log-sigmoid becomes a straight line. Dots are the hourly means; solid lines are the fitted relation.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Linearized log-sigmoid fit by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function performanceProfilePlot(profile){
@@ -92,7 +140,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the third-highest model peak validation score. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the third-highest model peak difficulty-adjusted validation score. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -120,7 +168,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const overview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These two views summarize all ${profile.count} workloads. They use reported validation reward: each task’s last submitted score is carried forward through the shared 24-hour window. Hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the highest validation score reached by the model ranked third on that workload. A model that never reaches that threshold remains unsolved, so its final plateau is its solved-workload coverage.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These views summarize all ${profile.count} workloads using difficulty-adjusted validation reward. Each task’s last submitted score is carried forward through the shared 24-hour window. The fitted mean curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}${linearizedFitPlot(overview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the highest difficulty-adjusted validation score reached by the model ranked third on that workload. A model that never reaches that threshold remains unsolved, so its final plateau is its solved-workload coverage. The linearized plot is a diagnostic of the fitted curve, not independent evidence: it reuses each model’s fitted ceiling and midpoint.</p></section>`;
   bindOverviewTooltips(target);
 }
 
