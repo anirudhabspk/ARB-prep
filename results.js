@@ -64,14 +64,19 @@ function overviewLegend(series){
   return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>`<span><i style="background:${item.color}"></i>${esc(item.name)}</span>`).join("")}</div>`;
 }
 
+function overviewLine(series,path,detail){
+  const label=`${series.name}. ${detail}`;
+  return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/><title>${esc(label)}</title></g>`;
+}
+
 function meanTrajectoryPlot(overview){
   const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,values=overview.series.flatMap(series=>series.points.map(point=>point.value)).filter(Number.isFinite),hi=Math.max(.1,...values),step=niceStep(hi/5),yMax=Math.ceil(hi/step)*step,x=hour=>L+hour/overview.maxHours*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=ticks(0,overview.maxHours,overview.maxHours<=12?2:4),scoreTicks=ticks(0,yMax,step);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean reported validation reward</text>`;
-  for(const series of overview.series){const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");body+=`<path class="curve" stroke="${series.color}" d="${d}"><title>${esc(series.name)}: mean of ${series.count} usable task trajectories</title></path>`}
-  return`<article class="metric-plot"><h3>Mean validation trajectory</h3><p>One curve per model, formed by averaging its best validation reward across task trajectories over the 24-hour evaluation window.</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mean validation trajectory by model">${body}</svg></article>`;
+  for(const series of overview.series){const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");body+=overviewLine(series,d,`Mean of ${series.count} usable task trajectories.`)}
+  return`<article class="metric-plot"><h3>Mean validation trajectory</h3><p>One curve per model, formed by averaging its best validation reward across task trajectories over the 24-hour evaluation window.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mean validation trajectory by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function performanceProfilePlot(profile){
@@ -85,16 +90,38 @@ function performanceProfilePlot(profile){
     const ratios=series.ratios.filter(Number.isFinite).sort((a,b)=>a-b);let solved=0,path=`M${x(1)} ${y(0)}`;
     for(let index=0;index<ratios.length;){const ratio=ratios[index];while(index<ratios.length&&Math.abs(ratios[index]-ratio)<1e-10)index++;const xx=x(Math.min(profile.maxFactor,ratio));path+=`L${xx} ${y(solved/profile.count)}L${xx} ${y(index/profile.count)}`;solved=index;}
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
-    body+=`<path class="curve" stroke="${series.color}" d="${path}"><title>${esc(series.name)}: solves ${solved} of ${profile.count} workloads by ${profile.maxFactor}× the fastest time</title></path>`;
+    body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the third-highest model peak validation score. Higher is better; a curve farther left reaches that target faster.</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the third-highest model peak validation score. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+}
+
+function bindOverviewTooltips(target){
+  const show=(line,event)=>{
+    const wrap=line.closest(".overview-chart-wrap"),tooltip=wrap?.querySelector(".overview-tooltip");
+    if(!wrap||!tooltip)return;
+    tooltip.querySelector("i").style.background=line.dataset.color;
+    tooltip.querySelector("strong").textContent=line.dataset.model;
+    tooltip.querySelector("span").textContent=line.dataset.detail;
+    const rect=wrap.getBoundingClientRect(),clientX=event?.clientX,clientY=event?.clientY;
+    const left=Number.isFinite(clientX)?Math.min(Math.max(10,clientX-rect.left+12),Math.max(10,rect.width-196)):12;
+    const top=Number.isFinite(clientY)?Math.min(Math.max(10,clientY-rect.top+12),Math.max(10,rect.height-72)):12;
+    tooltip.style.left=`${left}px`;tooltip.style.top=`${top}px`;tooltip.hidden=false;
+  };
+  target.querySelectorAll("[data-overview-line]").forEach(line=>{
+    line.addEventListener("mouseenter",event=>show(line,event));
+    line.addEventListener("mousemove",event=>show(line,event));
+    line.addEventListener("focus",event=>show(line,event));
+    line.addEventListener("mouseleave",()=>{const tooltip=line.closest(".overview-chart-wrap")?.querySelector(".overview-tooltip");if(tooltip)tooltip.hidden=true});
+    line.addEventListener("blur",()=>{const tooltip=line.closest(".overview-chart-wrap")?.querySelector(".overview-tooltip");if(tooltip)tooltip.hidden=true});
+  });
 }
 
 function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const overview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These two views summarize all ${profile.count} workloads. They use reported validation reward: each task’s last submitted score is carried forward through the shared 24-hour window.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the highest validation score reached by the model ranked third on that workload. A model that never reaches that threshold remains unsolved, so its final plateau is its solved-workload coverage.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These two views summarize all ${profile.count} workloads. They use reported validation reward: each task’s last submitted score is carried forward through the shared 24-hour window. Hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the highest validation score reached by the model ranked third on that workload. A model that never reaches that threshold remains unsolved, so its final plateau is its solved-workload coverage.</p></section>`;
+  bindOverviewTooltips(target);
 }
 
 function ranks(values){const order=values.map((value,index)=>({value,index})).sort((a,b)=>a.value-b.value),out=Array(values.length);for(let i=0;i<order.length;){let j=i+1;while(j<order.length&&order[j].value===order[i].value)j++;const rank=(i+j-1)/2+1;for(let k=i;k<j;k++)out[order[k].index]=rank;i=j}return out}
