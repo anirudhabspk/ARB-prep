@@ -112,10 +112,9 @@ function meanValidationTrajectories(){
 
 function solveProfiles(){
   const workloads=DATA.tasks.map(task=>{
-    const runs=task.models.map(run=>({key:run.model,points:rawTestCurve(run)})).filter(run=>run.points.length);
+    const runs=task.models.map(run=>({key:run.model,points:rawTestCurve(run),validationScores:run.points.map(point=>point.bestValidation).filter(Number.isFinite)})).filter(run=>run.points.length&&run.validationScores.length);
     if(runs.length<3)return null;
-    const peaks=runs.map(run=>Math.max(...run.points.map(point=>point.value))).sort((a,b)=>b-a);
-    const target=(peaks[3]+peaks[4])/2;
+    const target=Math.min(...runs.map(run=>Math.max(...run.validationScores)));
     const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.value>=target)?.seconds??Infinity]));
     const fastest=Math.min(...Object.values(hitTimes));
     return{target,ratios:Object.fromEntries(ORDER.map(key=>{const hit=hitTimes[key];return[key,Number.isFinite(hit)?Math.max(hit,1)/Math.max(fastest,1):Infinity]}))};
@@ -167,7 +166,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the midpoint between its fourth- and fifth-highest model peak raw hidden-test scores. Each rollout uses its backward running minimum test curve, so scores cannot decrease as evaluation time advances. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the lowest model peak validation score. Time to that target is measured on the raw hidden-test curve, using its backward running minimum so test scores cannot decrease as evaluation time advances. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -195,7 +194,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const validationOverview=meanValidationTrajectories(),testOverview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>The fitted mean validation curve uses difficulty-adjusted validation reward. The linearized hidden-test curve and performance profile use raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(validationOverview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(validationOverview)}${performanceProfilePlot(profile)}${linearizedOddsPlot(testOverview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the midpoint between the fourth- and fifth-highest model peak raw hidden-test scores after monotonic postprocessing. The linearized chart uses log(S × S_max / (S_max - S)) against log time. Its ceiling offset keeps S_max differences visible without recentering either axis for individual models.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>The fitted mean validation curve uses difficulty-adjusted validation reward. The linearized hidden-test curve and performance profile use raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(validationOverview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(validationOverview)}${performanceProfilePlot(profile)}${linearizedOddsPlot(testOverview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the lowest model peak validation score. The linearized chart uses log(S × S_max / (S_max - S)) against log time. Its ceiling offset keeps S_max differences visible without recentering either axis for individual models.</p></section>`;
   bindOverviewTooltips(target);
 }
 
