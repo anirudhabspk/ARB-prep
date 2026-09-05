@@ -33,6 +33,18 @@ function difficultyAdjustedValidation(task,point){
   return DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,"intermediate")??null;
 }
 
+function backwardRunningTestMinimum(points){
+  let lowest=Infinity;
+  return points.slice().sort((a,b)=>a.seconds-b.seconds).reverse().flatMap(point=>{
+    lowest=Math.min(lowest,point.value);
+    return Number.isFinite(lowest)?[{...point,value:lowest}]:[];
+  }).reverse();
+}
+
+function rawTestCurve(run){
+  return backwardRunningTestMinimum(run.points.map(point=>({...point,value:point.testAtBest})).filter(point=>Number.isFinite(point.value)));
+}
+
 const sigmoid=value=>value>=0?1/(1+Math.exp(-value)):Math.exp(value)/(1+Math.exp(value));
 const logit=value=>Math.log(value/(1-value));
 
@@ -73,7 +85,7 @@ function overviewTrajectories(){
   const hours=Array.from({length:maxHours+1},(_,hour)=>hour);
   const series=ORDER.map(key=>{
     const runs=DATA.tasks.map(task=>{
-      const run=task.models.find(candidate=>candidate.model===key),points=run?.points.map(point=>({...point,value:difficultyAdjustedValidation(task,point)})).filter(point=>Number.isFinite(point.value))||[];
+      const run=task.models.find(candidate=>candidate.model===key),points=run?rawTestCurve(run):[];
       return points.length?{points}:null;
     }).filter(Boolean);
     const valueAt=(run,seconds)=>{let value=0;for(const point of run.points){if(point.seconds>seconds)break;value=point.value}return value};
@@ -85,7 +97,7 @@ function overviewTrajectories(){
 
 function solveProfiles(){
   const workloads=DATA.tasks.map(task=>{
-    const runs=task.models.map(run=>({key:run.model,points:run.points.map(point=>({...point,value:difficultyAdjustedValidation(task,point)})).filter(point=>Number.isFinite(point.value))})).filter(run=>run.points.length);
+    const runs=task.models.map(run=>({key:run.model,points:rawTestCurve(run)})).filter(run=>run.points.length);
     if(runs.length<3)return null;
     const peaks=runs.map(run=>Math.max(...run.points.map(point=>point.value))).sort((a,b)=>b-a);
     const target=(peaks[3]+peaks[4])/2;
@@ -112,9 +124,9 @@ function meanTrajectoryPlot(overview){
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(2)}</text>`}
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
-  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean difficulty-adjusted reward</text>`;
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours)</text><text class="overview-axis-title" x="14" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 14 ${(T+plotB)/2})">Mean raw hidden-test score</text>`;
   for(const series of overview.series){for(const point of series.points.slice(1))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const d=series.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,d,`Log-sigmoid fit: R² ${series.fit.r2?.toFixed(3)??"n/a"}, ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h.`)}
-  return`<article class="metric-plot"><h3>Fitted mean validation trajectory</h3><p>Dots are hourly task means; solid curves are fitted log-sigmoids.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fitted mean difficulty-adjusted validation trajectory by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Fitted mean hidden-test trajectory</h3><p>Dots are hourly task means of the raw, unscaled hidden-test score; solid curves are fitted log-sigmoids.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fitted mean raw hidden-test trajectory by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function linearizedOddsPlot(overview){
@@ -124,7 +136,7 @@ function linearizedOddsPlot(overview){
   for(const value of ticks(yMin,yMax,yStep)){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
   body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">log(S × S_max / (S_max - S))</text>`;
   for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(logHour(point.hour))}" cy="${y(logOdds(point.value,series.fit.ceiling))}" r="2.4"/>`;const path=`M${x(xMin)} ${y(lineValue(series,xMin))}L${x(xMax)} ${y(lineValue(series,xMax))}`,intercept=Math.log(series.fit.ceiling)-series.fit.beta*series.fit.logMid;body+=overviewLine(series,path,`Linearized log-sigmoid: slope β ${series.fit.beta.toFixed(2)}, intercept ${intercept.toFixed(2)}, ceiling ${series.fit.ceiling.toFixed(3)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
-  return`<article class="metric-plot metric-plot-wide"><h3>Linearized fitted trajectories</h3><p>Ceiling-preserving raw-score log-odds, log(S × S_max / (S_max - S)), versus log time. This turns each fitted log-sigmoid into a straight line while retaining its S_max as a vertical offset.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Linearized fitted difficulty-adjusted trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot metric-plot-wide"><h3>Linearized hidden-test trajectories</h3><p>Ceiling-preserving raw-score log-odds, log(S × S_max / (S_max - S)), versus log time. This turns each fitted hidden-test curve into a straight line while retaining its S_max as a vertical offset.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Linearized raw hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function performanceProfilePlot(profile){
@@ -140,7 +152,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the midpoint between its fourth- and fifth-highest model peak difficulty-adjusted validation scores. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the midpoint between its fourth- and fifth-highest model peak raw hidden-test scores. Each rollout uses its backward running minimum test curve, so scores cannot decrease as evaluation time advances. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -168,7 +180,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const overview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These views summarize all ${profile.count} workloads using difficulty-adjusted validation reward. Each task’s last submitted score is carried forward through the shared 24-hour window. The fitted mean curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}${linearizedOddsPlot(overview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the midpoint between the fourth- and fifth-highest peak difficulty-adjusted validation scores across models. The linearized chart uses log(S × S_max / (S_max - S)) against log time. Its ceiling offset keeps S_max differences visible without recentering either axis for individual models.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>These views summarize all ${profile.count} workloads using raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting curve is monotone moving forward in time. The fitted mean curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(overview.series)}<div class="trajectory-overview-grid">${meanTrajectoryPlot(overview)}${performanceProfilePlot(profile)}${linearizedOddsPlot(overview)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the midpoint between the fourth- and fifth-highest model peak raw hidden-test scores after monotonic postprocessing. The linearized chart uses log(S × S_max / (S_max - S)) against log time. Its ceiling offset keeps S_max differences visible without recentering either axis for individual models.</p></section>`;
   bindOverviewTooltips(target);
 }
 
