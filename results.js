@@ -99,7 +99,8 @@ const ROLLOUT_INSIGHTS=window.ARB_ROLLOUT_INSIGHTS||{};
 const ROLLOUT_INSIGHT_SOURCE=window.ARB_ROLLOUT_INSIGHT_SOURCE||"";
 const ROLLOUT_MOMENTS=window.ARB_ROLLOUT_MOMENTS||{};
 const RAW_SCORE_MAPS=window.ARB_RAW_SCORE_MAPS||{};
-let chartMode="reward";
+const DIFFICULTY_REWARD_MAPS=window.ARB_DIFFICULTY_REWARD_MAPS||{};
+let chartMode="reported";
 
 function rolloutMoment(task,model,iteration){
   const moment=ROLLOUT_MOMENTS[task.name];
@@ -108,10 +109,13 @@ function rolloutMoment(task,model,iteration){
 
 function chartSplit(key){return key==="bestValidation"?"intermediate":"final"}
 function rawScoreMap(task){return RAW_SCORE_MAPS[task.name]||null}
+function difficultyRewardMap(task){return DIFFICULTY_REWARD_MAPS[task.name]||null}
 function plotValue(task,key,point){
-  if(chartMode!=="raw")return point[key];
-  const map=rawScoreMap(task);
-  return map?.invert(point[key],chartSplit(key))??null;
+  if(chartMode==="reported")return point[key];
+  const rawMap=rawScoreMap(task),raw=rawMap?.invert(point[key],chartSplit(key))??null;
+  if(chartMode==="raw")return raw;
+  if(raw==null)return point[key]===0?0:null;
+  return difficultyRewardMap(task)?.score(raw,chartSplit(key))??null;
 }
 function rawScoreFormat(value,map){
   if(value==null||!Number.isFinite(value))return"n/a";
@@ -127,11 +131,14 @@ function rawScoreDomain(stats,task,key){
   if(lo===hi){lo-=step;hi+=step}
   return{lo,hi,ticks:ticks(lo,hi,step),broken:false};
 }
+function difficultyRewardDomain(stats,task,key){
+  return taskDomain(stats.map(stat=>({points:stat.points.map(point=>({[key]:plotValue(task,key,point)}))})),key);
+}
 
 function taskChart(task,title,key){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
-  const map=rawScoreMap(task),domain=chartMode==="raw"?rawScoreDomain(stats,task,key):taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel=chartMode==="raw"?map?.label||"Raw metric":"Scaled reward",formatValue=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value);
+  const map=rawScoreMap(task),difficultyMap=difficultyRewardMap(task),domain=chartMode==="raw"?rawScoreDomain(stats,task,key):chartMode==="difficulty"?difficultyRewardDomain(stats,task,key):taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel=chartMode==="raw"?map?.label||"Raw metric":chartMode==="difficulty"?"Difficulty-adjusted reward":"Reported reward",formatValue=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value);
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">${esc(axisLabel)}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
   for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
@@ -169,10 +176,10 @@ function updateRolloutInsight(marker,task){
 
 function renderTask(index){
   activeTask=index;
-  const task=DATA.tasks[index],map=rawScoreMap(task),insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button class="${hiddenModels.has(key)?"off":""}" data-model="${key}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"",visibleTitle=chartMode==="raw"?"Best visible raw metric so far":"Best visible reward so far",hiddenTitle=chartMode==="raw"?"Hidden-test raw metric at that checkpoint":"Hidden-test reward at that checkpoint",plotNote=chartMode==="raw"?`The curves reconstruct the raw ${esc(map?.label||"task metric")} by inverting the published reward map. Zero reward is not uniquely invertible: it can mean an invalid result or one at or below the baseline, so those points are omitted.`:"The curves show Horizon's scaled rewards. Switch to raw metric to see the underlying task value recovered from each task's published reward map.";
+  const task=DATA.tasks[index],map=rawScoreMap(task),difficultyMap=difficultyRewardMap(task),insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button class="${hiddenModels.has(key)?"off":""}" data-model="${key}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"",visibleTitle=chartMode==="raw"?"Best visible raw metric so far":chartMode==="difficulty"?"Best visible difficulty-adjusted reward so far":"Best visible reported reward so far",hiddenTitle=chartMode==="raw"?"Hidden-test raw metric at that checkpoint":chartMode==="difficulty"?"Hidden-test difficulty-adjusted reward at that checkpoint":"Hidden-test reported reward at that checkpoint",plotNote=chartMode==="raw"?`The curves reconstruct the raw ${esc(map?.label||"task metric")} by inverting the published reward map. Zero reward is not uniquely invertible: it can mean an invalid result or one at or below the baseline, so those points are omitted.`:chartMode==="difficulty"?`Counterfactual comparison only. ${esc(difficultyMap?.kind||"Task-specific")} map: ${esc(difficultyMap?.summary||"The reported reward is unchanged.")} The plotted reward is recomputed from the recovered raw metric; Horizon's reported reward is not changed.`:"The curves show Horizon's reported scaled rewards. Use the other views to compare the underlying raw metric and a difficulty-aware counterfactual rescaling.";
   const momentBlock=moment?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">One verified rollout</span><h4>What this experiment tried</h4><p class="rollout-insight-run">The highlighted rings are the same ${esc(MODEL[moment.model].name)} experiment in the two score panels. Hover or focus either ring for its record.</p><p class="rollout-insight-note">${esc(moment.note)}</p><p class="rollout-insight-metric"${moment.metric?"":" hidden"}>${esc(moment.metric||"")}</p><p class="rollout-insight-source"><a href="${esc(moment.source)}" target="_blank" rel="noreferrer">Open the source rollout.</a></p></aside>`:"";
   const patternBlock=insight?`<aside class="rollout-pattern"><span class="rollout-insight-kicker">Pattern across rollouts</span><p>${esc(insight)}</p><p class="rollout-pattern-note">This is a task-level synthesis, not a claim about any one model or iteration.</p>${patternSource}</aside>`:"";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reward" aria-pressed="${chartMode==="reward"}">Scaled reward</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section></article>`;
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reported" aria-pressed="${chartMode==="reported"}">Reported reward</button><button type="button" data-chart-mode="difficulty" aria-pressed="${chartMode==="difficulty"}"${difficultyMap?"":" disabled"}>Difficulty-adjusted</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
   document.querySelectorAll("[data-chart-mode]").forEach(button=>button.addEventListener("click",()=>{chartMode=button.dataset.chartMode;renderTask(activeTask)}));
   document.querySelectorAll(".insight-marker").forEach(marker=>{
