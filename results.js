@@ -73,7 +73,7 @@ function renderCategories(){
   });
   const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);
   addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-title",cx,cy+10,"Task taxonomy");addText("wheel-center-note",cx,cy+31,"29 preview tasks");
-  pick(0);svg.addEventListener("mouseleave",()=>pick(0));
+  pick(0);
 }
 
 let activeCategory=0;
