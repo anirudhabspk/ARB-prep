@@ -266,7 +266,6 @@ function renderCategories(){
   pick(0);
 }
 
-const ROLLOUT_MOMENTS=window.ARB_ROLLOUT_MOMENTS||{};
 const TASK_CATALOG=window.ARB_TASK_CATALOG||[];
 const TASK_BY_NAME=new Map(DATA.tasks.map(task=>[task.name,task]));
 
@@ -333,11 +332,6 @@ function renderTaskCatalog(){
   render();
 }
 
-function rolloutMoment(task,model,iteration){
-  const moment=ROLLOUT_MOMENTS[task.name];
-  return moment&&moment.model===model&&moment.iteration===iteration?moment:null;
-}
-
 function taskChart(task,title,key){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
@@ -355,11 +349,7 @@ function taskChart(task,title,key){
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
     path+=`L${x(stat.hours)} ${y(points.at(-1).plot)}`;
     body+=`<path class="curve" stroke="${color}" d="${path}"/>`;
-    for(const point of points){
-      const hours=point.seconds/3600,moment=rolloutMoment(task,stat.key,point.iteration),markerLabel=`${MODEL[stat.key].name}, iteration ${point.iteration}, ${hours.toFixed(1)} hours`;
-      body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${esc(axisLabel)} ${formatValue(point.plot)}</title></circle>`;
-      if(moment)body+=`<g class="insight-marker" role="button" tabindex="0" data-model="${esc(stat.key)}" data-iteration="${point.iteration}" data-hours="${hours.toFixed(1)}" data-score="${formatValue(point.plot)}" data-chart-title="${esc(title)}" data-note="${esc(moment.note)}" data-metric="${esc(moment.metric||"")}" data-source="${esc(moment.source)}" aria-label="Show verified rollout moment for ${esc(markerLabel)}"><circle class="insight-halo" cx="${x(hours)}" cy="${y(point.plot)}" r="6.5"/><circle class="insight-center" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="3.1"/><title>Verified rollout moment: ${esc(markerLabel)}</title></g>`;
-    }
+    for(const point of points){const hours=point.seconds/3600;body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${esc(axisLabel)} ${formatValue(point.plot)}</title></circle>`}
   }
   return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
 }
@@ -401,30 +391,11 @@ function bindEfficiencyTooltips(){
   });
 }
 
-function updateRolloutInsight(marker,task){
-  const panel=document.getElementById("rollout-insight");
-  if(!panel)return;
-  const model=MODEL[marker.dataset.model]?.name||marker.dataset.model;
-  panel.querySelector(".rollout-insight-run").textContent=`${model}, iteration ${marker.dataset.iteration}, ${marker.dataset.hours} hours. ${marker.dataset.chartTitle}: ${marker.dataset.score}.`;
-  panel.querySelector(".rollout-insight-note").textContent=marker.dataset.note;
-  const metric=panel.querySelector(".rollout-insight-metric");
-  metric.hidden=!marker.dataset.metric;
-  metric.textContent=marker.dataset.metric;
-  const source=panel.querySelector(".rollout-insight-source a");
-  source.href=marker.dataset.source;
-}
-
 function renderTask(index){
   activeTask=index;
-  const task=DATA.tasks[index],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),visibleTitle="Best visible reported reward so far",hiddenTitle="Hidden-test reported reward at that checkpoint";
-  const momentBlock=moment?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">One verified rollout</span><h4>What this experiment tried</h4><p class="rollout-insight-run">The highlighted rings are the same ${esc(MODEL[moment.model].name)} experiment in the two score panels. Hover or focus either ring for its record.</p><p class="rollout-insight-note">${esc(moment.note)}</p><p class="rollout-insight-metric"${moment.metric?"":" hidden"}>${esc(moment.metric||"")}</p><p class="rollout-insight-source"><a href="${esc(moment.source)}" target="_blank" rel="noreferrer">Open the source rollout.</a></p></aside>`:"";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div>${momentBlock}<section class="scale-block"><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test reported reward.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
+  const task=DATA.tasks[index],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),visibleTitle="Best visible reported reward so far",hiddenTitle="Hidden-test reported reward at that checkpoint";
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div><section class="scale-block"><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test reported reward.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
-  document.querySelectorAll(".insight-marker").forEach(marker=>{
-    const show=()=>updateRolloutInsight(marker,task);
-    marker.addEventListener("mouseenter",show);marker.addEventListener("focus",show);marker.addEventListener("click",show);
-    marker.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();show()}});
-  });
   bindEfficiencyTooltips();
 }
 
