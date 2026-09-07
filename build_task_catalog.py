@@ -10,7 +10,7 @@ DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoResearchBench
 README_PATH = Path("task-readmes.md")
 CATALOG_PATH = Path("task-catalog.js")
 SITE_DATA_PATH = Path("site-data.js")
-GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/main"
+GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/f0cfffb69c854c4b2b05f97a2b22dd38525fb55e"
 
 CATEGORY_ORDER = [
     "Model training",
@@ -23,12 +23,12 @@ CATEGORY_ORDER = [
 ]
 
 TASKS = [
-    ("2406-07553-cpu-llm-decode-throughput", "CPU LLM decode throughput", "Faster CPU generation", "Speed up batched text generation on an eight core CPU."),
-    ("2407-19804-budgeted-imputation-mcar50", "Budgeted imputation MCAR 50", "Fill missing values", "Fill in missing table values quickly and accurately."),
-    ("2408-08998-shortest-valid-ci-l2-ece", "Shortest valid CI L2 ECE", "Calibration error ranges", "Give tight yet valid ranges for classifier calibration error."),
-    ("2501-05646-hicard-latent-encoder", "HiCARD latent encoder", "Encode rare categories", "Encode rare categories into eight numbers without using labels."),
-    ("2502-07114-sketched-newton-cov-estimator", "Sketched Newton covariance estimator", "Estimate parameter uncertainty", "Predict how much final model parameters vary across reruns."),
-    ("2508-09093-label-efficient-risk-estimator", "Label efficient risk estimator", "Measure loss cheaply", "Estimate a classifier's average loss using few true labels."),
+    ("cpu-llm-decode-throughput", "CPU LLM decode throughput", "Faster CPU generation", "Speed up batched text generation on an eight core CPU."),
+    ("budgeted-imputation-mcar50", "Budgeted imputation MCAR 50", "Fill missing values", "Fill in missing table values quickly and accurately."),
+    ("shortest-valid-ci-l2-ece", "Shortest valid CI L2 ECE", "Calibration error ranges", "Give tight yet valid ranges for classifier calibration error."),
+    ("hicard-latent-encoder", "HiCARD latent encoder", "Encode rare categories", "Encode rare categories into eight numbers without using labels."),
+    ("sketched-newton-cov-estimator", "Sketched Newton covariance estimator", "Estimate parameter uncertainty", "Predict how much final model parameters vary across reruns."),
+    ("label-efficient-risk-estimator", "Label efficient risk estimator", "Measure loss cheaply", "Estimate a classifier's average loss using few true labels."),
     ("act-tensor-sparse-panel-imputation-r2", "ACT tensor sparse panel imputation", "Restore sparse tables", "Reconstruct missing company financial values from mostly empty tables."),
     ("activeprune-al-unlabeled-pool-pruning", "ActivePrune unlabeled pool pruning", "Select useful documents", "Shrink the unlabeled document pool before each labeling round."),
     ("budgeted-covtype-dual-market-open", "Budgeted Covtype dual market", "Budget labels and features", "Classify forest cover while buying labels and features cheaply."),
@@ -38,19 +38,19 @@ TASKS = [
     ("coreset-selection-group-robust-waterbirds", "Waterbirds group robust coreset selection", "Choose balanced images", "Choose training bird images that cover hidden background groups."),
     ("dctabeval-aeac-pooled-cat-statistics", "DCTabEval pooled categorical statistics", "Rank access requests", "Rank employee access requests by how likely they are approved."),
     ("mlh-coco-16bit-hash-head-map5000", "COCO 16 bit hash head", "Learn image codes", "Learn 16 bit image codes for fast semantic search."),
-    ("p2505-06461-cpu-decoder-graph-executor", "CPU decoder graph executor", "Faster CPU decoding", "Run transformer decoder graphs faster on CPUs without losing accuracy."),
+    ("cpu-decoder-graph-executor", "CPU decoder graph executor", "Faster CPU decoding", "Run transformer decoder graphs faster on CPUs without losing accuracy."),
     ("reppo-reliable-onpolicy-control-trainer", "RePPO reliable on policy control", "Train reliable controllers", "Train reliable robot controllers from scratch under tight budgets."),
     ("sopcc-online-chance-constrained-policy", "SOPCC online chance constrained policy", "Plan safe routes", "Plan reward collecting routes when travel costs are random."),
     ("sparse-elsa-item-embeddings-8nnz", "Sparse ELSA item embeddings", "Learn sparse recommendations", "Build sparse item embeddings that rank users' hidden items well."),
     ("tgat-milp-branching-node-count", "TGAT MILP branching", "Reduce solver searches", "Choose branching variables so an integer solver explores fewer nodes."),
     ("vas-maskless-deployment-feasibility", "VAS maskless deployment feasibility", "Predict valid actions", "Predict valid game actions so a frozen policy scores higher."),
     ("grpo-rl-halfcheetah-advantage-estimator", "HalfCheetah advantage estimator", "Estimate action value", "Estimate how much each action helped a simulated running robot."),
-    ("2411-05007-svdquant-w4a4-psnr", "SVDQuant W4A4 reconstruction", "Compress image generation", "Shrink an image generator to four bits without ruining images."),
+    ("svdquant-w4a4-psnr", "SVDQuant W4A4 reconstruction", "Compress image generation", "Shrink an image generator to four bits without ruining images."),
     ("fast-adv-budgeted-pgd50-robust-cifar10", "FastAdv budgeted PGD50", "Resist image attacks", "Train an attack resistant image classifier in three minutes."),
     ("fastercache-budgeted-video-dit-cache-policy", "FasterCache video DiT policy", "Speed video generation", "Reuse earlier predictions to speed up video generation faithfully."),
     ("fastergcg-candidate-token-rank-ccc", "FasterGCG candidate token ranking", "Rank prompt changes", "Rank candidate prompt token swaps without running the language model."),
     ("less-is-more-pretrain-token-budget-selector", "Less Is More token budget selection", "Choose training documents", "Pick web documents that best pretrain a small language model."),
-    ("sae2406-sparse-dict-nmse-frontier", "Sparse autoencoder dictionary learning", "Rebuild model activations", "Rebuild language model activations from a few dictionary vectors."),
+    ("sae-sparse-dict-nmse-frontier", "Sparse autoencoder dictionary learning", "Rebuild model activations", "Rebuild language model activations from a few dictionary vectors."),
     ("ties-merging-clip-vitl14-eight-task-merge", "TIES CLIP model merging", "Merge vision models", "Merge eight fine tuned vision encoders into one accurate classifier."),
 ]
 
