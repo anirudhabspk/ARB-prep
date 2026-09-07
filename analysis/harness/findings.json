@@ -13,7 +13,7 @@
       "task": "Shortest valid CI L2 ECE",
       "scores": {
         "standard_opus": 0.531637467023,
-        "standard_sol": 0.531083307012,
+        "standard_sol": 0,
         "codex_sol": 0,
         "claude_opus": 0.529900146916
       }
@@ -49,7 +49,7 @@
       "task": "Waterbirds group robust coreset selection",
       "scores": {
         "standard_opus": 0.519959575543,
-        "standard_sol": 0.498151082937,
+        "standard_sol": 0.476006618864,
         "codex_sol": 0.585514834206,
         "claude_opus": 0.544364508393
       }
@@ -58,8 +58,8 @@
   "native_vs_terminus": {
     "codex_sol": {
       "wins": 3,
-      "losses": 3,
-      "ties": 0,
+      "losses": 2,
+      "ties": 1,
       "missing": 0
     },
     "claude_opus": {

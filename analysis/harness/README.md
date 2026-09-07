@@ -6,13 +6,13 @@ The table counts evaluations whose validation grading finished within 43,200 sec
 
 Claude Code on CPU decode has no grade inside the window. Its last assistant message was about 49 minutes after the first message, but its only grade arrived at 12.34 hours. The cause of that gap remains unresolved. Neither a zero score nor 11 hours of verifier time can be inferred from it.
 
-The Sol baselines for Shortest CI, HiCARD, and Waterbirds remain the original runs. Their later crashes occurred after the 12-hour window. Replacement runs are still below 12 hours at the latest check. Exact replacement IDs are in [TODO.md](../../TODO.md).
+The Sol baselines for Shortest CI and Waterbirds use replacement runs with more than 12 hours of recorded results. HiCARD retains the original run until its replacement reaches 12 hours. Exact replacement IDs are in [TODO.md](../../TODO.md).
 
 One run per harness and model supports a descriptive comparison, not a reliable estimate of an average harness advantage.
 
 ## Sources
 
-Pinned index commit: `cdd1d9d7ec65f39bd923628b4467d88e270d6e38`. The selected iteration records are in [source.json](source.json). Rebuild with `python3 build_harness_data.py` from the repository root.
+Pinned index commit: `0f96acb4598de116b82c621c170a2eb5a1cea19e`. The selected iteration records are in [source.json](source.json). Rebuild with `python3 build_harness_data.py` from the repository root.
 
 ### CPU LLM decode throughput
 
@@ -24,7 +24,7 @@ Pinned index commit: `cdd1d9d7ec65f39bd923628b4467d88e270d6e38`. The selected it
 ### Shortest valid CI L2 ECE
 
 - standard_opus, v10: [evaluation](https://horizon.bespokelabs.ai/evaluations/2082b3fe-ac32-4952-850f-aa643aa3226d).
-- standard_sol, v10: [evaluation](https://horizon.bespokelabs.ai/evaluations/fb502080-1a2e-4c5e-92a3-05e1681a56c2).
+- standard_sol, v10: [evaluation](https://horizon.bespokelabs.ai/evaluations/9cce644b-508d-49bf-998c-6fa67fdb44e9).
 - codex_sol, v10: [evaluation](https://horizon.bespokelabs.ai/evaluations/7a73f8a2-8a0b-4537-a9ed-400e0f2b99b3).
 - claude_opus, v10: [evaluation](https://horizon.bespokelabs.ai/evaluations/92cddea6-7803-4492-aff8-88bfe708b9cc).
 
@@ -52,20 +52,20 @@ Pinned index commit: `cdd1d9d7ec65f39bd923628b4467d88e270d6e38`. The selected it
 ### Waterbirds group robust coreset selection
 
 - standard_opus, v9: [evaluation](https://horizon.bespokelabs.ai/evaluations/c406b882-f939-40a6-bba8-cc838ba04270).
-- standard_sol, v9: [evaluation](https://horizon.bespokelabs.ai/evaluations/1b671667-6354-47cb-bed3-884ccb540edb).
+- standard_sol, v9: [evaluation](https://horizon.bespokelabs.ai/evaluations/27a6ab97-84b1-436b-b5be-702cdd9bbebd).
 - codex_sol, v9: [evaluation](https://horizon.bespokelabs.ai/evaluations/9a09a24e-31e0-456d-8256-331c42ca8ac1).
 - claude_opus, v9: [evaluation](https://horizon.bespokelabs.ai/evaluations/7bc25993-2f45-4457-ba2d-89573f04c6fd).
 
 
 ## Descriptive findings
 
-The final hidden test model order agrees on four of five fully observed tasks. Waterbirds reverses the order. CPU decode is excluded from this count because Claude Code has no grade inside the window. CI's Terminus scores are close (0.531637 versus 0.531083); this ordering is descriptive, not a meaningful statistical separation.
+The final hidden test model order agrees on four of five fully observed tasks. Waterbirds reverses the order. CPU decode is excluded from this count because Claude Code has no grade inside the window.
 
-Codex with Sol has higher hidden test scores than Terminus with Sol on three tasks and lower scores on three. Claude Code with Opus has higher scores on two tasks, lower scores on three, and no in-window grade on CPU decode. Both native harnesses improve CausalRivers and Waterbirds and score lower on HiCARD. Results come from one run per combination. No claim of a reliable general harness advantage is supported.
+Codex with Sol has higher hidden test scores than Terminus with Sol on three tasks, lower scores on two, and ties on one (including CPU decode in these counts). Claude Code with Opus has higher scores on two tasks, lower scores on three, and no in-window grade on CPU decode. Both native harnesses improve CausalRivers and Waterbirds and score lower on HiCARD. Results come from one run per combination. No claim of a reliable general harness advantage is supported.
 
 See [findings.json](findings.json) for the exact scores. Recompute with `python3 analysis/harness/summarize.py`. Update the aggregate table and the blog's harness-findings paragraph whenever baselines change.
 
-The latest API results were refreshed for all linked runs; the 24 plotted runs' iteration records were unchanged. The live index includes three pending Sol replacements. Worker logs for the CPU delay remain unavailable through Horizon. Direct Cloud Logging access requires renewing the existing gcloud login; no authentication settings were changed.
+The September 7 update refreshed the three Sol replacement results and adopted Shortest CI and Waterbirds. Other source records retain the earlier review snapshot. HiCARD remains pending. Worker logs for the CPU delay remain unavailable through Horizon. Direct Cloud Logging access requires renewing the existing gcloud login; no authentication settings were changed.
 
 Full transcript refresh requests stalled for some runs. [freshness.json](freshness.json) records each cached transcript timestamp. The blog conclusions use freshly checked score records, not unverified behavior inferred from stale transcripts.
 
@@ -77,8 +77,8 @@ The aggregate hidden test ranking is Opus above Sol with both harnesses. This do
 
 ## Submission count and overfitting
 
-Across the five common tasks, mean validation minus hidden test reward is 0.1076 for Codex/Sol versus 0.0074 for Terminus/Sol. Shortest CI accounts for the larger gap: without it, those means are 0.0103 and 0.0155 respectively. Claude Code/Opus has mean gap -0.0039, versus -0.0116 for Terminus/Opus. Its hidden test mean therefore does not fall below validation. These descriptive gaps do not establish a causal effect of additional submissions. A zero hidden reward on a thresholded task should not automatically be called overfitting.
+Across the five common tasks, mean validation minus hidden test reward is 0.1076 for Codex/Sol versus 0.1143 for Terminus/Sol. Shortest CI accounts for most of both gaps: without it, those means are 0.0103 and 0.0180 respectively. Claude Code/Opus has mean gap -0.0039, versus -0.0116 for Terminus/Opus. Its hidden test mean therefore does not fall below validation. These descriptive gaps do not establish a causal effect of additional submissions. A zero hidden reward on a thresholded task should not automatically be called overfitting.
 
 ## Announced budgets
 
-The plots compare the first 12 hours. All 12 Terminus runs were told they had 24 hours. All 12 native harness runs were told they had 12 hours. This may affect how agents pace their work, so the comparison does not isolate harness choice from the announced budget.
+The plots compare the first 12 hours. The original 12 Terminus runs were told they had 24 hours. All 12 native harness runs were told they had 12 hours. The replacement runs use the same first-12-hour comparison; their prompt budgets were not rechecked in this score-only update. This may affect how agents pace their work, so the comparison does not isolate harness choice from the announced budget.
