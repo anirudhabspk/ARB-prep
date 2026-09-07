@@ -108,7 +108,7 @@ def run_stats(run, fetched_at, duration):
         "validation": auc("bestValidation"),
         "test": auc("testAtBest"),
         "final": curve["selected"].get("private_score") if curve["selected"] else None,
-        "cost": run.get("cost_usd"),
+        "cost": run.get("api_cost_usd"),
     }
 
 
@@ -296,7 +296,7 @@ def main() -> None:
                     "attempt_status",
                     "created_at",
                     "completed_at",
-                    "cost_usd",
+                    "api_cost_usd",
                     "output_tokens",
                     "evaluation_id",
                     "source_status",
@@ -349,7 +349,7 @@ def main() -> None:
                 {
                     "model": run["model"],
                     "hours": curve["end"] / 3600,
-                    "cost": run.get("cost_usd"),
+                    "apiCost": run.get("api_cost_usd"),
                     "outputTokens": run.get("output_tokens"),
                     "evaluationId": run.get("evaluation_id"),
                     "sourceStatus": run.get("source_status"),

@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from build_site_data import run_curve, selected_iterations
+from build_site_data import run_curve, run_stats, selected_iterations
 
 
 class EvaluationPolicyTest(unittest.TestCase):
@@ -57,6 +57,26 @@ class EvaluationPolicyTest(unittest.TestCase):
         }
 
         self.assertEqual([item["iteration"] for item in selected_iterations(run)], [1])
+
+    def test_stats_use_only_api_ledger_cost(self):
+        run = {
+            "attempt_status": "completed",
+            "api_cost_usd": 12.5,
+            "cost_usd": 99,
+            "display_end_seconds": 100,
+            "iterations": [
+                {
+                    "iteration": 1,
+                    "public_score": 0.5,
+                    "private_score": 0.4,
+                    "public_elapsed_seconds": 50,
+                }
+            ],
+        }
+
+        stats = run_stats(run, datetime.now(timezone.utc), 100)
+
+        self.assertEqual(stats["cost"], 12.5)
 
 
 if __name__ == "__main__":

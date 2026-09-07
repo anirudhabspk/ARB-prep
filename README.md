@@ -9,3 +9,5 @@ Task descriptions live in `task-readmes.md`. Run `python3 build_task_catalog.py`
 See [`evaluation-replacements.md`](evaluation-replacements.md) for evaluations that must be replaced after their reruns finish.
 
 `build_site_data.py` accepts explicit `display_end_seconds`, `truncate_at_seconds`, and `valid_through_iteration` fields in each run. These fields make display and cutoff decisions explicit. Run `python -m unittest discover -s tests` after changing this policy.
+
+The `api_cost_usd` field must come from the API usage ledger. Do not replace missing API costs with rollout or evaluation costs.
