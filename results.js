@@ -590,4 +590,21 @@ function decorateModelEffortDots(){
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateModelEffortDots()}
+function decorateHpoChartBars(){
+  document.querySelectorAll(".hpo-chart-row").forEach(row=>{
+    if(row.dataset.companyLogoApplied)return;
+    const name=row.querySelector(".hpo-chart-name")?.textContent.trim();
+    const key=ORDER.find(candidate=>MODEL[candidate].name===name);
+    const svg=row.querySelector("svg"),bar=svg?.querySelector("rect");
+    if(!key||!svg||!bar)return;
+    const barEnd=Number(bar.getAttribute("x"))+Number(bar.getAttribute("width"));
+    const marker=document.createElementNS("http://www.w3.org/2000/svg","g");
+    marker.setAttribute("class","hpo-chart-logo");
+    marker.setAttribute("aria-hidden","true");
+    marker.innerHTML=modelLogoSvg(key,barEnd,16,15);
+    svg.appendChild(marker);
+    row.dataset.companyLogoApplied="true";
+  });
+}
+
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateModelEffortDots();decorateHpoChartBars()}
