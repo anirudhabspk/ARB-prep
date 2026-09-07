@@ -64,7 +64,7 @@ function harnessChart(split,title){
   for(const hour of [0,2,4,6,8,10,12])body+=`<text class="tick" x="${x(hour)}" y="303" text-anchor="middle">${hour}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${B}"/><line class="axis" x1="${L}" x2="${W-R}" y1="${B}" y2="${B}"/>`;
   for(const series of seriesData){
-    const points=series.scores.map((score,hour)=>({hour,score})).filter(point=>Number.isFinite(point.score));
+    const points=series.scores.map((score,hour)=>({hour,score})).filter(point=>point.hour>0&&Number.isFinite(point.score));
     if(!points.length)continue;
     let path=`M${x(points[0].hour)} ${y(points[0].score)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].hour)} ${y(points[index-1].score)}L${x(points[index].hour)} ${y(points[index].score)}`;
