@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Read an AutoResearchBench task and view its model performance curves.">
+<title>Task results | AutoResearchBench</title>
+<link rel="stylesheet" href="site.css?v=task-cards-20260907">
+</head>
+<body data-page="tasks">
+<header class="topbar">
+  <div class="brand">AutoResearchBench</div>
+  <nav class="toplinks" aria-label="Primary"><a href="blog.html#benchmark">Benchmark</a><a href="blog.html#results">Preliminary results</a><a href="blog.html#examples">Tasks</a></nav>
+</header>
+<main class="page page-single">
+  <article id="detail-view" hidden>
+    <a class="back-link" id="detail-back" href="blog.html#examples">← All tasks</a>
+    <p class="task-eyebrow">AutoResearchBench preview · Task · <code class="slug" id="detail-slug"></code></p>
+    <h1 class="detail-title" id="detail-title" tabindex="-1"></h1>
+    <p class="task-summary" id="detail-summary"></p>
+    <ul class="task-meta-row" id="detail-meta"></ul>
+    <section class="detail-section" aria-labelledby="task-section-title">
+      <h2 class="section-label" id="task-section-title">Task</h2>
+      <div class="readme-prose" id="detail-readme"></div>
+    </section>
+    <section class="detail-section" aria-labelledby="performance-section-title">
+      <h2 class="section-label" id="performance-section-title">Performance</h2>
+      <p class="task-intro">Click a model name to hide or show its curve.</p>
+      <div id="task-view"></div>
+    </section>
+  </article>
+  <section class="task-missing" id="task-missing" hidden>
+    <h1 tabindex="-1">No task named <code id="missing-slug"></code></h1>
+    <p><a class="back-link" href="blog.html#examples">Return to all tasks.</a></p>
+  </section>
+</main>
+<script src="site-data.js?v=task-cards-20260907"></script>
+<script src="rollout-insights.js?v=task-cards-20260907"></script>
+<script src="raw-score-maps.js?v=task-cards-20260907"></script>
+<script src="difficulty-reward-maps.js?v=task-cards-20260907"></script>
+<script src="harness-ablation-data.js?v=task-cards-20260907"></script>
+<script src="task-catalog.js?v=task-cards-20260907"></script>
+<script src="results.js?v=harness-task-picker-20260907"></script>
+<script src="tasks-page.js?v=task-cards-20260907"></script>
+</body>
+</html>
