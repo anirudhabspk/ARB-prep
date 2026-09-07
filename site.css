@@ -54,6 +54,18 @@
 .task-file-line{display:flex;width:max-content;min-width:100%}
 .task-file-line-number{position:sticky;left:0;width:4.25rem;flex:0 0 4.25rem;padding:0 12px 0 8px;border-right:1px solid var(--line);background:var(--soft);color:var(--muted);text-align:right;user-select:none}
 .task-file-line-content{display:block;min-width:max-content;padding:0 16px;white-space:pre}
+.task-files-viewer .syntax-comment{color:#6e7781}
+.task-files-viewer .syntax-keyword,.task-files-viewer .syntax-operator,.task-files-viewer .syntax-markup{color:#cf222e}
+.task-files-viewer .syntax-string,.task-files-viewer .syntax-code{color:#0a3069}
+.task-files-viewer .syntax-constant,.task-files-viewer .syntax-number{color:#0550ae}
+.task-files-viewer .syntax-decorator,.task-files-viewer .syntax-property,.task-files-viewer .syntax-variable{color:#953800}
+.task-files-viewer .syntax-function,.task-files-viewer .syntax-section{color:#8250df}
+.task-files-viewer .syntax-heading{color:#0550ae}
+.task-files-viewer .syntax-tag{color:#116329}
+.task-files-viewer .syntax-link{color:#0969da}
+.task-files-viewer .syntax-strong,.task-files-viewer .syntax-heading{font-weight:700}
+.task-files-viewer .syntax-emphasis{font-style:italic}
+.task-files-viewer .syntax-punctuation{color:#57606a}
 .task-file-content>.task-files-status{display:flex;align-items:center;justify-content:center;min-height:0;flex:1 1 auto;padding:28px;color:var(--muted);font-size:13px;text-align:center}
 .task-files-retry{margin-left:8px}
 .task-files-live{position:absolute;width:1px;height:1px;overflow:hidden;margin:-1px;padding:0;border:0;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
