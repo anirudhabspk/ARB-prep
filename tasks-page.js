@@ -26,11 +26,30 @@
     }
   });
 
+  const legacySlugs = {
+  "p2505-06461-cpu-decoder-graph-executor": "cpu-decoder-graph-executor",
+  "sae2406-sparse-dict-nmse-frontier": "sae-sparse-dict-nmse-frontier",
+  "2407-19804-budgeted-imputation-mcar50": "budgeted-imputation-mcar50",
+  "2502-07114-sketched-newton-cov-estimator": "sketched-newton-cov-estimator",
+  "2501-05646-hicard-latent-encoder": "hicard-latent-encoder",
+  "2408-08998-shortest-valid-ci-l2-ece": "shortest-valid-ci-l2-ece",
+  "2411-05007-svdquant-w4a4-psnr": "svdquant-w4a4-psnr",
+  "2508-09093-label-efficient-risk-estimator": "label-efficient-risk-estimator",
+  "2406-07553-cpu-llm-decode-throughput": "cpu-llm-decode-throughput"
+};
+
   function parseSlug() {
     const raw = location.hash.slice(1);
     if (!raw) return null;
     try {
-      return decodeURIComponent(raw);
+      const decoded = decodeURIComponent(raw);
+      const slug = legacySlugs[decoded] || decoded;
+      if (slug !== decoded) {
+        const url = new URL(location.href);
+        url.hash = slug;
+        history.replaceState(history.state, "", url);
+      }
+      return slug;
     } catch {
       return raw;
     }
@@ -82,7 +101,6 @@
     show(detailView);
     document.getElementById("detail-slug").textContent = entry.slug;
     document.getElementById("detail-title").textContent = entry.title;
-    document.getElementById("detail-summary").textContent = entry.summary;
 
     const meta = document.getElementById("detail-meta");
     meta.replaceChildren();

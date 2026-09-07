@@ -5,7 +5,7 @@
 ## Model training
 
 ### Unsupervised representation learning for tabular data
-<!-- slug: 2501-05646-hicard-latent-encoder -->
+<!-- slug: hicard-latent-encoder -->
 
 *Category: Model training. Subcategory: Representation learning.*
 
@@ -63,7 +63,7 @@ We have a pretrained CLIP ViT L 14 vision encoder and eight copies fine tuned on
 ## Algorithms and optimization
 
 ### Estimate parameter uncertainty from a model’s optimization trajectory
-<!-- slug: 2502-07114-sketched-newton-cov-estimator -->
+<!-- slug: sketched-newton-cov-estimator -->
 
 *Category: Algorithms and optimization. Subcategory: Statistical methods.*
 
@@ -107,7 +107,7 @@ The agent must help a mixed-integer programming solver find the best solution wh
 ## Data engineering and curation
 
 ### High throughput data imputation
-<!-- slug: 2407-19804-budgeted-imputation-mcar50 -->
+<!-- slug: budgeted-imputation-mcar50 -->
 
 *Category: Data engineering and curation. Subcategory: Imputation.*
 
@@ -151,21 +151,21 @@ The agent must choose which web documents to use when pretraining a language mod
 ## Systems and efficiency
 
 ### Faster language model generation on CPUs
-<!-- slug: 2406-07553-cpu-llm-decode-throughput -->
+<!-- slug: cpu-llm-decode-throughput -->
 
 *Category: Systems and efficiency. Subcategory: Inference.*
 
 This task optimizes the inference performance of a 12 layer GPT2 style model on an eight core CPU. The agent is required to construct an inference server for greedy decoding batches of varying length prompts. Requests finish at different times, so unused work in a batch can erase the benefit of processing requests together. One may start by batching requests of similar lengths and removing repeated setup from each generation step. Further gains may come from changing the schedule as requests finish, and reducing memory movement between CPU operations.
 
 ### Accelerating transformer decoder graphs on CPUs
-<!-- slug: p2505-06461-cpu-decoder-graph-executor -->
+<!-- slug: cpu-decoder-graph-executor -->
 
 *Category: Systems and efficiency. Subcategory: Inference.*
 
 The agent must build a CPU executor for transformer decoder graphs that produces nearly the same hidden states as a fixed reference implementation but runs faster. For each graph and set of weights, it returns a function that will process many new input sequences using those same weights. The graph specifies the decoder's operations, including normalization, attention, position encoding, and feed-forward layers; the agent may change how those operations are scheduled or combined, but it cannot omit required computation, and every output must remain within strict numerical error limits. It may precompute values derived from fixed weights, fuse neighboring operations, reuse memory buffers, call efficient matrix routines, and specialize separate paths for single-token and multi-token inputs. The evaluator times both executors head-to-head on unseen graph shapes. The score is the geometric mean of the reference runtime divided by the submitted runtime, so larger speedups are better; one inaccurate instance makes the submission score zero.
 
 ### Fast image generation model quantization
-<!-- slug: 2411-05007-svdquant-w4a4-psnr -->
+<!-- slug: svdquant-w4a4-psnr -->
 
 *Category: Systems and efficiency. Subcategory: Compression.*
 
@@ -181,14 +181,14 @@ The agent must reduce the cost of a fixed video diffusion model while keeping it
 ## Evaluation, calibration, and robustness
 
 ### Tight confidence intervals for prediction uncertainty estimation
-<!-- slug: 2408-08998-shortest-valid-ci-l2-ece -->
+<!-- slug: shortest-valid-ci-l2-ece -->
 
 *Category: Evaluation, calibration, and robustness. Subcategory: Metric estimation.*
 
 The task provides labels and class probabilities from classifiers with 2 to 50 classes, and samples of 200 to 10,000 rows. The agent is tasked with returning a short confidence interval for _squared calibration error_ among the one to three most likely classes. This interval is a range for how closely the stated chances match the observed results, and the interval itself must include the _true_ error in at least some fraction of repeated samples. Sampling noise changes with the class count and the shape of the probabilities, so a narrow interval can miss the true error in some settings. One may start with a standard range based on the sample size and the observed error. Further gains may come from better estimates of sampling noise and ranges that use the most likely probabilities.
 
 ### Estimating model performance without all labels
-<!-- slug: 2508-09093-label-efficient-risk-estimator -->
+<!-- slug: label-efficient-risk-estimator -->
 
 *Category: Evaluation, calibration, and robustness. Subcategory: Metric estimation.*
 
@@ -213,7 +213,7 @@ An automated red-team optimizer modifies a prompt one position at a time to move
 ## Interpretability
 
 ### Sparse Coding of Language Model Activations
-<!-- slug: sae2406-sparse-dict-nmse-frontier -->
+<!-- slug: sae-sparse-dict-nmse-frontier -->
 
 *Category: Interpretability.*
 

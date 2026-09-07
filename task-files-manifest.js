@@ -1,8 +1,8 @@
 window.ARB_TASK_FILES = {
   "sourceRepository": "bespokelabsai/AutoResearchBench-Preview-Tasks",
-  "sourceCommit": "041b8279e95729eae275d7ac70940750912275fe",
+  "sourceCommit": "f0cfffb69c854c4b2b05f97a2b22dd38525fb55e",
   "tasks": {
-    "2406-07553-cpu-llm-decode-throughput": {
+    "cpu-llm-decode-throughput": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -211,7 +211,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2407-19804-budgeted-imputation-mcar50": {
+    "budgeted-imputation-mcar50": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -360,7 +360,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2408-08998-shortest-valid-ci-l2-ece": {
+    "shortest-valid-ci-l2-ece": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -491,7 +491,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2501-05646-hicard-latent-encoder": {
+    "hicard-latent-encoder": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -592,7 +592,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2502-07114-sketched-newton-cov-estimator": {
+    "sketched-newton-cov-estimator": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -771,7 +771,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2508-09093-label-efficient-risk-estimator": {
+    "label-efficient-risk-estimator": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -2087,7 +2087,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "p2505-06461-cpu-decoder-graph-executor": {
+    "cpu-decoder-graph-executor": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -3166,7 +3166,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "2411-05007-svdquant-w4a4-psnr": {
+    "svdquant-w4a4-psnr": {
       "defaultFile": "instruction.md",
       "files": [
         {
@@ -3815,7 +3815,7 @@ window.ARB_TASK_FILES = {
         }
       ]
     },
-    "sae2406-sparse-dict-nmse-frontier": {
+    "sae-sparse-dict-nmse-frontier": {
       "defaultFile": "instruction.md",
       "files": [
         {
