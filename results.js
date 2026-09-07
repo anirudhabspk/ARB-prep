@@ -316,9 +316,6 @@ function renderTaskCatalog(){
       const title=document.createElement("h3");
       title.className="task-card-title";
       title.textContent=entry.title;
-      const subtitle=document.createElement("p");
-      subtitle.className="task-card-summary";
-      subtitle.textContent=entry.subtitle||entry.summary;
       const meta=document.createElement("div");
       meta.className="task-card-meta";
       const categoryLabel=document.createElement("span");
@@ -329,7 +326,7 @@ function renderTaskCatalog(){
       compute.className="compute-tag";
       compute.textContent=task?.compute||"";
       meta.append(categoryLabel,compute);
-      card.append(title,subtitle,meta);
+      card.append(title,meta);
       return card;
     });
     grid.replaceChildren(...cards);
