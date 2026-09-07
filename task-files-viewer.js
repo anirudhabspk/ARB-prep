@@ -2,6 +2,8 @@
   "use strict";
 
   const MOBILE_QUERY = "(max-width: 640px)";
+  const MAX_PREVIEW_LINES = 5000;
+  const MAX_HIGHLIGHT_LINE_LENGTH = 20000;
   const loadedFiles = new Map();
   let disposeCurrent = null;
 
@@ -125,6 +127,24 @@
     return tokens;
   }
 
+  function findPythonTriple(source, start) {
+    let quote = null;
+    for (let index = start; index < source.length; index += 1) {
+      const character = source[index];
+      if (quote) {
+        if (character === "\\") index += 1;
+        else if (character === quote) quote = null;
+        continue;
+      }
+      if (character === "#") return null;
+      if (source.startsWith('"""', index) || source.startsWith("'''", index)) {
+        return { index, delimiter: source.slice(index, index + 3) };
+      }
+      if (character === '"' || character === "'") quote = character;
+    }
+    return null;
+  }
+
   function tokenizePython(source, state) {
     const tokens = [];
     let cursor = 0;
@@ -139,23 +159,17 @@
 
     while (cursor < source.length) {
       const remaining = source.slice(cursor);
-      const opening = /(?:[rRuUbBfF]{0,2})("""|''')/.exec(remaining);
+      const opening = findPythonTriple(source, cursor);
       if (!opening) {
         tokenizeWithRules(remaining, SYNTAX_RULES.python).forEach(token => addToken(tokens, token.type, token.text));
         break;
       }
 
-      const start = cursor + opening.index;
-      const comment = source.indexOf("#", cursor);
-      if (comment >= 0 && comment < start) {
-        tokenizeWithRules(remaining, SYNTAX_RULES.python).forEach(token => addToken(tokens, token.type, token.text));
-        break;
-      }
-
+      const start = opening.index;
       tokenizeWithRules(source.slice(cursor, start), SYNTAX_RULES.python)
         .forEach(token => addToken(tokens, token.type, token.text));
-      const delimiter = opening[1];
-      const contentStart = start + opening[0].length;
+      const delimiter = opening.delimiter;
+      const contentStart = start + delimiter.length;
       const end = source.indexOf(delimiter, contentStart);
       if (end < 0) {
         addToken(tokens, "string", source.slice(start));
@@ -169,6 +183,7 @@
   }
 
   function highlightedTokens(source, language, state) {
+    if (source.length > MAX_HIGHLIGHT_LINE_LENGTH) return [{ type: null, text: source }];
     if (language === "python") return tokenizePython(source, state);
     return tokenizeWithRules(source, SYNTAX_RULES[language]);
   }
@@ -233,10 +248,10 @@
 
     section.hidden = false;
     const filesByPath = new Map(files.map(file => [file.path, file]));
-    const defaultPath = filesByPath.has("instruction.md")
-      ? "instruction.md"
-      : filesByPath.has(bundle.defaultFile)
-        ? bundle.defaultFile
+    const defaultPath = filesByPath.has(bundle.defaultFile)
+      ? bundle.defaultFile
+      : filesByPath.has("instruction.md")
+        ? "instruction.md"
         : files[0].path;
     const requestedPath = new URL(window.location.href).searchParams.get("file");
     const initialPath = requestedPath && filesByPath.has(requestedPath) ? requestedPath : defaultPath;
@@ -364,7 +379,7 @@
       const code = document.createElement("code");
       const syntaxState = {};
       const lines = text.split("\n");
-      lines.forEach((sourceLine, index) => {
+      lines.slice(0, MAX_PREVIEW_LINES).forEach((sourceLine, index) => {
         const row = element("span", "task-file-line");
         const lineNumber = element("span", "task-file-line-number", String(index + 1));
         lineNumber.setAttribute("aria-hidden", "true");
@@ -378,6 +393,14 @@
       });
       pre.appendChild(code);
       content.replaceChildren(pre);
+      if (lines.length > MAX_PREVIEW_LINES) {
+        const note = element(
+          "p",
+          "task-file-preview-note",
+          `Preview limited to the first ${MAX_PREVIEW_LINES.toLocaleString()} of ${lines.length.toLocaleString()} lines. Copy, Download, and View source include the complete file.`,
+        );
+        content.appendChild(note);
+      }
     }
 
     function expandAncestors(path) {
@@ -493,7 +516,7 @@
     addNodes(tree, treeList);
 
     function handleViewportChange(event) {
-      if (!event.matches) disclosure.open = true;
+      disclosure.open = !event.matches;
     }
 
     function handleKeydown(event) {

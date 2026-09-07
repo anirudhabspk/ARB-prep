@@ -1,0 +1,1 @@
+A single long local search plateaus; because the objective is exactly computable and the worst boxes are identifiable, the gain comes from many restarts refined against those boxes rather than from one deeper descent.

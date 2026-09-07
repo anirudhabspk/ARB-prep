@@ -1,0 +1,1 @@
+Hand-weighted combinations of lag features look strong locally and transfer poorly; the improvement is to learn the combiner from the regions you are given, and to add a term for whether a link survives conditioning on the other stations.

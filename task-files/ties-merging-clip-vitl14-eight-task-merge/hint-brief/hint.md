@@ -1,0 +1,1 @@
+Re-tuning the merge coefficients trades interference between domains without removing it; the improvement comes from letting a small shared part of the network be trained jointly on all the domains, which no reweighting of whole task vectors can imitate.

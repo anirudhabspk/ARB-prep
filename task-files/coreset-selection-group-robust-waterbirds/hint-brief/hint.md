@@ -1,0 +1,1 @@
+Selecting by class alone cannot see the hidden attribute, but the attribute is a dominant direction of variation and clustering the embeddings exposes it; the gain is then in allocating the budget across class-by-attribute cells with the rare cell deliberately over-represented.

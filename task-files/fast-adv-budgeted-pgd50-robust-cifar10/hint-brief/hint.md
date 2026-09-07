@@ -1,0 +1,1 @@
+Cheap single-step adversarial training improves steadily and then collapses against a strong attack, with nothing in the training loss to warn you; finding where that turn happens and stopping or strengthening the attack before it is the single largest gain available.

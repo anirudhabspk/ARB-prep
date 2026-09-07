@@ -1,0 +1,1 @@
+Lexical quality heuristics saturate and then mislead: clean, well-formed commercial prose ranks highly on all of them while teaching a language model almost nothing, so the improvement requires a criterion that scores informativeness rather than form.

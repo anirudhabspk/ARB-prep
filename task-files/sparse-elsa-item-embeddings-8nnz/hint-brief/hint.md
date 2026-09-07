@@ -1,0 +1,1 @@
+Generic factorisation into eight dimensions underperforms; the improvement is to spend each row's budget on itself plus a few explicitly chosen item relationships taken from an item-item model, at which point the remaining question is which relationships to keep, not what weights to give them.

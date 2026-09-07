@@ -1,0 +1,1 @@
+Tuning the discount and trace changes little; the advantage is limited by a value baseline fitted on one small on-policy batch and by seeds settling into a poor gait, so the gains come from reducing that estimator's variance and from keeping exploration alive early.

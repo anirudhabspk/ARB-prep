@@ -1,0 +1,1 @@
+The gradient score alone plateaus because a large part of a substitution's true benefit depends on the incoming token rather than the context it enters — a component invisible to any first-order quantity evaluated at the current point.

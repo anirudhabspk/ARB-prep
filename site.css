@@ -66,6 +66,7 @@
 .task-files-viewer .syntax-strong,.task-files-viewer .syntax-heading{font-weight:700}
 .task-files-viewer .syntax-emphasis{font-style:italic}
 .task-files-viewer .syntax-punctuation{color:#57606a}
+.task-file-preview-note{flex:0 0 auto;margin:0;padding:8px 12px;border-top:1px solid var(--line);background:var(--soft);color:var(--muted);font-size:11px;line-height:1.45}
 .task-file-content>.task-files-status{display:flex;align-items:center;justify-content:center;min-height:0;flex:1 1 auto;padding:28px;color:var(--muted);font-size:13px;text-align:center}
 .task-files-retry{margin-left:8px}
 .task-files-live{position:absolute;width:1px;height:1px;overflow:hidden;margin:-1px;padding:0;border:0;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}

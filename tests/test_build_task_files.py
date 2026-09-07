@@ -1,3 +1,4 @@
+import ast
 import hashlib
 import json
 import os
@@ -20,8 +21,8 @@ class BuildTaskFilesTests(unittest.TestCase):
     def tearDown(self):
         self.temp_dir.cleanup()
 
-    def write_task_file(self, relative, data):
-        path = self.task_files_root / build_task_files.TASK_SLUG / relative
+    def write_task_file(self, relative, data, slug=build_task_files.TASK_SLUG):
+        path = self.task_files_root / slug / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
 
@@ -63,7 +64,11 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.write_task_file("task.toml", b"version = 1\n")
         self.write_task_file("data/workload.json", b"{}\n")
 
-        files = build_task_files.build(self.task_files_root, self.manifest_path)
+        files = build_task_files.build(
+            self.task_files_root,
+            self.manifest_path,
+            task_slugs=(build_task_files.TASK_SLUG,),
+        )[build_task_files.TASK_SLUG]
         manifest = self.read_manifest()
 
         paths = [item["path"] for item in files]
@@ -90,14 +95,122 @@ class BuildTaskFilesTests(unittest.TestCase):
         os.symlink(self.root / "outside", link)
 
         with self.assertRaisesRegex(build_task_files.BuildError, "symlink"):
-            build_task_files.build(self.task_files_root, self.manifest_path)
+            build_task_files.build(
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )
         self.assertFalse(self.manifest_path.exists())
+
+    def test_build_excludes_binary_files_but_still_checks_excluded_entries(self):
+        self.write_task_file("instruction.md", b"task\n")
+        self.write_task_file("data.npy", b"binary array")
+
+        files = build_task_files.build(
+            self.task_files_root,
+            self.manifest_path,
+            task_slugs=(build_task_files.TASK_SLUG,),
+        )[build_task_files.TASK_SLUG]
+
+        self.assertEqual([item["path"] for item in files], ["instruction.md"])
+
+        binary_link = self.task_files_root / build_task_files.TASK_SLUG / "excluded.npy"
+        os.symlink(self.root / "outside", binary_link)
+        with self.assertRaisesRegex(build_task_files.BuildError, "symlink"):
+            build_task_files.build(
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )
 
     def test_relative_path_validation_rejects_absolute_and_parent_paths(self):
         for path in ("/absolute", "C:\\absolute", "../outside", "dir/../outside", "dir//file", "..\\outside", "dir/file..json"):
             with self.subTest(path=path):
                 with self.assertRaises(build_task_files.BuildError):
                     build_task_files.validate_relative_path(path)
+
+    def test_load_task_slugs_uses_catalog_order_and_rejects_duplicates(self):
+        catalog_path = self.root / "task-catalog.js"
+        catalog_path.write_text(
+            'window.ARB_TASK_CATALOG = [{"slug":"task-b"},{"slug":"task-a"}];\n',
+            encoding="utf-8",
+        )
+        self.assertEqual(build_task_files.load_task_slugs(catalog_path), ("task-b", "task-a"))
+
+        catalog_path.write_text(
+            'window.ARB_TASK_CATALOG = [{"slug":"task-a"},{"slug":"task-a"}];\n',
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(build_task_files.BuildError, "duplicate"):
+            build_task_files.load_task_slugs(catalog_path)
+
+    def test_repository_catalog_contains_29_safe_unique_slugs(self):
+        slugs = build_task_files.load_task_slugs()
+
+        self.assertEqual(len(slugs), 29)
+        self.assertEqual(len(set(slugs)), 29)
+        self.assertTrue(all(build_task_files.validate_task_slug(slug) == slug for slug in slugs))
+        self.assertTrue((build_task_files.ROOT / ".nojekyll").is_file())
+
+    def test_build_writes_multiple_task_bundles(self):
+        self.write_task_file("README.md", b"task a\n", slug="task-a")
+        self.write_task_file("instruction.md", b"task b\n", slug="task-b")
+
+        files_by_task = build_task_files.build(
+            self.task_files_root,
+            self.manifest_path,
+            task_slugs=("task-b", "task-a"),
+        )
+        manifest = self.read_manifest()
+
+        self.assertEqual(tuple(files_by_task), ("task-b", "task-a"))
+        self.assertEqual(tuple(manifest["tasks"]), ("task-b", "task-a"))
+        self.assertEqual(manifest["tasks"]["task-b"]["defaultFile"], "instruction.md")
+        self.assertEqual(manifest["tasks"]["task-a"]["defaultFile"], "README.md")
+
+    def test_sync_copies_readable_files_for_multiple_tasks(self):
+        repo = self.root / "source"
+        repo.mkdir()
+        self.git(repo, "init", "-q")
+        self.git(repo, "config", "user.email", "tests@example.com")
+        self.git(repo, "config", "user.name", "Test User")
+        source_files = {
+            "task-a/instruction.md": b"task a\n",
+            "task-a/data.npy": b"binary array",
+            "task-b/Dockerfile": b"FROM scratch\n",
+            "task-b/rows.csv": b"x,y\n1,2\n",
+            "task-b/archive.gz": b"compressed",
+        }
+        for relative, data in source_files.items():
+            path = repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        self.git(repo, "add", "task-a", "task-b")
+        self.git(repo, "commit", "-qm", "fixture")
+        commit = self.git(repo, "rev-parse", "HEAD")
+        self.write_task_file("old.txt", b"stale\n", slug="stale-task")
+
+        with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+            files_by_task = build_task_files.sync(
+                repo,
+                commit,
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=("task-a", "task-b"),
+            )
+
+        self.assertEqual(
+            {item["path"] for item in files_by_task["task-a"]},
+            {"instruction.md"},
+        )
+        self.assertEqual(
+            {item["path"] for item in files_by_task["task-b"]},
+            {"Dockerfile", "rows.csv"},
+        )
+        self.assertEqual(
+            {path.name for path in self.task_files_root.iterdir()},
+            {"task-a", "task-b"},
+        )
 
     def test_sync_reads_exact_commit_and_ignores_dirty_worktree(self):
         committed = {
@@ -112,7 +225,13 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.write_task_file("old.txt", b"remove me\n")
 
         with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
-            files = build_task_files.sync(repo, commit, self.task_files_root, self.manifest_path)
+            files = build_task_files.sync(
+                repo,
+                commit,
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )[build_task_files.TASK_SLUG]
 
         destination = self.task_files_root / build_task_files.TASK_SLUG
         actual_paths = sorted(
@@ -129,13 +248,25 @@ class BuildTaskFilesTests(unittest.TestCase):
         for source_ref in ("HEAD", commit[:12]):
             with self.subTest(source_ref=source_ref):
                 with self.assertRaisesRegex(build_task_files.BuildError, "full 40-character"):
-                    build_task_files.sync(repo, source_ref, self.task_files_root, self.manifest_path)
+                    build_task_files.sync(
+                        repo,
+                        source_ref,
+                        self.task_files_root,
+                        self.manifest_path,
+                        task_slugs=(build_task_files.TASK_SLUG,),
+                    )
 
     def test_sync_rejects_an_unapproved_exact_commit(self):
         repo, commit = self.make_source_repo({"instruction.md": b"task\n"})
 
         with self.assertRaisesRegex(build_task_files.BuildError, "approved source commit"):
-            build_task_files.sync(repo, commit, self.task_files_root, self.manifest_path)
+            build_task_files.sync(
+                repo,
+                commit,
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )
 
     def test_sync_rejects_committed_symlinks_without_replacing_destination(self):
         repo = self.root / "source"
@@ -153,31 +284,42 @@ class BuildTaskFilesTests(unittest.TestCase):
 
         with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
             with self.assertRaisesRegex(build_task_files.BuildError, "symlink"):
-                build_task_files.sync(repo, commit, self.task_files_root, self.manifest_path)
+                build_task_files.sync(
+                    repo,
+                    commit,
+                    self.task_files_root,
+                    self.manifest_path,
+                    task_slugs=(build_task_files.TASK_SLUG,),
+                )
 
         destination = self.task_files_root / build_task_files.TASK_SLUG
         self.assertEqual((destination / "keep.txt").read_bytes(), b"existing\n")
         self.assertEqual([path.name for path in destination.iterdir()], ["keep.txt"])
 
     def test_published_bundle_matches_reviewed_release_shape(self):
-        task_root = build_task_files.TASK_FILES_ROOT / build_task_files.TASK_SLUG
-        files = build_task_files.scan_task_tree(task_root)
-        paths = {item["path"] for item in files}
+        slugs = build_task_files.load_task_slugs()
+        files_by_task = build_task_files._scan_task_trees(build_task_files.TASK_FILES_ROOT, slugs)
+        files = [item for task_files in files_by_task.values() for item in task_files]
 
-        self.assertEqual(len(files), 34)
-        self.assertEqual(sum(item["size"] for item in files), 642_824)
-        self.assertEqual(
-            {path for path in paths if Path(path).name == "Dockerfile"},
-            {"environment/Dockerfile", "tests/Dockerfile"},
+        self.assertEqual(tuple(files_by_task), slugs)
+        self.assertEqual({path.name for path in build_task_files.TASK_FILES_ROOT.iterdir()}, set(slugs))
+        self.assertEqual(len(files), 649)
+        self.assertEqual(sum(item["size"] for item in files), 3_802_813)
+        self.assertEqual(sum(item["path"].endswith(".py") for item in files), 225)
+        self.assertEqual(sum(Path(item["path"]).name == "Dockerfile" for item in files), 58)
+        self.assertTrue(all(build_task_files.is_publishable_path(item["path"]) for item in files))
+
+        python_files = build_task_files.TASK_FILES_ROOT.rglob("*.py")
+        self.assertTrue(
+            all(ast.get_docstring(ast.parse(path.read_text(encoding="utf-8")), clean=False) is None for path in python_files)
         )
-        self.assertEqual(sum(path.endswith(".py") for path in paths), 10)
-        self.assertEqual(sum(path.endswith(".sh") for path in paths), 2)
-        self.assertEqual(sum(path.endswith(".json") for path in paths), 12)
 
         manifest_text = build_task_files.MANIFEST_PATH.read_text(encoding="utf-8")
         manifest = json.loads(manifest_text.removeprefix("window.ARB_TASK_FILES = ").removesuffix(";\n"))
         self.assertEqual(manifest["sourceCommit"], build_task_files.SOURCE_COMMIT)
-        self.assertEqual(manifest["tasks"][build_task_files.TASK_SLUG]["files"], files)
+        self.assertEqual(tuple(manifest["tasks"]), slugs)
+        for slug in slugs:
+            self.assertEqual(manifest["tasks"][slug]["files"], files_by_task[slug])
 
     def test_sync_detects_a_staged_path_mismatch_before_replacement(self):
         repo, commit = self.make_source_repo({"instruction.md": b"task\n"})
@@ -191,11 +333,66 @@ class BuildTaskFilesTests(unittest.TestCase):
         with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
             with mock.patch.object(build_task_files, "_write_staged_tree", write_with_extra_file):
                 with self.assertRaisesRegex(build_task_files.BuildError, "staged task files differ"):
-                    build_task_files.sync(repo, commit, self.task_files_root, self.manifest_path)
+                    build_task_files.sync(
+                        repo,
+                        commit,
+                        self.task_files_root,
+                        self.manifest_path,
+                        task_slugs=(build_task_files.TASK_SLUG,),
+                    )
 
         destination = self.task_files_root / build_task_files.TASK_SLUG
         self.assertEqual((destination / "keep.txt").read_bytes(), b"existing\n")
         self.assertEqual([path.name for path in destination.iterdir()], ["keep.txt"])
+
+    def test_sync_rolls_back_the_whole_root_if_post_install_verification_fails(self):
+        repo = self.root / "source"
+        repo.mkdir()
+        self.git(repo, "init", "-q")
+        self.git(repo, "config", "user.email", "tests@example.com")
+        self.git(repo, "config", "user.name", "Test User")
+        for relative, data in {
+            "task-a/instruction.md": b"new task a\n",
+            "task-b/instruction.md": b"new task b\n",
+        }.items():
+            path = repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        self.git(repo, "add", "task-a", "task-b")
+        self.git(repo, "commit", "-qm", "fixture")
+        commit = self.git(repo, "rev-parse", "HEAD")
+        self.write_task_file("keep.txt", b"old task a\n", slug="task-a")
+        self.write_task_file("keep.txt", b"old stale task\n", slug="stale-task")
+
+        real_scan = build_task_files._scan_task_trees
+
+        def reject_installed_tree(task_files_root, task_slugs):
+            real_scan(task_files_root, task_slugs)
+            raise build_task_files.BuildError("forced post-install failure")
+
+        with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+            with mock.patch.object(build_task_files, "_scan_task_trees", reject_installed_tree):
+                with self.assertRaisesRegex(build_task_files.BuildError, "forced post-install failure"):
+                    build_task_files.sync(
+                        repo,
+                        commit,
+                        self.task_files_root,
+                        self.manifest_path,
+                        task_slugs=("task-a", "task-b"),
+                    )
+
+        self.assertEqual(
+            {
+                path.relative_to(self.task_files_root).as_posix(): path.read_bytes()
+                for path in self.task_files_root.rglob("*")
+                if path.is_file()
+            },
+            {
+                "task-a/keep.txt": b"old task a\n",
+                "stale-task/keep.txt": b"old stale task\n",
+            },
+        )
+        self.assertFalse(self.manifest_path.exists())
 
 
 if __name__ == "__main__":

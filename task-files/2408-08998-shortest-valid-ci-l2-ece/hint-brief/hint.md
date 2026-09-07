@@ -1,0 +1,1 @@
+How much coverage margin is going spare differs sharply between sample sizes and ranks, so after the estimator is debiased the remaining length is bought by spending that margin where it exists rather than by tightening everywhere at once — and the score is a cliff, so a regime that runs out of margin loses everything.

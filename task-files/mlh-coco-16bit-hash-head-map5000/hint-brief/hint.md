@@ -1,0 +1,1 @@
+A pairwise similarity objective plateaus well below what the code can do; the improvement is to optimise the ranking that Hamming distance induces, over the same truncated window the metric uses, and to stop the bits from duplicating each other.

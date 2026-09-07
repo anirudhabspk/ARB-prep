@@ -1,0 +1,1 @@
+Once the coefficients are solved exactly on a fixed support, further work on them returns almost nothing — the remaining error is entirely in which atoms were chosen, so the improvement comes from iterating the support against the current residual.
