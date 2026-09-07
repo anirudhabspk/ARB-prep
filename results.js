@@ -46,6 +46,18 @@ function derive(run){let best=-Infinity,pick=null;const points=[];for(const row 
 function timeAuc(points,key,endSeconds){if(!points.length||!endSeconds)return null;let total=0,previousTime=0,previousValue=0;for(const point of points){const time=Math.min(endSeconds,Math.max(previousTime,point.seconds||0));total+=previousValue*(time-previousTime);if(point[key]!=null)previousValue=point[key];previousTime=time}total+=previousValue*Math.max(0,endSeconds-previousTime);return total/endSeconds}
 function runStats(run){return{key:run.model,hours:run.hours,points:run.points}}
 const taskStats=task=>task.models.map(runStats);
+const rewardSplit=key=>key==="bestValidation"?"intermediate":"final";
+
+function difficultyAdjustedReward(task,reportedReward,split,rawMetric=null){
+  const raw=Number.isFinite(rawMetric)?rawMetric:RAW_SCORE_MAPS[task.name]?.invert(reportedReward,split);
+  if(!Number.isFinite(raw))return reportedReward===0?0:null;
+  const reward=DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,split);
+  return Number.isFinite(reward)?Math.max(0,Math.min(1,reward)):null;
+}
+
+function difficultyAdjustedPoint(task,point,key){
+  return difficultyAdjustedReward(task,point[key],rewardSplit(key));
+}
 
 const HARNESS_ABLATION=window.ARB_HARNESS_ABLATIONS;
 const HARNESS_ABLATION_SERIES=[
@@ -56,16 +68,21 @@ const HARNESS_ABLATION_SERIES=[
 ];
 let harnessTask=2,hiddenHarnessSeries=new Set();
 
+function harnessReward(task,series,index,split){
+  const raw=series[`raw_${split}`]?.[index]??null;
+  return difficultyAdjustedReward(task,series[split]?.[index],split==="validation"?"intermediate":"final",raw);
+}
+
 function harnessChartSeries(split){
   return HARNESS_ABLATION_SERIES.filter(series=>!hiddenHarnessSeries.has(series.key)).map(series=>{
     const task=HARNESS_ABLATION.tasks[harnessTask];
-    const scores=task.series[series.key][split];
+    const source=task.series[series.key],scores=HARNESS_ABLATION.hours.map((_,index)=>harnessReward(task,source,index,split));
     return{...series,scores};
   });
 }
 
-function harnessAxisDomain(task){
-  const values=Object.values(task.series).flatMap(series=>[...series.validation.slice(1),...series.test.slice(1)]).filter(Number.isFinite);
+function harnessAxisDomain(seriesData){
+  const values=seriesData.flatMap(series=>series.scores).filter(Number.isFinite);
   if(!values.length)return{lo:0,hi:.6};
   const minimum=Math.min(...values),maximum=Math.max(...values);
   let lo=Math.max(0,Math.floor((minimum-.08)*10)/10),hi=Math.min(1,Math.ceil((maximum+.05)*10)/10);
@@ -79,8 +96,8 @@ function harnessChart(split,title){
   if(!seriesData.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
   const values=seriesData.flatMap(series=>series.scores).filter(Number.isFinite);
   if(!values.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">No values are available for this task.</p></div>`;
-  const {lo,hi}=harnessAxisDomain(HARNESS_ABLATION.tasks[harnessTask]);
-  const step=.1,yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,railTop=229,kinkTop=241,x=hour=>L+hour/12*(W-L-R),y=value=>lo>0?(value<lo?B-(Math.max(0,value)/lo)*(B-railTop):T+(hi-value)/(hi-lo)*(railTop-T)):T+(hi-value)/(hi-lo)*(B-T),axisLabel="Reported reward",formatValue=value=>value.toFixed(1);
+  const {lo,hi}=harnessAxisDomain(seriesData);
+  const step=.1,yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,railTop=229,kinkTop=241,x=hour=>L+hour/12*(W-L-R),y=value=>lo>0?(value<lo?B-(Math.max(0,value)/lo)*(B-railTop):T+(hi-value)/(hi-lo)*(railTop-T)):T+(hi-value)/(hi-lo)*(B-T),axisLabel="Difficulty-adjusted reward",formatValue=value=>value.toFixed(1);
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+B)/2})">${esc(axisLabel)}</text>`;
   for(const value of yTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   for(const hour of [0,2,4,6,8,10,12])body+=`<text class="tick" x="${x(hour)}" y="303" text-anchor="middle">${hour}</text>`;
@@ -101,8 +118,8 @@ function renderHarnessAblations(){
   const container=document.getElementById("harness-ablation-plot");
   if(!container)return;
   const summary=document.getElementById("harness-summary");
-  if(summary){const rows=HARNESS_ABLATION_SERIES.map(s=>{const a=HARNESS_ABLATION.aggregate[s.key];return `<tr><td>${esc(s.name.split(", ")[0])}</td><td>${esc(s.name.split(", ").slice(1).join(", "))}</td><td>${a.validation.toFixed(3)}</td><td>${a.test.toFixed(3)}</td><td>${a.completed_evaluations.toFixed(1)}</td></tr>`}).join("");summary.innerHTML=`<h3>Average results at 12 hours</h3><div class="harness-table-wrap"><table class="harness-table"><thead><tr><th>Harness</th><th>Model</th><th>Validation</th><th>Hidden test</th><th>Completed evaluations</th></tr></thead><tbody>${rows}</tbody></table></div>`;}
-  const task=HARNESS_ABLATION.tasks[harnessTask],visibleTitle="Best validation score so far",testTitle="Hidden test score of the same solution";
+  if(summary){const rows=HARNESS_ABLATION_SERIES.map(s=>{const a=HARNESS_ABLATION.aggregate[s.key],scores=Object.fromEntries(["validation","test"].map(split=>[split,mean(HARNESS_ABLATION.tasks.filter(task=>HARNESS_ABLATION.aggregate_tasks.includes(task.name)).map(task=>{const series=task.series[s.key],index=series[split].length-1;return harnessReward(task,series,index,split)}).filter(Number.isFinite))]));return `<tr><td>${esc(s.name.split(", ")[0])}</td><td>${esc(s.name.split(", ").slice(1).join(", "))}</td><td>${fmt(scores.validation)}</td><td>${fmt(scores.test)}</td><td>${a.completed_evaluations.toFixed(1)}</td></tr>`}).join("");summary.innerHTML=`<h3>Average results at 12 hours</h3><div class="harness-table-wrap"><table class="harness-table"><thead><tr><th>Harness</th><th>Model</th><th>Adjusted validation</th><th>Adjusted hidden test</th><th>Completed evaluations</th></tr></thead><tbody>${rows}</tbody></table></div>`;}
+  const task=HARNESS_ABLATION.tasks[harnessTask],visibleTitle="Best difficulty-adjusted validation reward so far",testTitle="Difficulty-adjusted hidden-test reward of the same solution";
   const legend=HARNESS_ABLATION_SERIES.map(series=>`<button type="button" class="${hiddenHarnessSeries.has(series.key)?"off":""}" data-harness-series="${series.key}" aria-pressed="${!hiddenHarnessSeries.has(series.key)}"><i style="background:repeating-linear-gradient(90deg,${series.color} 0,${series.color} ${series.dash?"7px":"18px"},transparent ${series.dash?"7px":"18px"},transparent ${series.dash?"12px":"18px"})"></i>${esc(series.name)}</button>`).join("");
   const taskPicker=`<label class="harness-task-picker">Task <select>${HARNESS_ABLATION.tasks.map((item,index)=>({item,index})).filter(({item})=>HARNESS_ABLATION.aggregate_tasks.includes(item.name)).sort((a,b)=>(b.item.name==="HiCARD latent encoder")-(a.item.name==="HiCARD latent encoder")).map(({item,index})=>`<option value="${index}"${index===harnessTask?" selected":""}>${esc(item.name)}</option>`).join("")}</select></label>`,missing=HARNESS_ABLATION_SERIES.filter(series=>!task.series[series.key].validation.some(Number.isFinite)).map(series=>series.name),note=missing.length?`<p class="plot-note">${esc(missing.join("; "))}: no evaluation finished within 12 hours. </p>`:"";
   container.innerHTML=`<div class="harness-plot">${taskPicker}<div class="harness-legend" role="group" aria-label="Harness and model series">${legend}</div>${note}<div class="charts">${harnessChart("validation",visibleTitle)}${harnessChart("test",testTitle)}</div></div>`;
@@ -124,8 +141,7 @@ function rawTestCurve(run){
 
 function difficultyAdjustedTestCurve(task,run){
   return backwardRunningTestMinimum(run.points.map(point=>{
-    const raw=RAW_SCORE_MAPS[task.name]?.invert(point.testAtBest,"final")??null;
-    const value=raw==null?(point.testAtBest===0?0:null):DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,"final")??null;
+    const value=difficultyAdjustedPoint(task,point,"testAtBest");
     return{...point,value};
   }).filter(point=>Number.isFinite(point.value)));
 }
@@ -182,7 +198,7 @@ function overviewTrajectories(){
 
 function solveProfiles(){
   const workloads=DATA.tasks.map(task=>{
-    const runs=task.models.map(run=>({key:run.model,points:rawTestCurve(run),validationScores:run.points.map(point=>point.bestValidation).filter(Number.isFinite)})).filter(run=>run.points.length&&run.validationScores.length);
+    const runs=task.models.map(run=>({key:run.model,points:difficultyAdjustedTestCurve(task,run),validationScores:run.points.map(point=>difficultyAdjustedPoint(task,point,"bestValidation")).filter(Number.isFinite)})).filter(run=>run.points.length&&run.validationScores.length);
     if(runs.length<3)return null;
     const target=Math.min(...runs.map(run=>Math.max(...run.validationScores)));
     const hitTimes=Object.fromEntries(runs.map(run=>[run.key,run.points.find(point=>point.value>=target)?.seconds??Infinity]));
@@ -230,7 +246,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the lowest model peak validation score. Time to that target is measured on the raw hidden-test curve, using its backward running minimum so test scores cannot decrease as evaluation time advances. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A workload is solved at the lowest model peak difficulty-adjusted validation reward. Time to that target is measured on the difficulty-adjusted hidden-test curve, using its backward running minimum so test scores cannot decrease as evaluation time advances. Higher is better; a curve farther left reaches that target faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -263,7 +279,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const testOverview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>The log-time trajectory plot uses difficulty-adjusted hidden-test reward on a shared 0–1 scale. The performance profile continues to use raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the lowest model peak validation score. The log-time chart uses the difficulty-adjusted 0–1 test-reward scale, so higher trajectories are directly better.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use difficulty-adjusted rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the lowest model peak difficulty-adjusted validation reward. Higher trajectories and a curve farther left are better.</p></section>`;
   bindOverviewTooltips(target);
 }
 
@@ -278,7 +294,62 @@ function rhoForTasks(tasks){const byModel=modelMeans(tasks),validation=ORDER.map
 function bootstrapRho(tasks,seed){let state=seed>>>0;const samples=[];for(let b=0;b<1200;b++){const sample=[];for(let i=0;i<tasks.length;i++){state=(1664525*state+1013904223)>>>0;sample.push(tasks[Math.floor(state/4294967296*tasks.length)])}samples.push(rhoForTasks(sample))}return[quantile(samples,.025),quantile(samples,.975)]}
 function bootstrapGaps(tasks,seed){let state=seed>>>0;const values=Object.fromEntries(ORDER.map(key=>[key,[]]));for(let b=0;b<1200;b++){const sample=[];for(let i=0;i<tasks.length;i++){state=(1664525*state+1013904223)>>>0;sample.push(tasks[Math.floor(state/4294967296*tasks.length)])}const byModel=modelMeans(sample);ORDER.forEach(key=>values[key].push(relativeGap(mean(byModel[key].validation),mean(byModel[key].test))))}return Object.fromEntries(ORDER.map(key=>[key,[quantile(values[key],.025),quantile(values[key],.975)]]))}
 function bootstrapElo(tasks,referenceKey,seed){let state=seed>>>0;const values=Object.fromEntries(ORDER.map(key=>[key,[]]));for(let b=0;b<300;b++){const sample=[];for(let i=0;i<tasks.length;i++){state=(1664525*state+1013904223)>>>0;sample.push(tasks[Math.floor(state/4294967296*tasks.length)])}const elo=eloFromTasks(sample,200),shift=1000-elo[referenceKey];ORDER.forEach(key=>values[key].push(elo[key]+shift))}return Object.fromEntries(ORDER.map(key=>[key,[quantile(values[key],.025),quantile(values[key],.975)]]))}
-function currentResults(){return{rows:DATA.aggregates,rho:DATA.rank_rho,rho_ci:DATA.rank_rho_ci,referenceName:DATA.elo_reference}}
+function difficultyAdjustedRunStats(task,run){
+  const points=run.points.map(point=>({...point,validation:difficultyAdjustedPoint(task,point,"bestValidation"),test:difficultyAdjustedPoint(task,point,"testAtBest")}));
+  if(!points.some(point=>Number.isFinite(point.validation)&&Number.isFinite(point.test)))return null;
+  const final=[...points].reverse().find(point=>Number.isFinite(point.test))?.test??null;
+  return{validation:timeAuc(points,"validation",run.hours*3600),test:timeAuc(points,"test",run.hours*3600),final,cost:run.apiCost};
+}
+
+// Keep the aggregate cohort aligned with the existing 28-task comparison set.
+const AGGREGATE_EXCLUDED_TASKS=new Set(["TIES CLIP model merging"]);
+function difficultyAdjustedTaskRows(){
+  return DATA.tasks.flatMap(task=>{
+    if(AGGREGATE_EXCLUDED_TASKS.has(task.name))return[];
+    const rows=Object.fromEntries(task.models.map(run=>[run.model,difficultyAdjustedRunStats(task,run)]).filter(([,stats])=>stats));
+    return ORDER.every(key=>rows[key]?.validation!=null&&rows[key]?.test!=null)?[rows]:[];
+  });
+}
+
+function adjustedModelValues(taskRows){
+  const values=Object.fromEntries(ORDER.map(key=>[key,{validation:[],test:[],final:[],cost:[]}]));
+  for(const task of taskRows)for(const key of ORDER){const row=task[key];for(const field of ["validation","test","final","cost"])if(Number.isFinite(row[field]))values[key][field].push(row[field]);}
+  return values;
+}
+
+function rhoForAdjustedTasks(taskRows){
+  const values=adjustedModelValues(taskRows);
+  return spearman(ORDER.map(key=>mean(values[key].validation)),ORDER.map(key=>mean(values[key].test)));
+}
+
+function bootstrapAdjustedRho(taskRows,seed){
+  let state=seed>>>0;const samples=[];
+  for(let b=0;b<1200;b++){const sample=[];for(let i=0;i<taskRows.length;i++){state=(1664525*state+1013904223)>>>0;sample.push(taskRows[Math.floor(state/4294967296*taskRows.length)])}samples.push(rhoForAdjustedTasks(sample));}
+  return[quantile(samples,.025),quantile(samples,.975)];
+}
+
+function bootstrapAdjustedGaps(taskRows,seed){
+  let state=seed>>>0;const values=Object.fromEntries(ORDER.map(key=>[key,[]]));
+  for(let b=0;b<1200;b++){
+    const sample=[];
+    for(let i=0;i<taskRows.length;i++){state=(1664525*state+1013904223)>>>0;sample.push(taskRows[Math.floor(state/4294967296*taskRows.length)]);}
+    const byModel=adjustedModelValues(sample);
+    for(const key of ORDER)values[key].push(relativeGap(mean(byModel[key].validation),mean(byModel[key].test)));
+  }
+  return Object.fromEntries(ORDER.map(key=>[key,[quantile(values[key],.025),quantile(values[key],.975)]]));
+}
+
+let difficultyAdjustedResults=null;
+function currentResults(){
+  if(difficultyAdjustedResults)return difficultyAdjustedResults;
+  const taskRows=difficultyAdjustedTaskRows(),values=adjustedModelValues(taskRows),gaps=bootstrapAdjustedGaps(taskRows,991),sourceByKey=new Map(DATA.aggregates.map(row=>[row.key,row]));
+  const rows=ORDER.map(key=>{
+    const source=sourceByKey.get(key),scores=values[key],validation=mean(scores.validation),test=mean(scores.test),final=mean(scores.final),index=ORDER.indexOf(key);
+    return{...source,validation,validation_ci:bootstrap(scores.validation,100+index),test,test_ci:bootstrap(scores.test,200+index),final,final_ci:bootstrap(scores.final,300+index),gap:relativeGap(validation,test),gap_ci:gaps[key],cost:mean(scores.cost)??source.cost};
+  });
+  difficultyAdjustedResults={rows,rho:rhoForAdjustedTasks(taskRows),rho_ci:bootstrapAdjustedRho(taskRows,7123),referenceName:DATA.elo_reference};
+  return difficultyAdjustedResults;
+}
 function plotDomain(rows,ciKey,includeZero=false){let values=rows.flatMap(row=>row[ciKey]||[]).filter(Number.isFinite);if(!values.length)values=[0,1];let lo=Math.min(...values),hi=Math.max(...values);if(includeZero){lo=Math.min(lo,0);hi=Math.max(hi,0)}const step=niceStep(Math.max(hi-lo,.01)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;if(lo===hi)hi+=step;return{lo,hi,ticks:ticks(lo,hi,step)}}
 function aggregatePlot(title,subtitle,rows,valueKey,ciKey,format="score",wide=false){
   const percent=format==="percent",integer=format==="integer",W=wide?940:470,H=358,L=wide?175:145,R=wide?70:60,T=8,B=32,plotB=H-B,rowH=(plotB-T)/rows.length,domain=plotDomain(rows,ciKey,percent),x=value=>L+(value-domain.lo)/(domain.hi-domain.lo)*(W-L-R),label=value=>percent?pct(value):integer?Math.round(value).toString():fmt(value),tickLabel=value=>percent?Math.round(100*value)+"%":integer?Math.round(value).toString():value.toFixed(2);
@@ -292,6 +363,33 @@ function aggregatePlot(title,subtitle,rows,valueKey,ciKey,format="score",wide=fa
 }
 function costPerformancePlot(rows){const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;let best=-Infinity;const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}body+=`<text class="cost-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Mean API cost per task (USD)</text><text class="cost-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Hidden test AUARC</text><path class="cost-frontier" d="${frontier.map((row,index)=>`${index?"L":"M"}${x(row.cost)},${y(row.test)}`).join(" ")}"/>`;for(const row of rows){const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden test AUARC ${score}`;body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`}const legend=rows.map(row=>`<span class="model-identity">${modelIdentity(row.key,{short:true})}</span>`).join("");return`<article class="metric-plot metric-plot-wide"><h3>Hidden test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p><div class="cost-legend">${legend}</div><div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`}
 function renderAggregates(){const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),test=[...result.rows].sort((a,b)=>b.test-a.test),final=[...result.rows].sort((a,b)=>b.final-a.final),validation=[...result.rows].sort((a,b)=>b.validation-a.validation),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);document.getElementById("aggregate-plots").innerHTML=aggregatePlot("Task-relative Elo","The midpoint of the model ratings is 1000.",elo,"elo","elo_ci","integer",true)+costPerformancePlot(result.rows)+aggregatePlot("Hidden test AUARC","Raw mean across tasks",test,"test","test_ci")+aggregatePlot("Final hidden test","Checkpoint chosen by validation",final,"final","final_ci")+aggregatePlot("Validation AUARC","Raw mean across tasks",validation,"validation","validation_ci")+aggregatePlot("Relative validation to test gap","Lower is better",gap,"gap","gap_ci","percent");bindEfficiencyTooltips();const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1];document.getElementById("leader-score").textContent=Math.round(leader.elo);document.getElementById("leader-name").textContent=leader.name;document.getElementById("rho-score").textContent=`ρ = ${result.rho.toFixed(2)}`;document.getElementById("rho-range").textContent=`Validation AUARC and hidden test AUARC model ranks. The 95% interval is ${result.rho_ci[0].toFixed(2)} to ${result.rho_ci[1].toFixed(2)}.`;document.getElementById("result-notes").innerHTML=`<li>${esc(leader.name)} leads task-relative Elo at ${Math.round(leader.elo)}. ${esc(runnerUp.name)} follows at ${Math.round(runnerUp.elo)}. The rating midpoint is 1000.</li><li>Validation and hidden test ranks broadly agree at ρ = ${result.rho.toFixed(2)}, but ${esc(largestGap.name)} has the largest relative validation to test gap at ${pct(largestGap.gap)}.</li>`}
+function costPerformancePlot(rows){
+  const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
+  let best=-Infinity;
+  const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));
+  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
+  for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}
+  for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}
+  body+=`<text class="cost-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Mean API cost per task (USD)</text><text class="cost-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Difficulty-adjusted hidden-test AUARC</text><path class="cost-frontier" d="${frontier.map((row,index)=>`${index?"L":"M"}${x(row.cost)},${y(row.test)}`).join(" ")}"/>`;
+  for(const row of rows){
+    const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, difficulty-adjusted hidden-test AUARC ${score}`;
+    body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Difficulty-adjusted hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
+  }
+  const legend=rows.map(row=>`<span class="model-identity">${modelIdentity(row.key,{short:true})}</span>`).join("");
+  return`<article class="metric-plot metric-plot-wide"><h3>Difficulty-adjusted hidden-test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p><div class="cost-legend">${legend}</div><div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Difficulty-adjusted hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
+}
+
+function renderAggregates(){
+  const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),test=[...result.rows].sort((a,b)=>b.test-a.test),final=[...result.rows].sort((a,b)=>b.final-a.final),validation=[...result.rows].sort((a,b)=>b.validation-a.validation),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
+  document.getElementById("aggregate-plots").innerHTML=aggregatePlot("Task-relative Elo","Within-task ordering is unchanged by monotone reward rescaling.",elo,"elo","elo_ci","integer",true)+costPerformancePlot(result.rows)+aggregatePlot("Difficulty-adjusted hidden-test AUARC","Mean across tasks",test,"test","test_ci")+aggregatePlot("Difficulty-adjusted final hidden test","Checkpoint chosen by validation",final,"final","final_ci")+aggregatePlot("Difficulty-adjusted validation AUARC","Mean across tasks",validation,"validation","validation_ci")+aggregatePlot("Relative adjusted validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent");
+  bindEfficiencyTooltips();
+  const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1];
+  document.getElementById("leader-score").textContent=Math.round(leader.elo);
+  document.getElementById("leader-name").textContent=leader.name;
+  document.getElementById("rho-score").textContent=`ρ = ${result.rho.toFixed(2)}`;
+  document.getElementById("rho-range").textContent=`Difficulty-adjusted validation and hidden-test AUARC model ranks. The 95% interval is ${result.rho_ci[0].toFixed(2)} to ${result.rho_ci[1].toFixed(2)}.`;
+  document.getElementById("result-notes").innerHTML=`<li>${esc(leader.name)} leads task-relative Elo at ${Math.round(leader.elo)}. ${esc(runnerUp.name)} follows at ${Math.round(runnerUp.elo)}. The rating midpoint is 1000.</li><li>Difficulty-adjusted validation and hidden-test ranks broadly agree at ρ = ${result.rho.toFixed(2)}, but ${esc(largestGap.name)} has the largest relative adjusted validation-to-test gap at ${pct(largestGap.gap)}.</li>`;
+}
 function renderCategories(){const svg=document.getElementById("taxonomy-wheel-svg"),title=document.getElementById("taxonomy-detail-title"),description=document.getElementById("taxonomy-detail-description"),count=document.getElementById("taxonomy-detail-count"),specimens=document.getElementById("taxonomy-detail-specimens");if(!svg||!title||!description||!count||!specimens)return;const ns="http://www.w3.org/2000/svg",cx=210,cy=210,inner=85,outer=164,point=(angle,radius)=>[cx+Math.cos(angle)*radius,cy+Math.sin(angle)*radius],arc=(start,end)=>{const[x1,y1]=point(start,outer),[x2,y2]=point(end,outer),[x3,y3]=point(end,inner),[x4,y4]=point(start,inner),large=end-start>Math.PI?1:0;return`M ${x1} ${y1} A ${outer} ${outer} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${large} 0 ${x4} ${y4} Z`},labelLines=name=>{if(name==="Algorithms and optimization")return["Algorithms","& optimization"];if(name==="Data engineering and curation")return["Data engineering","& curation"];if(name==="Evaluation, calibration, and robustness")return["Evaluation &","robustness"];if(name==="AI safety and alignment")return["AI safety &","alignment"];if(name==="Systems and efficiency")return["Systems &","efficiency"];return name.split(" ").length>1?[name.split(" ")[0],name.split(" ").slice(1).join(" ")]:[name]},groups=[];function addText(className,x,y,value){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;svg.appendChild(text)}function pick(index){const item=CATEGORIES[index];groups.forEach((group,i)=>{group.classList.toggle("is-active",i===index);group.classList.toggle("is-muted",i!==index);group.setAttribute("aria-pressed",String(i===index))});title.textContent=item.name;description.textContent=item.description;count.textContent=`${item.count} ${item.count===1?"task":"tasks"}`;specimens.replaceChildren(...item.specimens.map(specimen=>{const entry=document.createElement("li");entry.textContent=specimen;return entry}))}CATEGORIES.forEach((item,index)=>{const start=-Math.PI/2+index*(Math.PI*2/CATEGORIES.length)+.018,end=-Math.PI/2+(index+1)*(Math.PI*2/CATEGORIES.length)-.018,mid=(start+end)/2,group=document.createElementNS(ns,"g"),path=document.createElementNS(ns,"path"),label=document.createElementNS(ns,"text"),[tx,ty]=point(mid,124),lines=labelLines(item.name);group.classList.add("wheel-segment");group.setAttribute("role","button");group.setAttribute("tabindex","0");group.setAttribute("aria-label",`${item.name}, ${item.count} ${item.count===1?"task":"tasks"}`);group.setAttribute("aria-pressed","false");path.setAttribute("d",arc(start,end));path.setAttribute("fill",item.color);label.setAttribute("class","wheel-label");label.setAttribute("x",tx);label.setAttribute("y",ty-(lines.length-1)*6);lines.forEach((line,lineIndex)=>{const span=document.createElementNS(ns,"tspan");span.setAttribute("x",tx);span.setAttribute("dy",lineIndex===0?0:12);span.textContent=line;label.appendChild(span)});group.append(path,label);group.addEventListener("mouseenter",()=>pick(index));group.addEventListener("focus",()=>pick(index));group.addEventListener("click",()=>pick(index));group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();pick(index)}});svg.appendChild(group);groups.push(group)});const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-title",cx,cy+10,"Task taxonomy");addText("wheel-center-note",cx,cy+31,"29 tasks");pick(0);svg.addEventListener("mouseleave",()=>pick(0))}
 let hiddenModels=new Set(),activeTask=0;
 function taskDomain(stats,key){const values=stats.flatMap(stat=>stat.points.map(point=>point[key]).filter(Number.isFinite)),positive=values.filter(value=>value>0);if(!positive.length)return{lo:0,hi:1,ticks:[0,.2,.4,.6,.8,1],broken:false};const max=Math.max(...positive),endpoints=stats.map(stat=>stat.points.map(point=>point[key]).filter(Number.isFinite).at(-1)).filter(value=>value>0).sort((a,b)=>a-b);let anchor=endpoints[0]||Math.min(...positive);if(endpoints.length>2){const firstGap=endpoints[1]-endpoints[0],other=endpoints.slice(2).map((value,index)=>value-endpoints[index+1]),typical=quantile(other,.5);if(firstGap>Math.max(typical*2,.02))anchor=endpoints[1]}const step=niceStep(Math.max(max-anchor,.01)/5),floorValue=Math.min(anchor,quantile(positive,.025));let lo=Math.floor(floorValue/step)*step-step;if(lo<=0)lo=step;let hi=Math.min(1,Math.ceil(max/step)*step);if(hi-lo<step*3)hi=Math.min(1,hi+step);return{lo,hi:hi===lo?Math.min(1,lo+step):hi,ticks:ticks(lo,hi,step),broken:lo>0}}
@@ -390,9 +488,9 @@ function renderTaskCatalog(){
 }
 
 function taskChart(task,title,key){
-  const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
+  const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key)).map(stat=>({...stat,points:stat.points.map(point=>({...point,plot:difficultyAdjustedPoint(task,point,key)}))}));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
-  const domain=taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel="Reported reward",formatValue=fmt;
+  const domain=taskDomain(stats,"plot"),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel="Difficulty-adjusted reward",formatValue=fmt;
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">${esc(axisLabel)}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
   for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
@@ -400,7 +498,7 @@ function taskChart(task,title,key){
   for(const value of ticks(0,maxHours,hourStep))body+=`<text class="tick" x="${x(value)}" y="303" text-anchor="middle">${Math.round(value)}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
   for(const stat of stats){
-    const points=stat.points.map(point=>({...point,plot:point[key]})).filter(point=>point.plot!=null),color=MODEL[stat.key].color;
+    const points=stat.points.filter(point=>Number.isFinite(point.plot)),color=MODEL[stat.key].color;
     if(!points.length)continue;
     let path=`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
@@ -418,7 +516,7 @@ function compactNumber(value){
 }
 
 function efficiencyPlot(task,title,valueKey,xLabel,formatX){
-  const axisLabel="Reported reward",formatScore=fmt,candidates=task.models.filter(run=>!hiddenModels.has(run.model)).map(run=>{const point=run.points.slice().reverse().find(candidate=>Number.isFinite(candidate.testAtBest));return{run,point,score:point?.testAtBest??null}}),rows=candidates.flatMap(({run,score})=>Number.isFinite(run[valueKey])&&Number.isFinite(score)?[{key:run.model,x:run[valueKey],score}]:[]),missing=candidates.filter(({run,score})=>!Number.isFinite(run[valueKey])||!Number.isFinite(score));
+  const axisLabel="Difficulty-adjusted reward",formatScore=fmt,candidates=task.models.filter(run=>!hiddenModels.has(run.model)).map(run=>{const point=run.points.slice().reverse().find(candidate=>Number.isFinite(candidate.testAtBest));return{run,point,score:point?difficultyAdjustedPoint(task,point,"testAtBest"):null}}),rows=candidates.flatMap(({run,score})=>Number.isFinite(run[valueKey])&&Number.isFinite(score)?[{key:run.model,x:run[valueKey],score}]:[]),missing=candidates.filter(({run,score})=>!Number.isFinite(run[valueKey])||!Number.isFinite(score));
   const missingNote=missing.length?`<div class="efficiency-unavailable"><strong>Source data unavailable</strong>${missing.map(({run})=>`<span><i style="background:${MODEL[run.model]?.color||"#4D4D4D"}"></i>${esc(MODEL[run.model]?.name||run.model)}</span>`).join("")}</div>`:"";
   if(!rows.length)return`<div class="chart-card efficiency-card"><h4>${esc(title)}</h4><p class="plot-note">No visible models have both ${esc(xLabel.toLowerCase())} and final hidden-test ${esc(axisLabel.toLowerCase())} data.</p>${missingNote}</div>`;
   const W=620,H=338,L=66,R=18,T=22,plotB=267,xMax=Math.max(...rows.map(row=>row.x)),xStep=niceStep(Math.max(xMax,1)/5),axisMax=Math.max(xStep,Math.ceil(xMax/xStep)*xStep),scoreStats=rows.map(row=>({points:[{testAtBest:row.score}]})),domain=taskDomain(scoreStats,"testAtBest"),railTop=229,kinkTop=241,x=value=>W-R-value/axisMax*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
@@ -450,8 +548,8 @@ function bindEfficiencyTooltips(){
 
 function renderTask(index){
   activeTask=index;
-  const task=DATA.tasks[index],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-label="${esc(MODEL[key].name)}" aria-pressed="${!hiddenModels.has(key)}">${modelIdentity(key,{short:true})}</button>`).join(""),visibleTitle="Best visible reported reward so far",hiddenTitle="Hidden-test reported reward at that checkpoint";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div><section class="scale-block"><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test reported reward.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
+  const task=DATA.tasks[index],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-label="${esc(MODEL[key].name)}" aria-pressed="${!hiddenModels.has(key)}">${modelIdentity(key,{short:true})}</button>`).join(""),visibleTitle="Best difficulty-adjusted validation reward so far",hiddenTitle="Difficulty-adjusted hidden-test reward at that checkpoint";
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div><section class="scale-block"><p class="plot-note">Scores use the task-specific difficulty-adjusted reward scale.</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final difficulty-adjusted hidden-test reward.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
   bindEfficiencyTooltips();
 }
