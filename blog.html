@@ -10,7 +10,7 @@
 <body>
 <header class="topbar">
   <div class="brand">AutoResearchBench</div>
-  <nav class="toplinks" aria-label="Primary"><a href="#benchmark">Benchmark</a><a href="#results">Preliminary results</a><a href="#examples">Tasks</a></nav>
+  <nav class="toplinks" aria-label="Primary"><a href="#benchmark">Benchmark</a><a href="#results">Results</a><a href="#examples">Tasks</a></nav>
 </header>
 <section class="hero">
   <h1><span>AutoResearchBench</span></h1>
@@ -23,11 +23,10 @@
     <a href="#benchmark">Overview</a>
     <a href="#measurement">Evaluation</a>
     <a href="#setup">Experimental setup</a>
-    <a href="#results">Preliminary results</a>
+    <a href="#results">Results</a>
     <a href="#tasks">Task areas</a>
     <a href="#examples">Tasks</a>
     <a href="#harness-ablations">Harness ablations</a>
-    <a href="#auarc-thresholding">AUARC thresholding</a>
     <a href="#opsd-hints">Hints (OPSD)</a>
     <a href="#general-analysis">General analysis</a>
     <a href="#release">Full release</a>
@@ -51,15 +50,15 @@
     <section class="section" id="setup">
       <h2>Experimental setup</h2>
       <div class="prose">
-        <p>Each task uses the Harbor format, with separate work and verifier containers. We run Terminus 2 on each task for 15 research iterations. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. Terminus 2 gives the model 20 to 40 agent turns, with up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
+        <p>Each task uses the Harbor format, with separate work and verifier containers. We run AutoResearch with Terminus 2 on each task for 24 hours of total wall-clock time. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
         <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
-        <p>These preliminary results standardize 15 submitted experiments rather than agent time or wall clock time. We are still deciding whether the final evaluation should use a submission limit, an agent time limit, a wall clock time limit, or a combination of these.</p>
-        <p>The runs use high effort for Claude Opus 5, GPT-5.6-Sol, Qwen3.8-Max, and Kimi K3. Grok 4.6, GLM-5.3, Gemini 3.7 Flash, and Muse-Spark-1.2 use their provider defaults. For the final release, we will rerun every model at its highest supported effort. This preview reports one run for each model and task.</p>
-        <p>We welcome feedback on what would make this the fairest assessment of your model.</p>
+        <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">Harness ablations section</a>.</p>
+        <p>We ran all models at the maximum effort available when we conducted these experiments. The figures below compare Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, Qwen3.8 Max, Gemini 3.8 Flash, Muse Spark 1.3, Grok 4.6, and GPT-6 Astra.</p>
+        <!-- TODO: Confirm and list the exact effort level used for each model before merging. -->
       </div>
     </section>
     <section class="section" id="results">
-      <h2>Preliminary results</h2>
+      <h2>Results</h2>
       <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it by averaging the best score reached at each of the 15 iterations. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test score of the checkpoint selected by validation at each iteration.</p>
       <div id="trajectory-overview"></div>
       <div class="result-lead">
@@ -110,13 +109,6 @@
           </tbody>
         </table>
       </div>
-    </section>
-    <section class="section" id="auarc-thresholding">
-      <span class="pending-label">Pending</span>
-      <h2>AUARC thresholding</h2>
-      <ul class="todo-list">
-        <li>Calculate scores thresholded to go to 0 based on raw rewards.</li>
-      </ul>
     </section>
     <section class="section" id="opsd-hints">
       <span class="pending-label">Pending</span>
