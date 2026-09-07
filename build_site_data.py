@@ -17,6 +17,7 @@ COLORS = [
     "#A6761D",
     "#00A6D6",
     "#4D4D4D",
+    "#B2182B",
 ]
 
 EXCLUDED_TASK_IDS = {
@@ -40,6 +41,8 @@ def usable(run):
 
 
 def run_end(run, fetched_at, duration):
+    if run.get("display_end_seconds") is not None:
+        return min(duration, max(0, run["display_end_seconds"]))
     last = max([0] + [elapsed(item) for item in run["iterations"]])
     start = parse_time(run.get("created_at"))
     finish = fetched_at if run.get("status", "").lower() == "running" else parse_time(run.get("completed_at"))
@@ -47,23 +50,37 @@ def run_end(run, fetched_at, duration):
     return min(duration, max(last, wall))
 
 
+def selected_iterations(run):
+    valid_through = run.get("valid_through_iteration")
+    truncate_at = run.get("truncate_at_seconds")
+    return [
+        item
+        for item in run["iterations"]
+        if valid_through is None or item.get("iteration", 0) <= valid_through
+        if truncate_at is None or elapsed(item) <= truncate_at
+    ]
+
+
 def run_curve(run, fetched_at, duration):
     best = -math.inf
     selected = None
     points = []
+    end = run_end(run, fetched_at, duration)
+    previous_seconds = 0
     for item in run["iterations"]:
         if item.get("public_score") is not None and item["public_score"] > best:
             best = item["public_score"]
             selected = item
+        seconds = max(previous_seconds, min(end, elapsed(item)))
+        previous_seconds = seconds
         points.append(
             {
                 "iteration": item.get("iteration"),
-                "seconds": elapsed(item),
+                "seconds": seconds,
                 "bestValidation": selected.get("public_score") if selected else None,
                 "testAtBest": selected.get("private_score") if selected else None,
             }
         )
-    end = run_end(run, fetched_at, duration)
     return {"points": points, "end": end, "selected": selected}
 
 
@@ -280,6 +297,13 @@ def main() -> None:
                     "created_at",
                     "completed_at",
                     "cost_usd",
+                    "output_tokens",
+                    "evaluation_id",
+                    "source_status",
+                    "source_file",
+                    "extension",
+                    "display_end_seconds",
+                    "truncate_at_seconds",
                 )
             }
             clean_run["iterations"] = [
@@ -293,7 +317,7 @@ def main() -> None:
                         "private_elapsed_seconds",
                     )
                 }
-                for item in run["iterations"]
+                for item in selected_iterations(run)
             ]
             clean_task["models"].append(clean_run)
         payload["tasks"].append(clean_task)
@@ -325,6 +349,12 @@ def main() -> None:
                 {
                     "model": run["model"],
                     "hours": curve["end"] / 3600,
+                    "cost": run.get("cost_usd"),
+                    "outputTokens": run.get("output_tokens"),
+                    "evaluationId": run.get("evaluation_id"),
+                    "sourceStatus": run.get("source_status"),
+                    "sourceFile": run.get("source_file"),
+                    "extension": bool(run.get("extension")),
                     "points": curve["points"],
                 }
             )

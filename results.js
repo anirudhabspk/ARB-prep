@@ -1,5 +1,5 @@
 const DATA=window.ARB_DATA;
-const COLORS=["#6A3D9A","#D95F02","#1F78B4","#E7298A","#1B9E77","#A6761D","#00A6D6","#4D4D4D"];
+const COLORS=["#6A3D9A","#D95F02","#1F78B4","#E7298A","#1B9E77","#A6761D","#00A6D6","#4D4D4D","#B2182B"];
 const MODEL=Object.fromEntries(DATA.models.map((model,index)=>[model.codename,{...model,key:model.codename,color:COLORS[index%COLORS.length]}]));
 const ORDER=DATA.models.map(model=>model.codename);
 // Sync with the "Task areas" block, excluding SCFA while its task error is unresolved.
@@ -356,27 +356,28 @@ function rolloutMoment(task,model,iteration){
 function chartSplit(key){return key==="bestValidation"?"intermediate":"final"}
 function rawScoreMap(task){return RAW_SCORE_MAPS[task.name]||null}
 function difficultyRewardMap(task){return DIFFICULTY_REWARD_MAPS[task.name]||null}
-function plotValue(task,key,point){
-  if(chartMode==="reported")return point[key];
+function plotValueForMode(task,key,point,mode){
+  if(mode==="reported")return point[key];
   const rawMap=rawScoreMap(task),raw=rawMap?.invert(point[key],chartSplit(key))??null;
-  if(chartMode==="raw")return raw;
+  if(mode==="raw")return raw;
   if(raw==null)return point[key]===0?0:null;
   return difficultyRewardMap(task)?.score(raw,chartSplit(key))??null;
 }
+function plotValue(task,key,point){return plotValueForMode(task,key,point,chartMode)}
 function rawScoreFormat(value,map){
   if(value==null||!Number.isFinite(value))return"n/a";
   const precision=map?.precision??3;
   const adjustedPrecision=Math.abs(value)>0&&Math.abs(value)<.01?Math.max(precision,4):precision;
   return value.toFixed(adjustedPrecision);
 }
-function rawScoreDomain(stats,task,key){
-  const values=stats.flatMap(stat=>stat.points.map(point=>plotValue(task,key,point)).filter(Number.isFinite));
+function rawValueDomain(values){
   if(!values.length)return{lo:0,hi:1,ticks:[0,.2,.4,.6,.8,1],broken:false};
   const min=Math.min(...values),max=Math.max(...values),spread=Math.max(max-min,Math.abs(max)*.04,.01),step=niceStep(spread/5);
   let lo=Math.floor((min-spread*.08)/step)*step,hi=Math.ceil((max+spread*.08)/step)*step;
   if(lo===hi){lo-=step;hi+=step}
   return{lo,hi,ticks:ticks(lo,hi,step),broken:false};
 }
+function rawScoreDomain(stats,task,key){return rawValueDomain(stats.flatMap(stat=>stat.points.map(point=>plotValue(task,key,point)).filter(Number.isFinite)))}
 function difficultyRewardDomain(stats,task,key){
   return taskDomain(stats.map(stat=>({points:stat.points.map(point=>({[key]:plotValue(task,key,point)}))})),key);
 }
@@ -407,6 +408,43 @@ function taskChart(task,title,key){
   return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
 }
 
+function compactNumber(value){
+  if(value>=1e6)return`${(value/1e6).toFixed(value>=1e7?0:1)}m`;
+  if(value>=1e3)return`${(value/1e3).toFixed(value>=1e4?0:1)}k`;
+  return value.toFixed(value<10?1:0);
+}
+
+function efficiencyPlot(task,title,valueKey,xLabel,formatX){
+  const map=rawScoreMap(task),axisLabel=chartMode==="raw"?map?.label||"Raw metric":chartMode==="difficulty"?"Difficulty-adjusted reward":"Reported reward",formatScore=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value),candidates=task.models.filter(run=>!hiddenModels.has(run.model)).map(run=>{const point=run.points.slice().reverse().find(candidate=>Number.isFinite(candidate.testAtBest));return{run,point,score:point?plotValueForMode(task,"testAtBest",point,chartMode):null}}),rows=candidates.flatMap(({run,score})=>Number.isFinite(run[valueKey])&&Number.isFinite(score)?[{key:run.model,x:run[valueKey],score}]:[]),missing=candidates.filter(({run,score})=>!Number.isFinite(run[valueKey])||!Number.isFinite(score));
+  const missingNote=missing.length?`<div class="efficiency-unavailable"><strong>Source data unavailable</strong>${missing.map(({run})=>`<span><i style="background:${MODEL[run.model]?.color||"#4D4D4D"}"></i>${esc(MODEL[run.model]?.name||run.model)}</span>`).join("")}</div>`:"";
+  if(!rows.length)return`<div class="chart-card efficiency-card"><h4>${esc(title)}</h4><p class="plot-note">No visible models have both ${esc(xLabel.toLowerCase())} and final hidden-test ${esc(axisLabel.toLowerCase())} data.</p>${missingNote}</div>`;
+  const W=620,H=338,L=66,R=18,T=22,plotB=267,xMax=Math.max(...rows.map(row=>row.x)),xStep=niceStep(Math.max(xMax,1)/5),axisMax=Math.max(xStep,Math.ceil(xMax/xStep)*xStep),scoreStats=rows.map(row=>({points:[{testAtBest:row.score}]})),domain=chartMode==="raw"?rawValueDomain(rows.map(row=>row.score)):taskDomain(scoreStats,"testAtBest"),railTop=229,kinkTop=241,x=value=>W-R-value/axisMax*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
+  let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">${esc(xLabel)}</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">Final hidden-test ${esc(axisLabel.toLowerCase())}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
+  for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatScore(value)}</text>`}
+  if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
+  for(const value of ticks(0,axisMax,xStep)){const xx=x(value);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="tick" x="${xx}" y="303" text-anchor="middle">${esc(formatX(value))}</text>`}
+  body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
+  rows.forEach(row=>{
+    const xx=x(row.x),yy=y(row.score),model=MODEL[row.key]||{name:row.key,color:"#4D4D4D"},resourceValue=formatX(row.x),scoreValue=formatScore(row.score),label=`${model.name}: ${xLabel} ${resourceValue}, final hidden-test ${axisLabel.toLowerCase()} ${scoreValue}`;
+    body+=`<g class="efficiency-point" role="button" tabindex="0" data-model="${esc(model.name)}" data-resource-label="${esc(xLabel)}" data-resource-value="${esc(resourceValue)}" data-score-label="Final hidden-test ${esc(axisLabel.toLowerCase())}" data-score-value="${esc(scoreValue)}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="10"/><circle class="point" fill="${model.color}" cx="${xx}" cy="${yy}" r="5"/></g>`;
+  });
+  return`<div class="chart-card efficiency-card"><h4>${esc(title)}</h4><p class="chart-subtitle">Lower is farther right. Select a dot for details.</p><div class="efficiency-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}, final hidden-test ${esc(axisLabel.toLowerCase())}">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div>${missingNote}</div>`;
+}
+
+function bindEfficiencyTooltips(){
+  document.querySelectorAll(".efficiency-chart-wrap").forEach(wrap=>{
+    const markers=wrap.querySelectorAll(".efficiency-point"),tooltip=wrap.querySelector(".efficiency-tooltip");
+    const show=marker=>{tooltip.querySelector("strong").textContent=marker.dataset.model;tooltip.querySelector("[data-resource]").textContent=`${marker.dataset.resourceLabel}: ${marker.dataset.resourceValue}`;tooltip.querySelector("[data-score]").textContent=`${marker.dataset.scoreLabel}: ${marker.dataset.scoreValue}`;tooltip.style.left=`${marker.dataset.left}%`;tooltip.style.top=`${marker.dataset.top}%`;tooltip.classList.toggle("place-left",marker.dataset.placeLeft==="true");tooltip.classList.toggle("place-below",marker.dataset.placeBelow==="true");tooltip.hidden=false};
+    markers.forEach(marker=>{
+      const hide=()=>{if(marker.dataset.pinned!=="true")tooltip.hidden=true};
+      marker.addEventListener("mouseenter",()=>show(marker));marker.addEventListener("mouseleave",hide);marker.addEventListener("focus",()=>show(marker));marker.addEventListener("blur",hide);
+      marker.addEventListener("click",event=>{event.stopPropagation();const pin=marker.dataset.pinned!=="true";markers.forEach(item=>item.dataset.pinned="false");marker.dataset.pinned=String(pin);pin?show(marker):tooltip.hidden=true});
+      marker.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();marker.dispatchEvent(new MouseEvent("click",{bubbles:true}))}});
+    });
+    wrap.addEventListener("click",()=>{markers.forEach(marker=>marker.dataset.pinned="false");tooltip.hidden=true});
+  });
+}
+
 function updateRolloutInsight(marker,task){
   const panel=document.getElementById("rollout-insight");
   if(!panel)return;
@@ -425,7 +463,8 @@ function renderTask(index){
   const task=DATA.tasks[index],map=rawScoreMap(task),difficultyMap=difficultyRewardMap(task),insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"",visibleTitle=chartMode==="raw"?"Best visible raw metric so far":chartMode==="difficulty"?"Best visible difficulty-adjusted reward so far":"Best visible reported reward so far",hiddenTitle=chartMode==="raw"?"Hidden-test raw metric at that checkpoint":chartMode==="difficulty"?"Hidden-test difficulty-adjusted reward at that checkpoint":"Hidden-test reported reward at that checkpoint",plotNote=chartMode==="raw"?`The curves reconstruct the raw ${esc(map?.label||"task metric")} by inverting the published reward map. Zero reward is not uniquely invertible: it can mean an invalid result or one at or below the baseline, so those points are omitted.`:chartMode==="difficulty"?`Counterfactual comparison only. ${esc(difficultyMap?.kind||"Task-specific")} map: ${esc(difficultyMap?.summary||"The reported reward is unchanged.")} The plotted reward is recomputed from the recovered raw metric; Horizon's reported reward is not changed.`:"The curves show Horizon's reported scaled rewards. Use the other views to compare the underlying raw metric and a difficulty-aware counterfactual rescaling.";
   const momentBlock=moment?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">One verified rollout</span><h4>What this experiment tried</h4><p class="rollout-insight-run">The highlighted rings are the same ${esc(MODEL[moment.model].name)} experiment in the two score panels. Hover or focus either ring for its record.</p><p class="rollout-insight-note">${esc(moment.note)}</p><p class="rollout-insight-metric"${moment.metric?"":" hidden"}>${esc(moment.metric||"")}</p><p class="rollout-insight-source"><a href="${esc(moment.source)}" target="_blank" rel="noreferrer">Open the source rollout.</a></p></aside>`:"";
   const patternBlock=insight?`<aside class="rollout-pattern"><span class="rollout-insight-kicker">Pattern across rollouts</span><p>${esc(insight)}</p><p class="rollout-pattern-note">This is a task-level synthesis, not a claim about any one model or iteration.</p>${patternSource}</aside>`:"";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reported" aria-pressed="${chartMode==="reported"}">Reported reward</button><button type="button" data-chart-mode="difficulty" aria-pressed="${chartMode==="difficulty"}"${difficultyMap?"":" disabled"}>Difficulty-adjusted</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section></article>`;
+  const efficiencyValue=chartMode==="raw"?map?.label||"raw metric":chartMode==="difficulty"?"difficulty-adjusted reward":"reported reward";
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reported" aria-pressed="${chartMode==="reported"}">Reported reward</button><button type="button" data-chart-mode="difficulty" aria-pressed="${chartMode==="difficulty"}"${difficultyMap?"":" disabled"}>Difficulty-adjusted</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test ${esc(efficiencyValue)}; lower resource use is farther right.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. evaluation cost","cost","Evaluation cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
   document.querySelectorAll("[data-chart-mode]").forEach(button=>button.addEventListener("click",()=>{chartMode=button.dataset.chartMode;renderTask(activeTask)}));
   document.querySelectorAll(".insight-marker").forEach(marker=>{
@@ -433,6 +472,7 @@ function renderTask(index){
     marker.addEventListener("mouseenter",show);marker.addEventListener("focus",show);marker.addEventListener("click",show);
     marker.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();show()}});
   });
+  bindEfficiencyTooltips();
 }
 
 if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations()}
