@@ -34,31 +34,22 @@ const HARNESS_ABLATION_SERIES=[
   {key:"claude_opus",name:"Claude Code, Claude Opus 5",color:"#D95F02",dash:""},
   {key:"standard_opus",name:"Terminus 2, Claude Opus 5",color:"#D95F02",dash:"7 5"}
 ];
-let harnessChartMode="reported",harnessTask=0,hiddenHarnessSeries=new Set();
+let harnessTask=0,hiddenHarnessSeries=new Set();
 
-function harnessValue(task,series,hourIndex,mode,split){
-  const reward=series[split][hourIndex];
-  if(mode==="reported")return reward;
-  const chartSplit=split==="validation"?"intermediate":"final",recordedRaw=series[`raw_${split}`][hourIndex],raw=recordedRaw??RAW_SCORE_MAPS[task.name]?.invert(reward,chartSplit)??null;
-  if(mode==="raw")return raw;
-  if(raw==null)return reward===0?0:null;
-  return DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,chartSplit)??null;
-}
-
-function harnessChartSeries(mode,split){
+function harnessChartSeries(split){
   return HARNESS_ABLATION_SERIES.filter(series=>!hiddenHarnessSeries.has(series.key)).map(series=>{
     const task=HARNESS_ABLATION.tasks[harnessTask];
-    const scores=HARNESS_ABLATION.hours.map((_,hourIndex)=>harnessValue(task,task.series[series.key],hourIndex,mode,split));
+    const scores=task.series[series.key][split];
     return{...series,scores};
   });
 }
 
 function harnessChart(split,title){
-  const seriesData=harnessChartSeries(harnessChartMode,split),task=HARNESS_ABLATION.tasks[harnessTask],rawMap=RAW_SCORE_MAPS[task.name],raw=harnessChartMode==="raw";
+  const seriesData=harnessChartSeries(split);
   if(!seriesData.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
   const values=seriesData.flatMap(series=>series.scores).filter(Number.isFinite);
   if(!values.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">No values are available for this task.</p></div>`;
-  const step=raw?niceStep(Math.max(Math.max(...values)-Math.min(...values),.01)/5):.1,lo=raw?Math.floor(Math.min(...values)/step)*step:0,rawHi=raw?Math.ceil(Math.max(...values)/step)*step:0,hi=raw?(rawHi===lo?lo+step:rawHi):Math.max(.6,Math.ceil(Math.max(...values)*10)/10),yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,x=hour=>L+hour/12*(W-L-R),y=value=>T+(hi-value)/(hi-lo)*(B-T),axisLabel=raw?rawMap.label:harnessChartMode==="difficulty"?"Difficulty-adjusted reward":"Reported reward",formatValue=value=>raw?rawScoreFormat(value,rawMap):value.toFixed(1);
+  const step=.1,lo=0,hi=Math.max(.6,Math.ceil(Math.max(...values)*10)/10),yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,x=hour=>L+hour/12*(W-L-R),y=value=>T+(hi-value)/(hi-lo)*(B-T),axisLabel="Reported reward",formatValue=value=>value.toFixed(1);
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+B)/2})">${esc(axisLabel)}</text>`;
   for(const value of yTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   for(const hour of [0,2,4,6,8,10,12])body+=`<text class="tick" x="${x(hour)}" y="303" text-anchor="middle">${hour}</text>`;
@@ -77,11 +68,10 @@ function harnessChart(split,title){
 function renderHarnessAblations(){
   const container=document.getElementById("harness-ablation-plot");
   if(!container)return;
-  const raw=harnessChartMode==="raw",task=HARNESS_ABLATION.tasks[harnessTask],modeLabel=harnessChartMode==="difficulty"?"difficulty-adjusted":harnessChartMode==="reported"?"reported":"raw metric",visibleTitle=raw?"Best visible raw metric so far":`Best visible ${modeLabel} reward so far`,testTitle=raw?"Hidden test raw metric at that checkpoint":`Hidden test ${modeLabel} reward at that checkpoint`;
+  const task=HARNESS_ABLATION.tasks[harnessTask],visibleTitle="Best visible reported reward so far",testTitle="Hidden test reported reward at that checkpoint";
   const legend=HARNESS_ABLATION_SERIES.map(series=>`<button type="button" class="${hiddenHarnessSeries.has(series.key)?"off":""}" data-harness-series="${series.key}" aria-pressed="${!hiddenHarnessSeries.has(series.key)}"><i style="background:repeating-linear-gradient(90deg,${series.color} 0,${series.color} ${series.dash?"7px":"18px"},transparent ${series.dash?"7px":"18px"},transparent ${series.dash?"12px":"18px"})"></i>${esc(series.name)}</button>`).join("");
-  const controls=`<div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-harness-mode="reported" aria-pressed="${harnessChartMode==="reported"}">Reported reward</button><button type="button" data-harness-mode="difficulty" aria-pressed="${harnessChartMode==="difficulty"}">Difficulty-adjusted</button><button type="button" data-harness-mode="raw" aria-pressed="${harnessChartMode==="raw"}">Raw metric</button></div>`,taskPicker=`<label class="harness-task-picker">Task <select>${HARNESS_ABLATION.tasks.map((item,index)=>`<option value="${index}"${index===harnessTask?" selected":""}>${esc(item.name)}</option>`).join("")}</select></label>`,description=`The charts show ${esc(task.name)}, with one run for each harness and model.`;
-  container.innerHTML=`<div class="harness-plot">${controls}${taskPicker}<div class="harness-legend" role="group" aria-label="Harness and model series">${legend}</div><p>${description}</p><div class="charts">${harnessChart("validation",visibleTitle)}${harnessChart("test",testTitle)}</div></div>`;
-  container.querySelectorAll("[data-harness-mode]").forEach(button=>button.addEventListener("click",()=>{harnessChartMode=button.dataset.harnessMode;renderHarnessAblations()}));
+  const taskPicker=`<label class="harness-task-picker">Task <select>${HARNESS_ABLATION.tasks.map((item,index)=>`<option value="${index}"${index===harnessTask?" selected":""}>${esc(item.name)}</option>`).join("")}</select></label>`,description=`The charts show ${esc(task.name)}, with one run for each harness and model.`;
+  container.innerHTML=`<div class="harness-plot">${taskPicker}<div class="harness-legend" role="group" aria-label="Harness and model series">${legend}</div><p>${description}</p><div class="charts">${harnessChart("validation",visibleTitle)}${harnessChart("test",testTitle)}</div></div>`;
   container.querySelectorAll("[data-harness-series]").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.harnessSeries;hiddenHarnessSeries.has(key)?hiddenHarnessSeries.delete(key):hiddenHarnessSeries.add(key);renderHarnessAblations()}));
   container.querySelector("select")?.addEventListener("change",event=>{harnessTask=Number(event.target.value);renderHarnessAblations()});
 }
@@ -276,14 +266,9 @@ function renderCategories(){
   pick(0);
 }
 
-const ROLLOUT_INSIGHTS=window.ARB_ROLLOUT_INSIGHTS||{};
-const ROLLOUT_INSIGHT_SOURCE=window.ARB_ROLLOUT_INSIGHT_SOURCE||"";
 const ROLLOUT_MOMENTS=window.ARB_ROLLOUT_MOMENTS||{};
-const RAW_SCORE_MAPS=window.ARB_RAW_SCORE_MAPS||{};
-const DIFFICULTY_REWARD_MAPS=window.ARB_DIFFICULTY_REWARD_MAPS||{};
 const TASK_CATALOG=window.ARB_TASK_CATALOG||[];
 const TASK_BY_NAME=new Map(DATA.tasks.map(task=>[task.name,task]));
-let chartMode="reported";
 
 function renderTaskCatalog(){
   const filters=document.getElementById("task-catalog-filters"),grid=document.getElementById("task-grid");
@@ -353,39 +338,10 @@ function rolloutMoment(task,model,iteration){
   return moment&&moment.model===model&&moment.iteration===iteration?moment:null;
 }
 
-function chartSplit(key){return key==="bestValidation"?"intermediate":"final"}
-function rawScoreMap(task){return RAW_SCORE_MAPS[task.name]||null}
-function difficultyRewardMap(task){return DIFFICULTY_REWARD_MAPS[task.name]||null}
-function plotValueForMode(task,key,point,mode){
-  if(mode==="reported")return point[key];
-  const rawMap=rawScoreMap(task),raw=rawMap?.invert(point[key],chartSplit(key))??null;
-  if(mode==="raw")return raw;
-  if(raw==null)return point[key]===0?0:null;
-  return difficultyRewardMap(task)?.score(raw,chartSplit(key))??null;
-}
-function plotValue(task,key,point){return plotValueForMode(task,key,point,chartMode)}
-function rawScoreFormat(value,map){
-  if(value==null||!Number.isFinite(value))return"n/a";
-  const precision=map?.precision??3;
-  const adjustedPrecision=Math.abs(value)>0&&Math.abs(value)<.01?Math.max(precision,4):precision;
-  return value.toFixed(adjustedPrecision);
-}
-function rawValueDomain(values){
-  if(!values.length)return{lo:0,hi:1,ticks:[0,.2,.4,.6,.8,1],broken:false};
-  const min=Math.min(...values),max=Math.max(...values),spread=Math.max(max-min,Math.abs(max)*.04,.01),step=niceStep(spread/5);
-  let lo=Math.floor((min-spread*.08)/step)*step,hi=Math.ceil((max+spread*.08)/step)*step;
-  if(lo===hi){lo-=step;hi+=step}
-  return{lo,hi,ticks:ticks(lo,hi,step),broken:false};
-}
-function rawScoreDomain(stats,task,key){return rawValueDomain(stats.flatMap(stat=>stat.points.map(point=>plotValue(task,key,point)).filter(Number.isFinite)))}
-function difficultyRewardDomain(stats,task,key){
-  return taskDomain(stats.map(stat=>({points:stat.points.map(point=>({[key]:plotValue(task,key,point)}))})),key);
-}
-
 function taskChart(task,title,key){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
-  const map=rawScoreMap(task),difficultyMap=difficultyRewardMap(task),domain=chartMode==="raw"?rawScoreDomain(stats,task,key):chartMode==="difficulty"?difficultyRewardDomain(stats,task,key):taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel=chartMode==="raw"?map?.label||"Raw metric":chartMode==="difficulty"?"Difficulty-adjusted reward":"Reported reward",formatValue=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value);
+  const domain=taskDomain(stats,key),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel="Reported reward",formatValue=fmt;
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">${esc(axisLabel)}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
   for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
@@ -393,7 +349,7 @@ function taskChart(task,title,key){
   for(const value of ticks(0,maxHours,hourStep))body+=`<text class="tick" x="${x(value)}" y="303" text-anchor="middle">${Math.round(value)}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
   for(const stat of stats){
-    const points=stat.points.map(point=>({...point,plot:plotValue(task,key,point)})).filter(point=>point.plot!=null),color=MODEL[stat.key].color;
+    const points=stat.points.map(point=>({...point,plot:point[key]})).filter(point=>point.plot!=null),color=MODEL[stat.key].color;
     if(!points.length)continue;
     let path=`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
@@ -415,10 +371,10 @@ function compactNumber(value){
 }
 
 function efficiencyPlot(task,title,valueKey,xLabel,formatX){
-  const map=rawScoreMap(task),axisLabel=chartMode==="raw"?map?.label||"Raw metric":chartMode==="difficulty"?"Difficulty-adjusted reward":"Reported reward",formatScore=value=>chartMode==="raw"?rawScoreFormat(value,map):fmt(value),candidates=task.models.filter(run=>!hiddenModels.has(run.model)).map(run=>{const point=run.points.slice().reverse().find(candidate=>Number.isFinite(candidate.testAtBest));return{run,point,score:point?plotValueForMode(task,"testAtBest",point,chartMode):null}}),rows=candidates.flatMap(({run,score})=>Number.isFinite(run[valueKey])&&Number.isFinite(score)?[{key:run.model,x:run[valueKey],score}]:[]),missing=candidates.filter(({run,score})=>!Number.isFinite(run[valueKey])||!Number.isFinite(score));
+  const axisLabel="Reported reward",formatScore=fmt,candidates=task.models.filter(run=>!hiddenModels.has(run.model)).map(run=>{const point=run.points.slice().reverse().find(candidate=>Number.isFinite(candidate.testAtBest));return{run,point,score:point?.testAtBest??null}}),rows=candidates.flatMap(({run,score})=>Number.isFinite(run[valueKey])&&Number.isFinite(score)?[{key:run.model,x:run[valueKey],score}]:[]),missing=candidates.filter(({run,score})=>!Number.isFinite(run[valueKey])||!Number.isFinite(score));
   const missingNote=missing.length?`<div class="efficiency-unavailable"><strong>Source data unavailable</strong>${missing.map(({run})=>`<span><i style="background:${MODEL[run.model]?.color||"#4D4D4D"}"></i>${esc(MODEL[run.model]?.name||run.model)}</span>`).join("")}</div>`:"";
   if(!rows.length)return`<div class="chart-card efficiency-card"><h4>${esc(title)}</h4><p class="plot-note">No visible models have both ${esc(xLabel.toLowerCase())} and final hidden-test ${esc(axisLabel.toLowerCase())} data.</p>${missingNote}</div>`;
-  const W=620,H=338,L=66,R=18,T=22,plotB=267,xMax=Math.max(...rows.map(row=>row.x)),xStep=niceStep(Math.max(xMax,1)/5),axisMax=Math.max(xStep,Math.ceil(xMax/xStep)*xStep),scoreStats=rows.map(row=>({points:[{testAtBest:row.score}]})),domain=chartMode==="raw"?rawValueDomain(rows.map(row=>row.score)):taskDomain(scoreStats,"testAtBest"),railTop=229,kinkTop=241,x=value=>W-R-value/axisMax*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
+  const W=620,H=338,L=66,R=18,T=22,plotB=267,xMax=Math.max(...rows.map(row=>row.x)),xStep=niceStep(Math.max(xMax,1)/5),axisMax=Math.max(xStep,Math.ceil(xMax/xStep)*xStep),scoreStats=rows.map(row=>({points:[{testAtBest:row.score}]})),domain=taskDomain(scoreStats,"testAtBest"),railTop=229,kinkTop=241,x=value=>W-R-value/axisMax*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T);
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">${esc(xLabel)}</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">Final hidden-test ${esc(axisLabel.toLowerCase())}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
   for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatScore(value)}</text>`}
   if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
@@ -460,13 +416,10 @@ function updateRolloutInsight(marker,task){
 
 function renderTask(index){
   activeTask=index;
-  const task=DATA.tasks[index],map=rawScoreMap(task),difficultyMap=difficultyRewardMap(task),insight=ROLLOUT_INSIGHTS[task.name],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),patternSource=ROLLOUT_INSIGHT_SOURCE?`<p class="rollout-pattern-source"><a href="${esc(ROLLOUT_INSIGHT_SOURCE)}" target="_blank" rel="noreferrer">Read the rollout index.</a></p>`:"",visibleTitle=chartMode==="raw"?"Best visible raw metric so far":chartMode==="difficulty"?"Best visible difficulty-adjusted reward so far":"Best visible reported reward so far",hiddenTitle=chartMode==="raw"?"Hidden-test raw metric at that checkpoint":chartMode==="difficulty"?"Hidden-test difficulty-adjusted reward at that checkpoint":"Hidden-test reported reward at that checkpoint",plotNote=chartMode==="raw"?`The curves reconstruct the raw ${esc(map?.label||"task metric")} by inverting the published reward map. Zero reward is not uniquely invertible: it can mean an invalid result or one at or below the baseline, so those points are omitted.`:chartMode==="difficulty"?`Counterfactual comparison only. ${esc(difficultyMap?.kind||"Task-specific")} map: ${esc(difficultyMap?.summary||"The reported reward is unchanged.")} The plotted reward is recomputed from the recovered raw metric; Horizon's reported reward is not changed.`:"The curves show Horizon's reported scaled rewards. Use the other views to compare the underlying raw metric and a difficulty-aware counterfactual rescaling.";
+  const task=DATA.tasks[index],moment=ROLLOUT_MOMENTS[task.name],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join(""),visibleTitle="Best visible reported reward so far",hiddenTitle="Hidden-test reported reward at that checkpoint";
   const momentBlock=moment?`<aside class="rollout-insight" id="rollout-insight" aria-live="polite"><span class="rollout-insight-kicker">One verified rollout</span><h4>What this experiment tried</h4><p class="rollout-insight-run">The highlighted rings are the same ${esc(MODEL[moment.model].name)} experiment in the two score panels. Hover or focus either ring for its record.</p><p class="rollout-insight-note">${esc(moment.note)}</p><p class="rollout-insight-metric"${moment.metric?"":" hidden"}>${esc(moment.metric||"")}</p><p class="rollout-insight-source"><a href="${esc(moment.source)}" target="_blank" rel="noreferrer">Open the source rollout.</a></p></aside>`:"";
-  const patternBlock=insight?`<aside class="rollout-pattern"><span class="rollout-insight-kicker">Pattern across rollouts</span><p>${esc(insight)}</p><p class="rollout-pattern-note">This is a task-level synthesis, not a claim about any one model or iteration.</p>${patternSource}</aside>`:"";
-  const efficiencyValue=chartMode==="raw"?map?.label||"raw metric":chartMode==="difficulty"?"difficulty-adjusted reward":"reported reward";
-  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div>${momentBlock}${patternBlock}<section class="scale-block"><div class="chart-mode" role="group" aria-label="Chart value"><span>Chart value:</span><button type="button" data-chart-mode="reported" aria-pressed="${chartMode==="reported"}">Reported reward</button><button type="button" data-chart-mode="difficulty" aria-pressed="${chartMode==="difficulty"}"${difficultyMap?"":" disabled"}>Difficulty-adjusted</button><button type="button" data-chart-mode="raw" aria-pressed="${chartMode==="raw"}"${map?"":" disabled"}>Raw metric</button></div><p class="plot-note">${plotNote}</p><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test ${esc(efficiencyValue)}.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
+  document.getElementById("task-view").innerHTML=`<article class="task-view"><div class="legend" role="group" aria-label="Models">${legend}</div>${momentBlock}<section class="scale-block"><div class="charts">${taskChart(task,visibleTitle,"bestValidation")}${taskChart(task,hiddenTitle,"testAtBest")}</div></section><section class="scale-block task-chart-section" aria-labelledby="task-efficiency-title"><div class="scale-head"><h4 id="task-efficiency-title">Efficiency at the final selected checkpoint</h4><p>Final hidden-test reported reward.</p></div><div class="charts">${efficiencyPlot(task,"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)}${efficiencyPlot(task,"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)}</div></section></article>`;
   document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}));
-  document.querySelectorAll("[data-chart-mode]").forEach(button=>button.addEventListener("click",()=>{chartMode=button.dataset.chartMode;renderTask(activeTask)}));
   document.querySelectorAll(".insight-marker").forEach(marker=>{
     const show=()=>updateRolloutInsight(marker,task);
     marker.addEventListener("mouseenter",show);marker.addEventListener("focus",show);marker.addEventListener("click",show);

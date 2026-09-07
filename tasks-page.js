@@ -91,7 +91,6 @@
     const hasPoints = task?.models?.some(model => model.points?.length);
     if (task && hasPoints) {
       hiddenModels.clear();
-      chartMode = "reported";
       renderTask(taskIndex);
     } else {
       taskView.innerHTML = '<p class="plot-note">No runs recorded for this task yet.</p>';
