@@ -213,8 +213,10 @@ function solveProfiles(){
 function overviewLegend(series){
   return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>{
     const model=MODEL[item.key],brand=MODEL_BRANDS[item.key],label=model?.name||item.key;
-    if(!brand)return`<span class="overview-legend-logo overview-legend-fallback" title="${esc(label)}" aria-label="${esc(label)}" role="img" style="border-color:${model?.color||"#4D4D4D"}"></span>`;
-    return`<span class="overview-legend-logo" title="${esc(label)}" aria-label="${esc(label)}" role="img" style="border-color:${model.color}"><img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async"></span>`;
+    const mark=brand
+      ?`<span class="overview-legend-logo" aria-hidden="true" style="border-color:${model.color}"><img class="company-logo" src="${brand.logo}" alt="" decoding="async"></span>`
+      :`<span class="overview-legend-logo overview-legend-fallback" aria-hidden="true" style="border-color:${model?.color||"#4D4D4D"}"></span>`;
+    return`<span class="overview-legend-item" title="${esc(label)}">${mark}<span>${esc(label)}</span></span>`;
   }).join("")}</div>`;
 }
 
