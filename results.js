@@ -1,4 +1,6 @@
 const DATA=window.ARB_DATA;
+const RAW_SCORE_MAPS=window.ARB_RAW_SCORE_MAPS||{};
+const DIFFICULTY_REWARD_MAPS=window.ARB_DIFFICULTY_REWARD_MAPS||{};
 const COLORS=["#6A3D9A","#D95F02","#1F78B4","#E7298A","#1B9E77","#A6761D","#00A6D6","#4D4D4D","#B2182B"];
 const MODEL=Object.fromEntries(DATA.models.map((model,index)=>[model.codename,{...model,key:model.codename,color:COLORS[index%COLORS.length]}]));
 const ORDER=DATA.models.map(model=>model.codename);
@@ -102,6 +104,14 @@ function rawTestCurve(run){
   return backwardRunningTestMinimum(run.points.map(point=>({...point,value:point.testAtBest})).filter(point=>Number.isFinite(point.value)));
 }
 
+function difficultyAdjustedTestCurve(task,run){
+  return backwardRunningTestMinimum(run.points.map(point=>{
+    const raw=RAW_SCORE_MAPS[task.name]?.invert(point.testAtBest,"final")??null;
+    const value=raw==null?(point.testAtBest===0?0:null):DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,"final")??null;
+    return{...point,value};
+  }).filter(point=>Number.isFinite(point.value)));
+}
+
 const sigmoid=value=>value>=0?1/(1+Math.exp(-value)):Math.exp(value)/(1+Math.exp(value));
 const logit=value=>Math.log(value/(1-value));
 
@@ -142,7 +152,7 @@ function overviewTrajectories(){
   const hours=Array.from({length:maxHours+1},(_,hour)=>hour);
   const series=ORDER.map(key=>{
     const runs=DATA.tasks.map(task=>{
-      const run=task.models.find(candidate=>candidate.model===key),points=run?rawTestCurve(run):[];
+      const run=task.models.find(candidate=>candidate.model===key),points=run?difficultyAdjustedTestCurve(task,run):[];
       return points.length?{points}:null;
     }).filter(Boolean);
     const valueAt=(run,seconds)=>{let value=0;for(const point of run.points){if(point.seconds>seconds)break;value=point.value}return value};
@@ -176,13 +186,13 @@ function overviewLine(series,path,detail){
 }
 
 function logTimeTestPlot(overview){
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=Math.ceil(Math.max(.1,...overview.series.flatMap(series=>[series.fit.ceiling,...series.points.map(point=>point.value)]))/.1)*.1,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.1);
+  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=1,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
-  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean raw hidden-test score</text>`;
-  for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone raw-test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
-  return`<article class="metric-plot"><h3>Log-time hidden-test trajectories</h3><p>Dots are monotone hourly means of the raw hidden-test score; solid curves are monotone log-sigmoid fits. Higher curves represent better test scores.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time raw hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean difficulty-adjusted hidden-test reward</text>`;
+  for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone difficulty-adjusted test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
+  return`<article class="metric-plot"><h3>Log-time hidden-test trajectories</h3><p>Dots are monotone hourly means of difficulty-adjusted hidden-test reward; solid curves are monotone log-sigmoid fits. The shared 0–1 scale makes higher curves directly better.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time difficulty-adjusted hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function performanceProfilePlot(profile){
@@ -226,7 +236,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const testOverview=overviewTrajectories(),profile=solveProfiles();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p class="editorial-todo"><strong>TODO: Advait, could you replace these with the normalized rewards used everywhere else in the blog?</strong></p><p>These views use raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the lowest model peak validation score. The log-time hidden-test chart keeps scores on their raw scale, so higher trajectories are directly better.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>The log-time trajectory plot uses difficulty-adjusted hidden-test reward on a shared 0–1 scale. The performance profile continues to use raw, unscaled hidden-test scores. For each rollout, the test curve is postprocessed by sweeping backward in time and retaining the lowest test score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted curves use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">For the performance profile, each workload’s solve threshold is the lowest model peak validation score. The log-time chart uses the difficulty-adjusted 0–1 test-reward scale, so higher trajectories are directly better.</p></section>`;
   bindOverviewTooltips(target);
 }
 
