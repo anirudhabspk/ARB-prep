@@ -53,8 +53,18 @@
         <p>Each task uses the Harbor format, with separate work and verifier containers. We run AutoResearch with Terminus 2 on each task for 24 hours of total wall-clock time. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
         <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
         <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">Harness ablations section</a>.</p>
-        <p>We ran all models at the maximum effort available when we conducted these experiments. The figures below compare Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, Qwen3.8 Max, Gemini 3.8 Flash, Muse Spark 1.3, Grok 4.6, and GPT-6 Astra.</p>
-        <!-- TODO: Confirm and list the exact effort level used for each model before merging. -->
+        <p>We ran all models at the maximum effort available when we conducted these experiments. We explicitly configured the following effort levels:</p>
+        <ul>
+          <li>Claude Fable 5.1: <code>max</code>.</li>
+          <li>Claude Opus 5: <code>max</code>.</li>
+          <li>GPT-5.6 Sol: <code>max</code>.</li>
+          <li>Kimi K3: <code>max</code>.</li>
+          <li>Qwen3.8 Max: <code>xhigh</code>.</li>
+          <li>Gemini 3.8 Flash: <code>high</code>.</li>
+          <li>Muse Spark 1.3: <code>xhigh</code>.</li>
+          <li>Grok 4.6: <code>xhigh</code>.</li>
+          <li>GPT-6 Astra: <code>max</code>.</li>
+        </ul>
       </div>
     </section>
     <section class="section" id="results">
