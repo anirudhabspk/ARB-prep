@@ -1,0 +1,198 @@
+{
+  "recorded_at": "2026-09-07T18:59:13.568453+00:00",
+  "index_commit": "cdd1d9d7ec65f39bd923628b4467d88e270d6e38",
+  "score_results": "All 27 linked result records refreshed. The 24 plotted runs were unchanged.",
+  "transcripts": [
+    {
+      "evaluation_id": "4015d5cf-c5c2-4b92-af7c-b35f5ca3e3f1",
+      "task": "2406-07553-cpu-llm-decode-throughput",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:53:39.610954+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "002958c6-cb2f-46e3-8536-ba8d421083af",
+      "task": "2406-07553-cpu-llm-decode-throughput",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:56:03.336912+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "967fb4cf-f9ae-40ca-9476-0c7e5075697d",
+      "task": "2406-07553-cpu-llm-decode-throughput",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:58:46.637837+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "3e6ce694-3926-4a39-9cfd-355733663c18",
+      "task": "2406-07553-cpu-llm-decode-throughput",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:58:06.573872+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "2082b3fe-ac32-4952-850f-aa643aa3226d",
+      "task": "2408-08998-shortest-valid-ci-l2-ece",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:53:00.587625+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "fb502080-1a2e-4c5e-92a3-05e1681a56c2",
+      "task": "2408-08998-shortest-valid-ci-l2-ece",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:28:39.605309+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "9cce644b-508d-49bf-998c-6fa67fdb44e9",
+      "task": "2408-08998-shortest-valid-ci-l2-ece",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:53:36.955671+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "7a73f8a2-8a0b-4537-a9ed-400e0f2b99b3",
+      "task": "2408-08998-shortest-valid-ci-l2-ece",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:53:17.711976+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "92cddea6-7803-4492-aff8-88bfe708b9cc",
+      "task": "2408-08998-shortest-valid-ci-l2-ece",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:53:09.250584+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "bc033aef-3253-4ab1-b0ec-c23e04113753",
+      "task": "2501-05646-hicard-latent-encoder",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:53:32.881194+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "8fb52cfe-bfad-4213-af41-fdb4241edf4e",
+      "task": "2501-05646-hicard-latent-encoder",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:56:35.093445+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "c3d3ee62-2656-410a-be30-811076c68570",
+      "task": "2501-05646-hicard-latent-encoder",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:55:34.821759+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "79e80e6d-7754-4a2d-9312-ec6ba4700beb",
+      "task": "2501-05646-hicard-latent-encoder",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:54:34.516596+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "5bc3c570-c905-4f5a-9f18-5cfb33a97eb8",
+      "task": "2501-05646-hicard-latent-encoder",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:54:00.319700+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "141d827b-df90-4311-9a32-510738589856",
+      "task": "budgeted-covtype-dual-market-open",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:55:42.208066+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "a9dc3f9a-b35d-4c8a-86b7-78db70bc10ef",
+      "task": "budgeted-covtype-dual-market-open",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:29:12.359239+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "f1bd7743-4ba6-4d6f-84c0-7fb8a2c97bcf",
+      "task": "budgeted-covtype-dual-market-open",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:57:26.490638+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "b7e8fd13-6656-4367-a3a6-deef2b1c3438",
+      "task": "budgeted-covtype-dual-market-open",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:56:01.438845+00:00",
+      "refreshed_during_review": true
+    },
+    {
+      "evaluation_id": "18c36610-cc0a-442c-a64a-63b0e50894b3",
+      "task": "causalrivers-heldout-station-graph-auroc",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:28:55.969078+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "6d152e55-d12e-49c4-be07-78a692f15ebb",
+      "task": "causalrivers-heldout-station-graph-auroc",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:29:18.884067+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "5b88c008-dd09-45a8-a13f-6cb4bcd18dc4",
+      "task": "causalrivers-heldout-station-graph-auroc",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:28:43.675916+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "5402dce4-4d71-4f15-8b8f-92f975936e11",
+      "task": "causalrivers-heldout-station-graph-auroc",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:28:45.258012+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "c406b882-f939-40a6-bba8-cc838ba04270",
+      "task": "coreset-selection-group-robust-waterbirds",
+      "model_or_harness": "Claude Opus 5",
+      "cache_written_at": "2026-09-07T18:29:09.953990+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "1b671667-6354-47cb-bed3-884ccb540edb",
+      "task": "coreset-selection-group-robust-waterbirds",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:29:19.238928+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "27a6ab97-84b1-436b-b5be-702cdd9bbebd",
+      "task": "coreset-selection-group-robust-waterbirds",
+      "model_or_harness": "GPT-5.6 Sol",
+      "cache_written_at": "2026-09-07T18:29:14.198708+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "9a09a24e-31e0-456d-8256-331c42ca8ac1",
+      "task": "coreset-selection-group-robust-waterbirds",
+      "model_or_harness": "Codex",
+      "cache_written_at": "2026-09-07T18:29:18.503886+00:00",
+      "refreshed_during_review": false
+    },
+    {
+      "evaluation_id": "7bc25993-2f45-4457-ba2d-89573f04c6fd",
+      "task": "coreset-selection-group-robust-waterbirds",
+      "model_or_harness": "Claude Code",
+      "cache_written_at": "2026-09-07T18:29:15.280795+00:00",
+      "refreshed_during_review": false
+    }
+  ],
+  "worker_logs": "Unavailable through Horizon; direct Cloud Logging requires renewed gcloud authentication.",
+  "review_refresh_started_at": "2026-09-07T18:51:27.909883+00:00"
+}

@@ -34,7 +34,7 @@ const HARNESS_ABLATION_SERIES=[
   {key:"claude_opus",name:"Claude Code, Claude Opus 5",color:"#D95F02",dash:""},
   {key:"standard_opus",name:"Terminus 2, Claude Opus 5",color:"#D95F02",dash:"7 5"}
 ];
-let harnessTask=0,hiddenHarnessSeries=new Set();
+let harnessTask=2,hiddenHarnessSeries=new Set();
 
 function harnessChartSeries(split){
   return HARNESS_ABLATION_SERIES.filter(series=>!hiddenHarnessSeries.has(series.key)).map(series=>{
@@ -44,23 +44,35 @@ function harnessChartSeries(split){
   });
 }
 
+function harnessAxisDomain(task){
+  const values=Object.values(task.series).flatMap(series=>[...series.validation.slice(1),...series.test.slice(1)]).filter(Number.isFinite);
+  if(!values.length)return{lo:0,hi:.6};
+  const minimum=Math.min(...values),maximum=Math.max(...values);
+  let lo=Math.max(0,Math.floor((minimum-.08)*10)/10),hi=Math.min(1,Math.ceil((maximum+.05)*10)/10);
+  if(hi-lo<.3)lo=Math.max(0,Math.round((hi-.3)*10)/10);
+  if(lo<.2)lo=0;
+  return{lo,hi:Math.max(hi,lo+.3)};
+}
+
 function harnessChart(split,title){
   const seriesData=harnessChartSeries(split);
   if(!seriesData.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
   const values=seriesData.flatMap(series=>series.scores).filter(Number.isFinite);
   if(!values.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">No values are available for this task.</p></div>`;
-  const step=.1,lo=0,hi=Math.max(.6,Math.ceil(Math.max(...values)*10)/10),yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,x=hour=>L+hour/12*(W-L-R),y=value=>T+(hi-value)/(hi-lo)*(B-T),axisLabel="Reported reward",formatValue=value=>value.toFixed(1);
+  const {lo,hi}=harnessAxisDomain(HARNESS_ABLATION.tasks[harnessTask]);
+  const step=.1,yTicks=ticks(lo,hi,step),W=620,H=338,L=68,R=12,T=12,B=267,railTop=229,kinkTop=241,x=hour=>L+hour/12*(W-L-R),y=value=>lo>0?(value<lo?B-(Math.max(0,value)/lo)*(B-railTop):T+(hi-value)/(hi-lo)*(railTop-T)):T+(hi-value)/(hi-lo)*(B-T),axisLabel="Reported reward",formatValue=value=>value.toFixed(1);
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+B)/2})">${esc(axisLabel)}</text>`;
   for(const value of yTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
   for(const hour of [0,2,4,6,8,10,12])body+=`<text class="tick" x="${x(hour)}" y="303" text-anchor="middle">${hour}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${B}"/><line class="axis" x1="${L}" x2="${W-R}" y1="${B}" y2="${B}"/>`;
+  if(lo>0)body+=`<g aria-label="Y-axis break; lower range omitted"><line class="grid" x1="${L}" x2="${W-R}" y1="${B}" y2="${B}"/><text class="tick" x="${L-7}" y="${B+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/></g>`;
   for(const series of seriesData){
     const points=series.scores.map((score,hour)=>({hour,score})).filter(point=>point.hour>0&&Number.isFinite(point.score));
     if(!points.length)continue;
     let path=`M${x(points[0].hour)} ${y(points[0].score)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].hour)} ${y(points[index-1].score)}L${x(points[index].hour)} ${y(points[index].score)}`;
     body+=`<path class="curve" stroke="${series.color}" stroke-dasharray="${series.dash}" d="${path}"/>`;
-    for(const point of points)body+=`<circle class="point" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.score)}" r="2.4"><title>${esc(series.name)}, ${point.hour} hours: ${formatValue(point.score)}</title></circle>`;
+    for(const point of points)body+=`<circle class="point" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.score)}" r="2.4"><title>${esc(series.name)}, ${point.hour} hours: ${point.score.toFixed(3)}</title></circle>`;
   }
   return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
 }
@@ -68,10 +80,12 @@ function harnessChart(split,title){
 function renderHarnessAblations(){
   const container=document.getElementById("harness-ablation-plot");
   if(!container)return;
-  const task=HARNESS_ABLATION.tasks[harnessTask],visibleTitle="Best visible reported reward so far",testTitle="Hidden test reported reward at that checkpoint";
+  const summary=document.getElementById("harness-summary");
+  if(summary){const rows=HARNESS_ABLATION_SERIES.map(s=>{const a=HARNESS_ABLATION.aggregate[s.key];return `<tr><td>${esc(s.name.split(", ")[0])}</td><td>${esc(s.name.split(", ").slice(1).join(", "))}</td><td>${a.validation.toFixed(3)}</td><td>${a.test.toFixed(3)}</td><td>${a.completed_evaluations.toFixed(1)}</td></tr>`}).join("");summary.innerHTML=`<h3>Average results at 12 hours</h3><div class="harness-table-wrap"><table class="harness-table"><thead><tr><th>Harness</th><th>Model</th><th>Validation</th><th>Hidden test</th><th>Completed evaluations</th></tr></thead><tbody>${rows}</tbody></table></div><p class="plot-note">Same ${HARNESS_ABLATION.aggregate_tasks.length} tasks for every row. <a href="analysis/harness/README.md">Method and sources</a>.</p>`;}
+  const task=HARNESS_ABLATION.tasks[harnessTask],visibleTitle="Best validation score so far",testTitle="Hidden test score of the same solution";
   const legend=HARNESS_ABLATION_SERIES.map(series=>`<button type="button" class="${hiddenHarnessSeries.has(series.key)?"off":""}" data-harness-series="${series.key}" aria-pressed="${!hiddenHarnessSeries.has(series.key)}"><i style="background:repeating-linear-gradient(90deg,${series.color} 0,${series.color} ${series.dash?"7px":"18px"},transparent ${series.dash?"7px":"18px"},transparent ${series.dash?"12px":"18px"})"></i>${esc(series.name)}</button>`).join("");
-  const taskPicker=`<label class="harness-task-picker">Task <select>${HARNESS_ABLATION.tasks.map((item,index)=>`<option value="${index}"${index===harnessTask?" selected":""}>${esc(item.name)}</option>`).join("")}</select></label>`,description=`The charts show ${esc(task.name)}, with one run for each harness and model.`;
-  container.innerHTML=`<div class="harness-plot">${taskPicker}<div class="harness-legend" role="group" aria-label="Harness and model series">${legend}</div><p>${description}</p><div class="charts">${harnessChart("validation",visibleTitle)}${harnessChart("test",testTitle)}</div></div>`;
+  const taskPicker=`<label class="harness-task-picker">Task <select>${HARNESS_ABLATION.tasks.map((item,index)=>({item,index})).filter(({item})=>HARNESS_ABLATION.aggregate_tasks.includes(item.name)).sort((a,b)=>(b.item.name==="HiCARD latent encoder")-(a.item.name==="HiCARD latent encoder")).map(({item,index})=>`<option value="${index}"${index===harnessTask?" selected":""}>${esc(item.name)}</option>`).join("")}</select></label>`,missing=HARNESS_ABLATION_SERIES.filter(series=>!task.series[series.key].validation.some(Number.isFinite)).map(series=>series.name),note=missing.length?`<p class="plot-note">${esc(missing.join("; "))}: no evaluation finished within 12 hours. </p>`:"";
+  container.innerHTML=`<div class="harness-plot">${taskPicker}<div class="harness-legend" role="group" aria-label="Harness and model series">${legend}</div>${note}<div class="charts">${harnessChart("validation",visibleTitle)}${harnessChart("test",testTitle)}</div></div>`;
   container.querySelectorAll("[data-harness-series]").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.harnessSeries;hiddenHarnessSeries.has(key)?hiddenHarnessSeries.delete(key):hiddenHarnessSeries.add(key);renderHarnessAblations()}));
   container.querySelector("select")?.addEventListener("change",event=>{harnessTask=Number(event.target.value);renderHarnessAblations()});
 }

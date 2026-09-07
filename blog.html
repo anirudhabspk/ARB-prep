@@ -94,20 +94,12 @@
       <div class="task-grid" id="task-grid"></div>
     </section>
     <section class="section" id="harness-ablations">
-      <h2>Harness Ablations</h2>
-      <p class="harness-intro">To isolate the effect of the model harness on autoresearch performance, we ran Codex and Claude Code for 12 hours on six tasks. We compare their results with the first 12 hours of standard Terminus 2 runs using the same models.</p>
+      <h2>Harness ablations</h2>
+      <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models and comparing the first 12 hours.</p>
+      <div id="harness-summary"></div>
+      <p id="harness-findings">Average scores differ across harnesses, but the aggregate hidden test ranking stays the same. Both Codex and Claude Code submit more than Terminus 2 in these runs. Codex has a larger drop from validation to hidden test scores, mostly due to one task. Claude Code has no average drop. These results do not establish that extra submissions cause overfitting.</p>
       <div id="harness-ablation-plot"></div>
-      <div class="harness-table-wrap">
-        <table class="harness-table">
-          <thead><tr><th>Harness</th><th>Model</th><th>Average submissions per task</th><th>Average agent time per task</th><th>Average verifier time per task</th></tr></thead>
-          <tbody>
-            <tr><td>Codex</td><td>GPT-5.6 Sol</td><td>160.3</td><td>4.8 of 12 hours, 39.8%</td><td>7.2 of 12 hours, 60.2%</td></tr>
-            <tr><td>Terminus 2</td><td>GPT-5.6 Sol</td><td>59.3</td><td>8.5 of 12 hours, 71.1%</td><td>3.5 of 12 hours, 28.9%</td></tr>
-            <tr><td>Claude Code</td><td>Claude Opus 5</td><td>29.2</td><td>8.2 of 12 hours, 68.2%</td><td>3.8 of 12 hours, 31.8%</td></tr>
-            <tr><td>Terminus 2</td><td>Claude Opus 5</td><td>11.5</td><td>10.9 of 12 hours, 90.5%</td><td>1.1 of 12 hours, 9.5%</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
     </section>
     <section class="section" id="opsd-hints">
       <span class="pending-label">Pending</span>
