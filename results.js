@@ -36,9 +36,10 @@ const HARNESS_ABLATION_SERIES=[
 ];
 let harnessChartMode="reported",harnessRawTask=0,hiddenHarnessSeries=new Set();
 
-function harnessValue(task,reward,mode,split){
+function harnessValue(task,series,hourIndex,mode,split){
+  const reward=series[split][hourIndex];
   if(mode==="reported")return reward;
-  const chartSplit=split==="validation"?"intermediate":"final",raw=RAW_SCORE_MAPS[task.name]?.invert(reward,chartSplit)??null;
+  const chartSplit=split==="validation"?"intermediate":"final",raw=series[`raw_${split}`][hourIndex];
   if(mode==="raw")return raw;
   if(raw==null)return reward===0?0:null;
   return DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,chartSplit)??null;
@@ -47,7 +48,7 @@ function harnessValue(task,reward,mode,split){
 function harnessChartSeries(mode,split){
   return HARNESS_ABLATION_SERIES.filter(series=>!hiddenHarnessSeries.has(series.key)).map(series=>{
     const tasks=mode==="raw"?[HARNESS_ABLATION.tasks[harnessRawTask]]:HARNESS_ABLATION.tasks;
-    const scores=HARNESS_ABLATION.hours.map((_,hourIndex)=>mean(tasks.map(task=>harnessValue(task,task.series[series.key][split][hourIndex],mode,split)).filter(Number.isFinite)));
+    const scores=HARNESS_ABLATION.hours.map((_,hourIndex)=>mean(tasks.map(task=>harnessValue(task,task.series[series.key],hourIndex,mode,split)).filter(Number.isFinite)));
     return{...series,scores};
   });
 }
