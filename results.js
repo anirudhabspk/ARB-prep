@@ -195,7 +195,11 @@ function solveProfiles(){
 }
 
 function overviewLegend(series){
-  return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>`<span class="model-identity">${modelIdentity(item.key,{short:true})}</span>`).join("")}</div>`;
+  return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>{
+    const model=MODEL[item.key],brand=MODEL_BRANDS[item.key],label=model?.name||item.key;
+    if(!brand)return`<span class="overview-legend-logo overview-legend-fallback" title="${esc(label)}" aria-label="${esc(label)}" role="img" style="border-color:${model?.color||"#4D4D4D"}"></span>`;
+    return`<span class="overview-legend-logo" title="${esc(label)}" aria-label="${esc(label)}" role="img" style="border-color:${model.color}"><img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async"></span>`;
+  }).join("")}</div>`;
 }
 
 function overviewLine(series,path,detail){

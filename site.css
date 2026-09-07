@@ -101,9 +101,9 @@
 .company-logo-backdrop{vector-effect:non-scaling-stroke}
 .efficiency-point:hover .company-logo-backdrop,.efficiency-point:focus .company-logo-backdrop{stroke:var(--ink);stroke-width:2.5}
 .overview-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:16px 0 22px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
-.overview-legend .model-identity{flex:0 0 auto;gap:4px}
-.overview-legend .company-logo{width:18px;height:18px}
-.overview-legend .model-color-key{height:10px}
+.overview-legend-logo{display:grid;place-items:center;width:24px;height:24px;flex:0 0 auto;border:2px solid;background:#fff;cursor:help}
+.overview-legend-logo .company-logo{width:18px;height:18px}
+.overview-legend-fallback::after{content:"";width:10px;height:10px;background:currentColor}
 .cost-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin:12px 0 4px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
 .cost-legend .model-identity{flex:0 0 auto}
 .cost-legend .company-logo{width:18px;height:18px}
