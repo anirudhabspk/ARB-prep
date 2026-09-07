@@ -92,3 +92,23 @@
   .task-files-viewer.is-expanded .task-files-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);overflow:hidden;border:0}
   .task-files-viewer.is-expanded .task-file-panel{min-height:0;overflow:hidden}
 }
+
+/* Provider identity is carried by a logo; the color key still distinguishes models from the same provider. */
+.company-logo{display:block;width:13px;height:13px;flex:0 0 auto;object-fit:contain}
+.model-identity{display:inline-flex;align-items:center;gap:4px;min-width:0;white-space:nowrap}
+.model-color-key{display:block;width:3px;height:11px;flex:0 0 auto;border-radius:2px}
+.company-logo-svg{pointer-events:none}
+.company-logo-backdrop{vector-effect:non-scaling-stroke}
+.efficiency-point:hover .company-logo-backdrop,.efficiency-point:focus .company-logo-backdrop{stroke:var(--ink);stroke-width:2.5}
+.overview-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:16px 0 22px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
+.overview-legend .model-identity{flex:0 0 auto;gap:4px}
+.overview-legend .company-logo{width:12px;height:12px}
+.overview-legend .model-color-key{height:10px}
+.cost-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin:12px 0 4px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
+.cost-legend .model-identity{flex:0 0 auto}
+.cost-legend .company-logo{width:12px;height:12px}
+.legend{flex-wrap:nowrap;max-width:100%;overflow-x:auto;scrollbar-width:thin}
+.legend button{flex:0 0 auto;gap:5px;padding:5px 8px}
+.legend .company-logo{width:12px;height:12px}
+.legend .model-color-key{height:10px}
+@media(max-width:640px){.overview-legend,.cost-legend{gap:8px}.overview-legend .model-identity,.cost-legend .model-identity{font-size:9px}}
