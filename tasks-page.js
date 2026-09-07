@@ -82,7 +82,6 @@
     show(detailView);
     document.getElementById("detail-slug").textContent = entry.slug;
     document.getElementById("detail-title").textContent = entry.title;
-    document.getElementById("detail-summary").textContent = entry.summary;
 
     const meta = document.getElementById("detail-meta");
     meta.replaceChildren();
