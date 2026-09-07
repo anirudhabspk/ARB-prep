@@ -1,0 +1,94 @@
+{
+  "comparisons": [
+    {
+      "task": "CPU LLM decode throughput",
+      "scores": {
+        "standard_opus": 0.469878165529,
+        "standard_sol": 0,
+        "codex_sol": 0.405916373993,
+        "claude_opus": null
+      }
+    },
+    {
+      "task": "Shortest valid CI L2 ECE",
+      "scores": {
+        "standard_opus": 0.531637467023,
+        "standard_sol": 0.531083307012,
+        "codex_sol": 0,
+        "claude_opus": 0.529900146916
+      }
+    },
+    {
+      "task": "HiCARD latent encoder",
+      "scores": {
+        "standard_opus": 0.603077609776,
+        "standard_sol": 0.538027656612,
+        "codex_sol": 0.520757791835,
+        "claude_opus": 0.568165799386
+      }
+    },
+    {
+      "task": "Budgeted Covtype dual market",
+      "scores": {
+        "standard_opus": 0.469406198428,
+        "standard_sol": 0.520502780024,
+        "codex_sol": 0.472871295907,
+        "claude_opus": 0.457945187922
+      }
+    },
+    {
+      "task": "CausalRivers held out station graph AUROC",
+      "scores": {
+        "standard_opus": 0.652163470746,
+        "standard_sol": 0.603771871655,
+        "codex_sol": 0.638385650224,
+        "claude_opus": 0.685735673148
+      }
+    },
+    {
+      "task": "Waterbirds group robust coreset selection",
+      "scores": {
+        "standard_opus": 0.519959575543,
+        "standard_sol": 0.498151082937,
+        "codex_sol": 0.585514834206,
+        "claude_opus": 0.544364508393
+      }
+    }
+  ],
+  "native_vs_terminus": {
+    "codex_sol": {
+      "wins": 3,
+      "losses": 3,
+      "ties": 0,
+      "missing": 0
+    },
+    "claude_opus": {
+      "wins": 2,
+      "losses": 3,
+      "ties": 0,
+      "missing": 1
+    }
+  },
+  "model_order": [
+    {
+      "task": "Shortest valid CI L2 ECE",
+      "same_order": true
+    },
+    {
+      "task": "HiCARD latent encoder",
+      "same_order": true
+    },
+    {
+      "task": "Budgeted Covtype dual market",
+      "same_order": true
+    },
+    {
+      "task": "CausalRivers held out station graph AUROC",
+      "same_order": true
+    },
+    {
+      "task": "Waterbirds group robust coreset selection",
+      "same_order": false
+    }
+  ]
+}
