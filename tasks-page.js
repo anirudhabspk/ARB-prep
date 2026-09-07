@@ -7,6 +7,9 @@
   const categoryByTask = new Map(CATEGORIES.flatMap(category => category.specimens.map(name => [name, category.name])));
   const detailView = document.getElementById("detail-view");
   const missingView = document.getElementById("task-missing");
+  const taskFilesSection = document.getElementById("task-files-section");
+  const taskFilesContainer = document.getElementById("task-files-viewer");
+  let disposeTaskFiles = null;
 
   if (!location.hash.slice(1)) {
     location.replace("blog.html#examples");
@@ -47,9 +50,26 @@
     list.appendChild(item);
   }
 
+  function clearTaskFiles() {
+    disposeTaskFiles?.();
+    disposeTaskFiles = null;
+    taskFilesSection.hidden = true;
+    taskFilesContainer.replaceChildren();
+  }
+
+  function renderTaskFiles(slug) {
+    clearTaskFiles();
+    const hasBundle = Boolean(window.ARB_TASK_FILES?.tasks?.[slug]);
+    if (!hasBundle || !window.ARBTaskFilesViewer?.render) return;
+    taskFilesSection.hidden = false;
+    const dispose = window.ARBTaskFilesViewer.render({ slug, container: taskFilesContainer });
+    if (typeof dispose === "function") disposeTaskFiles = dispose;
+  }
+
   function renderDetail(slug) {
     const entry = bySlug.get(slug);
     if (!entry) {
+      clearTaskFiles();
       show(missingView);
       document.getElementById("missing-slug").textContent = slug;
       document.title = "Task not found · AutoResearchBench";
@@ -95,6 +115,7 @@
     } else {
       taskView.innerHTML = '<p class="plot-note">No runs recorded for this task yet.</p>';
     }
+    renderTaskFiles(slug);
     document.title = `${entry.title} · AutoResearchBench`;
   }
 
