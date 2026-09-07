@@ -1,0 +1,1 @@
+Quantising once and then fitting the low-rank term to whatever is left leaves about half the recoverable error on the table; alternating between the two — requantise against the current low-rank term, refit it against the new residual — is where the improvement is.

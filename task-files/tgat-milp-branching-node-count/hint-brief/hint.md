@@ -1,0 +1,1 @@
+Heuristic scores of the fractional candidates plateau near the trivial floor; the observation carries enough of the relaxation to evaluate what a candidate would actually do rather than guess, and the improvement is in affording that evaluation within the per-decision time budget.

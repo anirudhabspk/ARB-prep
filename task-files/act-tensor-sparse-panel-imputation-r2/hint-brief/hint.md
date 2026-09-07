@@ -1,0 +1,1 @@
+The entries are cross-sectional ranks, and conditioning on them as if they were Gaussian misstates the dependence; mapping ranks to normal scores first, then conditioning, is the step that moves the metric once a basic low-rank fit is in place.

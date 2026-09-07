@@ -1,0 +1,1 @@
+Uniform sampling with a plain mean is the floor; the improvement is to stratify by how much each example's loss can vary and to correct the estimate with the auxiliary predictions as a control variate, which stays unbiased even when that auxiliary is badly calibrated.

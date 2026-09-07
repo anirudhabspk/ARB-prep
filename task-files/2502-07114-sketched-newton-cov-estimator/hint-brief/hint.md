@@ -1,0 +1,1 @@
+Propagating the sketch moments approximately or by sampling is the accuracy ceiling; the recurrence is exact and can be evaluated to machine precision, after which the error is dominated entirely by the noise-scale estimate rather than by the covariance.

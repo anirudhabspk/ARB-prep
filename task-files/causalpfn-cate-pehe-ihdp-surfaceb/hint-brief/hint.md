@@ -1,0 +1,1 @@
+Beyond the shared parametric form, the treated group is the same fixed cohort in every dataset and a population quantity over it is pinned to an exact constant — that identity removes far more error than any further refinement of the fitting.

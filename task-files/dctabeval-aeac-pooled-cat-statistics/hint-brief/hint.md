@@ -1,0 +1,1 @@
+Model choice saturates early; the improvement comes from features counted over the unlabelled rows as well as the labelled ones — occurrence and co-occurrence of the identifier values, which carry more than any single value's identity.

@@ -1,0 +1,1 @@
+The category statistics do not have to be frozen at fit time: the batch handed to the transform is more unlabelled data about the same categories, and folding it into those estimates is a larger gain than any refinement of the projection.

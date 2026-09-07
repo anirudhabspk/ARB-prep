@@ -1,0 +1,1 @@
+Early policies come in far under the permitted failure rate, which is reward given away: the improvement is to treat the allowance as a budget to be consumed by the end of the route, using the closed-form probability of finishing rather than a fixed safety margin.

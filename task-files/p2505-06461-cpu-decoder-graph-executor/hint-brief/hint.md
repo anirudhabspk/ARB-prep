@@ -1,0 +1,1 @@
+Measure where each regime actually sits: single-token execution runs at the machine's memory-bandwidth ceiling while multi-token execution does not, so past that point the single-token path improves only by moving fewer bytes and issuing fewer calls, not by faster arithmetic.

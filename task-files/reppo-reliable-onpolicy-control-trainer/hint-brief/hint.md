@@ -1,0 +1,1 @@
+A general learner plateaus below the bar because the score demands every seed succeed; the improvement is to recognise the environments as low-dimensional classical control systems under an unknown observation transform, identify the system, and control it analytically.

@@ -1,0 +1,1 @@
+The first round is where the leverage is, because no model exists yet to make the acquisition rule meaningful — what the retained subset looks like distributionally at that point matters more than everything the loop does afterwards.
