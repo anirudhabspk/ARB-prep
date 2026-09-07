@@ -92,6 +92,86 @@
     return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
   }
 
+  const SYNTAX_RULES = {
+    python: /(?<comment>#.*)|(?<string>(?:[rRuUbBfF]{0,2})(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'))|(?<decorator>@[A-Za-z_]\w*(?:\.\w+)*)|(?<keyword>\b(?:and|as|assert|async|await|break|case|class|continue|def|del|elif|else|except|finally|for|from|global|if|import|in|is|lambda|match|nonlocal|not|or|pass|raise|return|try|while|with|yield)\b)|(?<constant>\b(?:True|False|None|NotImplemented|Ellipsis)\b)|(?<number>\b(?:0[xob][0-9a-f_]+|\d[\d_]*(?:\.[\d_]*)?(?:e[+-]?\d+)?)\b)|(?<function>\b[A-Za-z_]\w*(?=\s*\())|(?<operator>:=|->|==|!=|<=|>=|\*\*|\/\/|[-+*/%@&|^~<>]=?)/gi,
+    json: /(?<property>"(?:\\.|[^"\\])*"(?=\s*:))|(?<string>"(?:\\.|[^"\\])*")|(?<constant>\b(?:true|false|null)\b)|(?<number>-?(?:0|[1-9]\d*)(?:\.\d+)?(?:e[+-]?\d+)?)|(?<punctuation>[{}\[\],:])/gi,
+    toml: /(?<comment>#.*)|(?<section>^\s*\[\[?[^\]]+\]?\])|(?<string>"(?:\\.|[^"\\])*"|'[^']*')|(?<property>\b[A-Za-z0-9_-]+(?=\s*=))|(?<constant>\b(?:true|false)\b)|(?<number>\b\d(?:[\d_.:-]*\d)?(?:[zZ]|[+-]\d\d?:?\d\d)?\b)|(?<punctuation>[\[\]{},=])/gi,
+    shell: /(?<comment>#.*)|(?<string>"(?:\\.|[^"\\])*"|'[^']*')|(?<variable>\$\{[^}]+\}|\$(?:[A-Za-z_]\w*|[0-9@#?$!*-]))|(?<keyword>\b(?:if|then|else|elif|fi|for|while|in|do|done|case|esac|function|select|time|until)\b)|(?<number>\b\d+(?:\.\d+)?\b)|(?<operator>&&|\|\||;;|[|&;<>])/g,
+    dockerfile: /(?<keyword>^\s*(?:ADD|ARG|CMD|COPY|ENTRYPOINT|ENV|EXPOSE|FROM|HEALTHCHECK|LABEL|MAINTAINER|ONBUILD|RUN|SHELL|STOPSIGNAL|USER|VOLUME|WORKDIR)\b)|(?<comment>#.*)|(?<string>"(?:\\.|[^"\\])*"|'[^']*')|(?<variable>\$\{[^}]+\}|\$[A-Za-z_]\w*)|(?<property>--[A-Za-z0-9_-]+)|(?<number>\b\d+(?:\.\d+)?\b)|(?<operator>&&|\|\||[|&;<>])/gi,
+    markdown: /(?<heading>^\s{0,3}#{1,6}\s.*$)|(?<markup>^\s*(?:>|[-+*]|\d+\.)\s|^\s*`{3,}.*$)|(?<code>`+[^`]+`+)|(?<link>\[[^\]]+\]\([^)]+\))|(?<strong>\*\*[^*]+\*\*|__[^_]+__)|(?<emphasis>\*[^*]+\*|_[^_]+_)|(?<tag><\/?[A-Za-z][^>]*>)/g,
+  };
+
+  function addToken(tokens, type, text) {
+    if (!text) return;
+    const previous = tokens[tokens.length - 1];
+    if (previous?.type === type) previous.text += text;
+    else tokens.push({ type, text });
+  }
+
+  function tokenizeWithRules(source, rules) {
+    if (!rules || !source) return source ? [{ type: null, text: source }] : [];
+    const tokens = [];
+    let cursor = 0;
+    rules.lastIndex = 0;
+    for (let match = rules.exec(source); match; match = rules.exec(source)) {
+      addToken(tokens, null, source.slice(cursor, match.index));
+      const type = Object.keys(match.groups).find(name => match.groups[name] != null);
+      addToken(tokens, type, match[0]);
+      cursor = rules.lastIndex;
+      if (match[0] === "") rules.lastIndex += 1;
+    }
+    addToken(tokens, null, source.slice(cursor));
+    return tokens;
+  }
+
+  function tokenizePython(source, state) {
+    const tokens = [];
+    let cursor = 0;
+
+    if (state.pythonString) {
+      const end = source.indexOf(state.pythonString);
+      if (end < 0) return [{ type: "string", text: source }];
+      addToken(tokens, "string", source.slice(0, end + state.pythonString.length));
+      cursor = end + state.pythonString.length;
+      state.pythonString = null;
+    }
+
+    while (cursor < source.length) {
+      const remaining = source.slice(cursor);
+      const opening = /(?:[rRuUbBfF]{0,2})("""|''')/.exec(remaining);
+      if (!opening) {
+        tokenizeWithRules(remaining, SYNTAX_RULES.python).forEach(token => addToken(tokens, token.type, token.text));
+        break;
+      }
+
+      const start = cursor + opening.index;
+      const comment = source.indexOf("#", cursor);
+      if (comment >= 0 && comment < start) {
+        tokenizeWithRules(remaining, SYNTAX_RULES.python).forEach(token => addToken(tokens, token.type, token.text));
+        break;
+      }
+
+      tokenizeWithRules(source.slice(cursor, start), SYNTAX_RULES.python)
+        .forEach(token => addToken(tokens, token.type, token.text));
+      const delimiter = opening[1];
+      const contentStart = start + opening[0].length;
+      const end = source.indexOf(delimiter, contentStart);
+      if (end < 0) {
+        addToken(tokens, "string", source.slice(start));
+        state.pythonString = delimiter;
+        break;
+      }
+      addToken(tokens, "string", source.slice(start, end + delimiter.length));
+      cursor = end + delimiter.length;
+    }
+    return tokens;
+  }
+
+  function highlightedTokens(source, language, state) {
+    if (language === "python") return tokenizePython(source, state);
+    return tokenizeWithRules(source, SYNTAX_RULES[language]);
+  }
+
   async function copyText(text) {
     if (navigator.clipboard?.writeText) {
       try {
@@ -276,17 +356,22 @@
       content.replaceChildren(status);
     }
 
-    function renderSource(text) {
+    function renderSource(text, language) {
       const pre = element("pre", "task-file-code");
       pre.tabIndex = 0;
       pre.setAttribute("aria-label", `${selectedPath} source`);
       const code = document.createElement("code");
+      const syntaxState = {};
       const lines = text.split("\n");
       lines.forEach((sourceLine, index) => {
         const row = element("span", "task-file-line");
         const lineNumber = element("span", "task-file-line-number", String(index + 1));
         lineNumber.setAttribute("aria-hidden", "true");
-        const lineContent = element("span", "task-file-line-content", sourceLine);
+        const lineContent = element("span", "task-file-line-content");
+        highlightedTokens(sourceLine, language, syntaxState).forEach(token => {
+          if (!token.type) lineContent.appendChild(document.createTextNode(token.text));
+          else lineContent.appendChild(element("span", `syntax-${token.type}`, token.text));
+        });
         row.append(lineNumber, lineContent);
         code.appendChild(row);
       });
@@ -330,7 +415,7 @@
       const cached = loadedFiles.get(cacheKey);
       if (cached) {
         selectedContent = cached;
-        renderSource(cached.text);
+        renderSource(cached.text, file.language);
         copyButton.disabled = false;
         downloadButton.disabled = false;
         announce(`Selected ${path}`);
@@ -349,7 +434,7 @@
         if (disposed || thisRequest !== requestNumber) return;
         loadedFiles.set(cacheKey, loaded);
         selectedContent = loaded;
-        renderSource(loaded.text);
+        renderSource(loaded.text, file.language);
         copyButton.disabled = false;
         downloadButton.disabled = false;
         announce(`Selected ${path}. Source loaded.`);
