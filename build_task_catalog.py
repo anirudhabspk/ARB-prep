@@ -87,7 +87,7 @@ def assemble_readmes(tasks_repo):
         grouped[category].append(f"### {title}\n<!-- slug: {slug} -->\n{remainder.rstrip()}\n")
 
     sections = [
-        "# AutoResearchBench preview tasks\n",
+        "# AutoResearchBench tasks\n",
         "29 tasks, grouped by research area. Each block is the task's README copied from the tasks repo.\n",
     ]
     for category in CATEGORY_ORDER:
@@ -211,7 +211,7 @@ def main():
         "--tasks-repo",
         type=Path,
         default=DEFAULT_TASKS_REPO,
-        help="path to the AutoResearchBench Preview Tasks checkout",
+        help="path to the AutoResearchBench tasks checkout",
     )
     args = parser.parse_args()
     if args.assemble:
