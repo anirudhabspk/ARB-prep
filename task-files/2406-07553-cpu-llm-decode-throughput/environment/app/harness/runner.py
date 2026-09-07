@@ -1,18 +1,3 @@
-"""Engine runner: the child protocol, and the parent-side timing around it.
-
-Child (`python3 runner.py <engine.py> <model_dir> <warmup.json> <results.json> <ready>`):
-
-  1. import the engine module, construct ``Engine(model_dir)``      -- not timed
-  2. run one ``generate()`` over the warm-up workload                -- not timed
-  3. create the ready marker file, then block reading stdin
-  4. read the workload as JSON from stdin, call ``generate()``       -- TIMED
-  5. write the returned token ids to the results file and exit
-
-The parent starts its clock when it hands the workload to the child and stops it when
-the child process exits, so the whole measurement lives on the far side of a process
-boundary. The workload is never on disk: an engine cannot see it before the clock runs.
-"""
-
 from __future__ import annotations
 
 import json

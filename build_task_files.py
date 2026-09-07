@@ -17,7 +17,7 @@ TASK_FILES_ROOT = ROOT / "task-files"
 MANIFEST_PATH = ROOT / "task-files-manifest.js"
 TASK_SLUG = "2406-07553-cpu-llm-decode-throughput"
 SOURCE_REPOSITORY = "bespokelabsai/AutoResearchBench-Preview-Tasks"
-SOURCE_COMMIT = "d955d799fdd09e023f5be947c2b2864227ed0409"
+SOURCE_COMMIT = "cdd1d9d7ec65f39bd923628b4467d88e270d6e38"
 EXACT_COMMIT_RE = re.compile(r"[0-9a-fA-F]{40}")
 
 

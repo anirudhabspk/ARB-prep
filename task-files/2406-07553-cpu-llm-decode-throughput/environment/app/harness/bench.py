@@ -1,14 +1,3 @@
-"""Dev benchmark: measure an engine's speedup over the reference on the dev workloads.
-
-    python3 /app/harness/bench.py                    # one dev workload
-    python3 /app/harness/bench.py --draws all        # all four, plus the median
-    python3 /app/harness/bench.py --draws 1,2 --limit 32
-
-It uses the same protocol as the graded run - interleaved reference and candidate, one
-distinct workload per round, the clock running only around ``generate()`` - on the dev
-workloads instead of the held-out ones.
-"""
-
 from __future__ import annotations
 
 import argparse

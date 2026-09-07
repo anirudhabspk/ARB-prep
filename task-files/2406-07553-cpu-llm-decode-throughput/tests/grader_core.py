@@ -1,23 +1,3 @@
-"""The reward map. Verifier-only: no copy of this file exists in the agent image.
-
-The graded metric is S, the generated-token throughput of the submitted engine divided
-by the throughput of the reference engine measured in the same grading run on the same
-workloads.
-
-Map: rational_squash, with both anchors read off the task.
-
-  m0      = 1.0   the strongest trivial submission is the shipped reference engine
-                  itself, which reproduces its own outputs and measures S = 1.0 by
-                  construction. Every trivial or degenerate submission lands at or
-                  below it (a degenerate one fails the agreement gate and gets S = 0).
-  baseline_score = 18.0  the speedup the source work reports for its serving engine.
-
-The metric is a ratio that improves multiplicatively, which is the log_rational row of
-the selection rule; the span from m0 to the attainable ceiling measured at this reduced
-scale is about one order of magnitude, not the several decades log compression exists
-for, so rational_squash is used.
-"""
-
 from __future__ import annotations
 
 M0 = 1.0

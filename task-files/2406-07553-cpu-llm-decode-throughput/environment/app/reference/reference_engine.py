@@ -1,16 +1,3 @@
-"""Reference serving engine.
-
-Batch-1 greedy decode over a 12-layer causal transformer (GPT-2 124M geometry), fp32,
-with a per-request key/value cache. Requests are served strictly one at a time.
-
-This module defines the output semantics: for every request, the returned token ids are
-the greedy (argmax) continuation of the prompt, `max_new_tokens` of them, with no early
-stop and no padding.
-
-Read-only. The graded engine is a separate module; this one is here to be read, timed
-against, and used as the definition of a correct answer.
-"""
-
 from __future__ import annotations
 
 import json
