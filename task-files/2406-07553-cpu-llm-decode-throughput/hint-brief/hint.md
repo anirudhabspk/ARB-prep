@@ -1,0 +1,1 @@
+Once batched decoding works, the remaining time is not arithmetic: profiling shows it going to per-step temporaries, a hand-written activation, and the full-vocabulary projection, so the next gains come from removing allocation and dispatch rather than from better attention.

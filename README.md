@@ -11,3 +11,21 @@ See [`evaluation-replacements.md`](evaluation-replacements.md) for evaluations t
 `build_site_data.py` accepts explicit `display_end_seconds`, `truncate_at_seconds`, and `valid_through_iteration` fields in each run. These fields make display and cutoff decisions explicit. Run `python -m unittest discover -s tests` after changing this policy.
 
 The `api_cost_usd` field must come from the API usage ledger. Do not replace missing API costs with rollout or evaluation costs.
+
+## Publishing task files
+
+The public task file browser is pinned to commit `d955d799fdd09e023f5be947c2b2864227ed0409` from `bespokelabsai/AutoResearchBench-Preview-Tasks`.
+
+Get explicit public release approval before copying task files. The published copy includes hidden workloads and grader code. A different source commit requires a fresh file review, public release approval, and secret and personal information scan.
+
+Sync from the committed tree, not the source repository working tree:
+
+```sh
+python build_task_files.py --sync --source-repo /path/to/AutoResearchBench-Preview-Tasks --source-ref d955d799fdd09e023f5be947c2b2864227ed0409
+```
+
+Rebuild the metadata manifest after changing the tracked copy:
+
+```sh
+python build_task_files.py
+```
