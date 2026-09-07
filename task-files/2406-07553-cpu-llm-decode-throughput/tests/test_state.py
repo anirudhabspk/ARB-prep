@@ -1,12 +1,3 @@
-"""Trusted grader. Runs the submitted engine and the reference engine and scores the run.
-
-Nothing agent-authored is imported or executed inside this process. The deliverable is
-copied to a root-owned read-only staging tree, launched in a fresh subprocess as the
-unprivileged ``agent`` uid via ``runuser``, and its output is read back as untrusted
-JSON. The wall clock is read here, in this process, around that subprocess boundary, so
-no code the agent wrote can touch the number that becomes the score.
-"""
-
 from __future__ import annotations
 
 import json

@@ -22,9 +22,10 @@
     return typeof slug === "string" && /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(slug) && !slug.includes("..");
   }
 
-  function sourceUrl(slug, path) {
+  function sourceUrl(slug, path, sha256) {
     const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-    return `task-files/${encodeURIComponent(slug)}/${encodedPath}`;
+    const version = typeof sha256 === "string" ? `?v=${encodeURIComponent(sha256.slice(0, 12))}` : "";
+    return `task-files/${encodeURIComponent(slug)}/${encodedPath}${version}`;
   }
 
   function formatBytes(size) {
@@ -405,7 +406,7 @@
       expandAncestors(path);
       pathLabel.textContent = path;
       metadata.textContent = `${file.language || "text"} · ${formatBytes(file.size)}`;
-      const rawUrl = sourceUrl(slug, path);
+      const rawUrl = sourceUrl(slug, path, file.sha256);
       sourceLink.href = rawUrl;
       copyButton.disabled = true;
       downloadButton.disabled = true;

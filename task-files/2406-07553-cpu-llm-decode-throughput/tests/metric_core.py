@@ -1,9 +1,3 @@
-"""The measurement protocol: what a valid answer is, and how the speedup is computed.
-
-The grader measures the graded engine exactly the way this module measures it, on a
-held-out request set instead of the dev one.
-"""
-
 from __future__ import annotations
 
 import os

@@ -1,6 +1,6 @@
 window.ARB_TASK_FILES = {
   "sourceRepository": "bespokelabsai/AutoResearchBench-Preview-Tasks",
-  "sourceCommit": "d955d799fdd09e023f5be947c2b2864227ed0409",
+  "sourceCommit": "cdd1d9d7ec65f39bd923628b4467d88e270d6e38",
   "tasks": {
     "2406-07553-cpu-llm-decode-throughput": {
       "defaultFile": "instruction.md",
@@ -49,26 +49,26 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "environment/app/harness/bench.py",
-          "size": 3259,
-          "sha256": "9f19438ba1c389fc39abf2de5fca7a67a4c39822794f1c1407a4dc07b4a0e6cc",
+          "size": 2741,
+          "sha256": "512eb2fc6c4d3b81795a110202879846774bbafeaae1e0f6832eaeabe0964ade",
           "language": "python"
         },
         {
           "path": "environment/app/harness/metric_core.py",
-          "size": 7184,
-          "sha256": "87a55ada95898c7c992a70f00f5a666455747dbbee9e9a7d3dfbb68360d74e18",
+          "size": 6963,
+          "sha256": "824b135cb3d76dc81cb0dbe1196b8256b64ad52fcddbd04f6708dcf34f4ebfc3",
           "language": "python"
         },
         {
           "path": "environment/app/harness/runner.py",
-          "size": 6848,
-          "sha256": "29e2aeba4a849c6f107d3ab4a7630f4dd5ceecc34d3722b7c20bcd3a2c9f96f2",
+          "size": 6051,
+          "sha256": "7422ce9035e23b50479a7e994fcdbcb74de8361f20438625bdee4e2a480909a7",
           "language": "python"
         },
         {
           "path": "environment/app/reference/reference_engine.py",
-          "size": 5675,
-          "sha256": "7fca21cd4bf4c65afd16e40acd9866768f269213994eb2bcca4c6ddcd629e9c1",
+          "size": 5132,
+          "sha256": "24318cd300495f11acffd4720daf3273ec46526081d6bc47f4e14b451127a247",
           "language": "python"
         },
         {
@@ -109,14 +109,14 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/compute_reward.py",
-          "size": 691,
-          "sha256": "560adf7d5468fa96fd506e4857f84d15dd79b84f82ebd38906de1cb25e462c52",
+          "size": 608,
+          "sha256": "be0ecd54cac37a2c61921bab0fe87b705a605bd1382cc41df3c1e462cf0e431e",
           "language": "python"
         },
         {
           "path": "tests/grader_core.py",
-          "size": 1472,
-          "sha256": "6e6dbb23de20d11308247281bc2ff48aaa13acf66ed3bb2ce243fa079a184bf1",
+          "size": 422,
+          "sha256": "531efa88ffcf4847dec100488b944408511f61d357475cfea8c7e548b7b1b892",
           "language": "python"
         },
         {
@@ -163,14 +163,14 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/metric_core.py",
-          "size": 7184,
-          "sha256": "87a55ada95898c7c992a70f00f5a666455747dbbee9e9a7d3dfbb68360d74e18",
+          "size": 6963,
+          "sha256": "824b135cb3d76dc81cb0dbe1196b8256b64ad52fcddbd04f6708dcf34f4ebfc3",
           "language": "python"
         },
         {
           "path": "tests/reference_engine.py",
-          "size": 5675,
-          "sha256": "7fca21cd4bf4c65afd16e40acd9866768f269213994eb2bcca4c6ddcd629e9c1",
+          "size": 5132,
+          "sha256": "24318cd300495f11acffd4720daf3273ec46526081d6bc47f4e14b451127a247",
           "language": "python"
         },
         {
@@ -187,8 +187,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/runner.py",
-          "size": 6848,
-          "sha256": "29e2aeba4a849c6f107d3ab4a7630f4dd5ceecc34d3722b7c20bcd3a2c9f96f2",
+          "size": 6051,
+          "sha256": "7422ce9035e23b50479a7e994fcdbcb74de8361f20438625bdee4e2a480909a7",
           "language": "python"
         },
         {
@@ -199,8 +199,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/test_state.py",
-          "size": 8085,
-          "sha256": "1a58d03e2317b96e7a02998042c5018e322db2c241f3ebd02d4b2da5f34698da",
+          "size": 7575,
+          "sha256": "c08a0292f3dd34f55c7e16cb0362fcb29a581d77744043ebdfe911e5d0da39b9",
           "language": "python"
         },
         {

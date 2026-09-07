@@ -1,5 +1,3 @@
-"""Turn the recorded metric into the single clamped reward the platform reads."""
-
 import json
 import math
 from pathlib import Path

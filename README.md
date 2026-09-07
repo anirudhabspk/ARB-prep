@@ -14,14 +14,14 @@ The `api_cost_usd` field must come from the API usage ledger. Do not replace mis
 
 ## Publishing task files
 
-The public task file browser is pinned to commit `d955d799fdd09e023f5be947c2b2864227ed0409` from `bespokelabsai/AutoResearchBench-Preview-Tasks`.
+The public task file browser is pinned to commit `cdd1d9d7ec65f39bd923628b4467d88e270d6e38` from `bespokelabsai/AutoResearchBench-Preview-Tasks`.
 
 Get explicit public release approval before copying task files. The published copy includes hidden workloads and grader code. A different source commit requires a fresh file review, public release approval, and secret and personal information scan.
 
 Sync from the committed tree, not the source repository working tree:
 
 ```sh
-python build_task_files.py --sync --source-repo /path/to/AutoResearchBench-Preview-Tasks --source-ref d955d799fdd09e023f5be947c2b2864227ed0409
+python build_task_files.py --sync --source-repo /path/to/AutoResearchBench-Preview-Tasks --source-ref cdd1d9d7ec65f39bd923628b4467d88e270d6e38
 ```
 
 Rebuild the metadata manifest after changing the tracked copy:

@@ -165,7 +165,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         paths = {item["path"] for item in files}
 
         self.assertEqual(len(files), 34)
-        self.assertEqual(sum(item["size"] for item in files), 648_107)
+        self.assertEqual(sum(item["size"] for item in files), 642_824)
         self.assertEqual(
             {path for path in paths if Path(path).name == "Dockerfile"},
             {"environment/Dockerfile", "tests/Dockerfile"},
