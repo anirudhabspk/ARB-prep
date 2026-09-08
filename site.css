@@ -101,7 +101,8 @@
 .company-logo-backdrop{vector-effect:non-scaling-stroke}
 .efficiency-point:hover .company-logo-backdrop,.efficiency-point:focus .company-logo-backdrop{stroke:var(--ink);stroke-width:2.5}
 .overview-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:16px 0 22px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
-.overview-legend-item{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;white-space:nowrap;cursor:help}
+.overview-legend-item{display:inline-flex;align-items:center;gap:5px;flex:1 0 104px;min-width:0;white-space:nowrap;cursor:help}
+.overview-legend-item>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .overview-legend-logo{display:grid;place-items:center;width:24px;height:24px;flex:0 0 auto;border:2px solid;background:#fff}
 .overview-legend-logo .company-logo{width:18px;height:18px}
 .overview-legend-fallback::after{content:"";width:10px;height:10px;background:currentColor}
