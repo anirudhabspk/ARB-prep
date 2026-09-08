@@ -222,10 +222,10 @@
 <p id="scoring-refresh-todo" style="color:#B2182B;font-weight:600">TODO: Once the new Fable scores are ready, recalculate these two plots and task-relative Elo using the same reward normalization as the other results.</p>
 <p>Models that made more submissions or spent longer working did not consistently achieve higher test AUARC.</p>
 <style>
-.model-effort{margin:24px 0;color:var(--ink);font-family:var(--sans)}.model-effort-panels{display:grid;grid-template-columns:1fr 1fr;gap:24px}.model-effort h4{font-size:15px;margin:0 0 12px;font-weight:600}.model-effort svg{display:block;width:100%;height:auto;overflow:visible}.model-effort text{font-family:var(--sans);fill:var(--muted);font-size:11px}.model-effort .dot-label{fill:var(--ink);font-size:11px;font-weight:500}.model-effort .model-dot:focus circle,.model-effort .model-dot:hover circle{stroke:var(--ink);stroke-width:2}.model-effort figcaption{font-size:13px;color:var(--muted);line-height:1.6;margin-top:16px}@media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
+.model-effort{margin:24px 0;color:var(--ink);font-family:var(--sans)}.model-effort-panels{display:grid;grid-template-columns:1fr 1fr;gap:24px}.model-effort h4{font-size:15px;margin:0 0 12px;font-weight:600}.model-effort svg{display:block;width:100%;height:auto;overflow:visible}.model-effort text{font-family:var(--sans);fill:var(--muted);font-size:11px}.model-effort .dot-label{display:none}.model-effort .model-dot:focus circle,.model-effort .model-dot:hover circle{stroke:var(--ink);stroke-width:2}.model-effort figcaption{font-size:13px;color:var(--muted);line-height:1.6;margin-top:16px}@media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
 </style>
 <figure class="model-effort"><div class="model-effort-panels">
-<div><h4>Number of submissions vs. test AUARC</h4><svg viewBox="0 0 390 315" role="img" aria-label="Number of submissions vs. test AUARC. One labeled point per model, averaged over available completed tasks."><text x="45" y="17">Mean test AUARC</text>
+<div><h4>Number of submissions vs. test AUARC</h4><svg viewBox="0 0 390 315" role="img" aria-label="Number of submissions vs. test AUARC. One point per model, averaged over available completed tasks."><text x="45" y="17">Mean test AUARC</text>
 <line x1="45" x2="355" y1="255.000" y2="255.000" stroke="var(--line)"/><text x="35" y="259.000" text-anchor="end">0.3</text>
 <line x1="45" x2="355" y1="201.250" y2="201.250" stroke="var(--line)"/><text x="35" y="205.250" text-anchor="end">0.4</text>
 <line x1="45" x2="355" y1="147.500" y2="147.500" stroke="var(--line)"/><text x="35" y="151.500" text-anchor="end">0.5</text>
@@ -247,7 +247,7 @@
 <g class="model-dot" tabindex="0" aria-label="Qwen3.8 Max: mean 32.2 submissions, 18.6 estimated hours, test AUARC 0.412; 26 completed tasks."><title>Qwen3.8 Max: mean 32.2 submissions, 18.6 estimated hours, test AUARC 0.412; 26 completed tasks.</title><circle cx="211.128" cy="194.772" r="5" fill="#1B9E77"/><text class="dot-label" x="203.128" y="186.772" text-anchor="end">Qwen</text></g>
 <g class="model-dot" tabindex="0" aria-label="Muse Spark 1.3: mean 28.3 submissions, 20.7 estimated hours, test AUARC 0.384; 25 completed tasks."><title>Muse Spark 1.3: mean 28.3 submissions, 20.7 estimated hours, test AUARC 0.384; 25 completed tasks.</title><circle cx="191.113" cy="209.722" r="5" fill="#00A6D6"/><text class="dot-label" x="183.113" y="225.722" text-anchor="end">Muse</text></g>
 </svg></div>
-<div><h4>Time vs. test AUARC</h4><svg viewBox="0 0 390 315" role="img" aria-label="Time vs. test AUARC. One labeled point per model, averaged over available completed tasks."><text x="45" y="17">Mean test AUARC</text>
+<div><h4>Time vs. test AUARC</h4><svg viewBox="0 0 390 315" role="img" aria-label="Time vs. test AUARC. One point per model, averaged over available completed tasks."><text x="45" y="17">Mean test AUARC</text>
 <line x1="45" x2="355" y1="255.000" y2="255.000" stroke="var(--line)"/><text x="35" y="259.000" text-anchor="end">0.3</text>
 <line x1="45" x2="355" y1="201.250" y2="201.250" stroke="var(--line)"/><text x="35" y="205.250" text-anchor="end">0.4</text>
 <line x1="45" x2="355" y1="147.500" y2="147.500" stroke="var(--line)"/><text x="35" y="151.500" text-anchor="end">0.5</text>
@@ -294,6 +294,6 @@
 <script src="task-catalog.js?v=clean-task-names-20260907"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=cost-legend-match-grok-contained-hpo-logo-aspect-20260908"></script>
+<script src="results.js?v=model-effort-tooltips-20260908"></script>
 </body>
 </html>

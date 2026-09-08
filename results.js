@@ -606,12 +606,35 @@ function renderTask(index){
 
 function decorateModelEffortDots(){
   const ns="http://www.w3.org/2000/svg";
+  document.querySelectorAll(".model-effort svg").forEach(svg=>{
+    const wrap=document.createElement("div"),tooltip=document.createElement("div");
+    wrap.className="efficiency-chart-wrap model-effort-chart";
+    tooltip.className="efficiency-tooltip";
+    tooltip.setAttribute("role","tooltip");
+    tooltip.hidden=true;
+    tooltip.innerHTML="<strong></strong><span data-resource></span><span data-score></span>";
+    svg.replaceWith(wrap);
+    wrap.append(svg,tooltip);
+  });
   document.querySelectorAll(".model-effort .model-dot").forEach(marker=>{
     if(marker.dataset.companyLogoApplied)return;
-    const key=ORDER.find(candidate=>(marker.getAttribute("aria-label")||"").startsWith(`${MODEL[candidate].name}:`));
+    const description=marker.getAttribute("aria-label")||"",details=description.match(/^(.+): mean ([\d.]+) submissions, ([\d.]+) estimated hours, test AUARC ([\d.]+);/),svg=marker.closest("svg"),key=ORDER.find(candidate=>description.startsWith(`${MODEL[candidate].name}:`));
     const circle=marker.querySelector("circle"),brand=MODEL_BRANDS[key];
-    if(!circle||!brand)return;
+    if(!circle||!brand||!details||!svg)return;
     const cx=Number(circle.getAttribute("cx")),cy=Number(circle.getAttribute("cy")),size=16.5,frameSize=size*1.25,logoSize=size*(brand.scale||1);
+    const submissionsChart=svg.getAttribute("aria-label")?.startsWith("Number of submissions");
+    marker.classList.add("efficiency-point");
+    marker.dataset.model=details[1];
+    marker.dataset.resourceLabel=submissionsChart?"Mean submissions per task":"Mean hours outside grading";
+    marker.dataset.resourceValue=submissionsChart?details[2]:`${details[3]} h`;
+    marker.dataset.scoreLabel="Mean test AUARC";
+    marker.dataset.scoreValue=details[4];
+    marker.dataset.left=(cx/390*100).toFixed(2);
+    marker.dataset.top=(cy/315*100).toFixed(2);
+    marker.dataset.placeLeft=String(cx>300);
+    marker.dataset.placeBelow=String(cy<80);
+    marker.querySelector("title")?.remove();
+    marker.querySelector(".dot-label")?.remove();
     const frame=document.createElementNS(ns,"rect");
     frame.setAttribute("class","company-logo-backdrop");
     frame.setAttribute("x",String(cx-frameSize/2));
@@ -666,7 +689,7 @@ function decorateHpoChartBars(){
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateModelEffortDots();decorateHpoChartBars()}
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();decorateModelEffortDots();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateHpoChartBars()}
 
 // Keep the contents marker aligned with the section being read.
 (() => {
