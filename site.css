@@ -133,9 +133,9 @@
 .measure h3{font-family:var(--serif);font-size:25px;font-weight:300;line-height:1.2}
 
 /* Model effort settings */
-.effort-setting-chart{max-width:790px;margin:32px 0 40px;padding:20px 0;border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}
-.effort-setting-chart figcaption{margin:0 0 10px;font:300 25px/1.2 var(--serif);color:var(--ink)}
+.effort-setting-chart{max-width:790px;margin:8px 0 40px;padding:0 0 20px;border-bottom:1px solid var(--line)}
 .effort-setting-row{display:grid;grid-template-columns:90px minmax(0,1fr);gap:24px;align-items:start;padding:13px 0}
+.effort-setting-chart>.effort-setting-row:first-child{border-top:1px solid var(--line)}
 .effort-setting-row+.effort-setting-row{border-top:1px solid var(--line)}
 .effort-setting-level{color:var(--ink);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 .effort-setting-models{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 22px;margin:0;padding:0;list-style:none;color:var(--muted);font-size:14px;line-height:1.4}
@@ -188,6 +188,9 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 /* Keep the task browser compact while leaving category filters visible. */
 #examples .task-grid{max-height:min(480px,60vh);overflow-y:auto;align-content:start;padding:3px 8px 3px 3px;scrollbar-width:thin;scrollbar-color:#124e54 transparent;scrollbar-gutter:stable}
 #examples .task-grid:focus-visible{outline:2px solid #124e54;outline-offset:4px}
+#examples{scroll-margin-top:82px}
+#examples .task-intro{margin-top:34px}
+#examples .catalog-filters{padding-top:0;border-top:0}
 
 /* Task catalogue: one compact row per task. */
 .task-grid{grid-template-columns:minmax(0,1fr);gap:8px}

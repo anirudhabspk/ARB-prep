@@ -489,7 +489,7 @@ function renderCategories(){
   if(!svg||!title||!description||!count||!specimens)return;
   const ns="http://www.w3.org/2000/svg",cx=210,cy=210,inner=85,outer=164,point=(angle,radius)=>[cx+Math.cos(angle)*radius,cy+Math.sin(angle)*radius],arc=(start,end)=>{const startOuter=point(start,outer),endOuter=point(end,outer),endInner=point(end,inner),startInner=point(start,inner),large=end-start>Math.PI?1:0;return "M "+startOuter[0]+" "+startOuter[1]+" A "+outer+" "+outer+" 0 "+large+" 1 "+endOuter[0]+" "+endOuter[1]+" L "+endInner[0]+" "+endInner[1]+" A "+inner+" "+inner+" 0 "+large+" 0 "+startInner[0]+" "+startInner[1]+" Z"},labelLines=name=>{if(name==="Algorithms and optimization")return["Algorithms","& optimization"];if(name==="Data engineering and curation")return["Data engineering","& curation"];if(name==="Evaluation, calibration, and robustness")return["Evaluation &","robustness"];if(name==="AI safety and alignment")return["AI safety &","alignment"];if(name==="Systems and efficiency")return["Systems &","efficiency"];return name.split(" ").length>1?[name.split(" ")[0],name.split(" ").slice(1).join(" ")]:[name]},groups=[],taskLabel=item=>item.count+" "+(item.count===1?"task":"tasks");
   function addText(className,x,y,value){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;svg.appendChild(text)}
-  function openTaskBrowser(categoryIndex,taskName){document.dispatchEvent(new CustomEvent(taskName?"taxonomy-task-selected":"taxonomy-category-selected",{detail:taskName?{categoryIndex,taskName}:{categoryIndex}}));document.getElementById("examples")?.scrollIntoView({behavior:"smooth",block:"start"})}
+  function openTaskBrowser(categoryIndex,taskName){document.dispatchEvent(new CustomEvent(taskName?"taxonomy-task-selected":"taxonomy-category-selected",{detail:taskName?{categoryIndex,taskName}:{categoryIndex}}))}
   function pick(index){
     const item=CATEGORIES[index];
     groups.forEach((group,groupIndex)=>{group.classList.toggle("is-active",groupIndex===index);group.classList.toggle("is-muted",groupIndex!==index);group.setAttribute("aria-pressed",String(groupIndex===index))});
@@ -509,6 +509,11 @@ function renderCategories(){
   });
   const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);
   addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-note",cx,cy+31,"29 tasks");
+  document.addEventListener("task-catalog-category-selected",event=>{
+    const index=event.detail?.categoryIndex;
+    if(Number.isInteger(index)&&CATEGORIES[index])pick(index);
+    else groups.forEach(group=>{group.classList.remove("is-active","is-muted");group.setAttribute("aria-pressed","false")});
+  });
   pick(0);
 }
 
@@ -571,6 +576,12 @@ function renderTaskCatalog(){
   document.addEventListener("taxonomy-task-selected",event=>{
     const entry=TASK_CATALOG.find(task=>task.blogName===event.detail?.taskName);
     if(entry)location.href=`tasks.html#${entry.slug}`;
+  });
+  filters.addEventListener("click",event=>{
+    const button=event.target.closest("button[data-category]");
+    if(!button)return;
+    const categoryIndex=button.dataset.category==="all"?null:CATEGORIES.findIndex(category=>category.name===button.dataset.category);
+    document.dispatchEvent(new CustomEvent("task-catalog-category-selected",{detail:{categoryIndex}}));
   });
   render();
 }

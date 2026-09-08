@@ -17,8 +17,7 @@
   <aside class="contents" aria-label="Contents">
     <strong>Contents</strong>
     <a href="#benchmark">Overview</a>
-    <a href="#tasks">Task areas</a>
-    <a href="#examples">Tasks</a>
+    <a href="#tasks">Tasks</a>
     <a href="#setup">Experimental setup</a>
     <a href="#general-analysis">Analyzing agent behavior</a>
     <a href="#opsd-hints">Hints (OPSD)</a>
@@ -41,7 +40,7 @@
       </div>
     </section>
     <section class="section" id="tasks">
-      <h2>Task areas</h2>
+      <h2>Tasks</h2>
       <p class="task-intro">Explore the kinds of research problems represented in the benchmark.</p>
       <div class="taxonomy-wheel">
         <figure>
@@ -55,12 +54,11 @@
           <ul class="taxonomy-specimens" id="taxonomy-detail-specimens"></ul>
         </section>
       </div>
-    </section>
-    <section class="section" id="examples">
-      <h2>Tasks</h2>
-      <p class="task-intro">Browse all 29 research tasks. Select a task to read its description and view its results.</p>
-      <div class="catalog-filters" id="task-catalog-filters" role="group" aria-label="Filter tasks by research area"></div>
-      <div class="task-grid" id="task-grid" tabindex="0" role="region" aria-label="Research tasks, scroll to browse"></div>
+      <div id="examples" class="task-catalog">
+        <p class="task-intro">Browse all 29 research tasks. Select a task to read its description and view its results.</p>
+        <div class="catalog-filters" id="task-catalog-filters" role="group" aria-label="Filter tasks by research area"></div>
+        <div class="task-grid" id="task-grid" tabindex="0" role="region" aria-label="Research tasks, scroll to browse"></div>
+      </div>
     </section>
     <section class="section" id="setup">
       <h2>Experimental setup</h2>
@@ -69,8 +67,11 @@
         <p>Evaluating agents over extended 24-hour runs lets us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
         <p>Each task uses the Harbor format, with separate work and verifier containers. To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
       </div>
+      <h3 id="effort-setting-title">Effort levels for model evaluations</h3>
+      <div class="prose effort-setting-discussion">
+        <p>We ran each model at the highest effort level available, except Muse Spark. Its current highest effort level was not available when we generated its rollouts. Each model can produce at most 32,000 output tokens per turn.</p>
+      </div>
       <figure class="effort-setting-chart" aria-labelledby="effort-setting-title">
-        <figcaption id="effort-setting-title">Effort levels for model evaluations</figcaption>
         <div class="effort-setting-row">
           <div class="effort-setting-level">Max</div>
           <ul class="effort-setting-models">
@@ -85,7 +86,7 @@
           <div class="effort-setting-level">Xhigh</div>
           <ul class="effort-setting-models">
             <li>Qwen3.8 Max</li>
-            <li>Muse Spark 1.3</li>
+            <li>Muse Spark 1.3*</li>
             <li>Grok 4.6</li>
           </ul>
         </div>
@@ -96,9 +97,9 @@
           </ul>
         </div>
       </figure>
-      <h3>Evaluation metrics</h3>
+      <h3>Task scoring and aggregate evaluation metrics</h3>
       <div class="prose">
-        <p>We measure both progress during the run and performance on hidden tests:</p>
+        <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available. Validation and hidden-test results first recover the raw task metric, then use the same mapping based on the final hidden-test panel's anchors. This keeps their rewards and the reported generalization gap on one common scale.</p>
         <ul>
           <li><strong>Progress over time.</strong> During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</li>
           <li><strong>Hidden test generalization.</strong> At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</li>
@@ -273,6 +274,6 @@
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="opsd-hints-data.js?v=hint-experiment-20260908"></script>
 <script src="opsd-hints.js?v=four-hint-scatters-20260908"></script>
-<script src="results.js?v=gap-labels-beside-20260908"></script>
+<script src="results.js?v=taxonomy-no-scroll-gap-labels-20260908"></script>
 </body>
 </html>
