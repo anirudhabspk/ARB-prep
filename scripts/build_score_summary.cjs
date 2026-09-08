@@ -1,0 +1,22 @@
+// Use the browser's scoring functions to bake the data summary and native SVG.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'..');
+const context=vm.createContext({window:{}});
+for(const file of ['site-data.js','raw-score-maps.js','difficulty-reward-maps.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'results.js'),'utf8').split('if(document.body.dataset.page')[0],context);
+const evaluate=code=>vm.runInContext(code,context);
+const results=evaluate('currentResults()'),data=context.window.ARB_DATA;
+data.aggregates=results.rows;
+data.rank_rho=results.rho;data.rank_rho_ci=results.rho_ci;
+data.complete_task_count=evaluate('difficultyAdjustedTaskRows().filter(row=>ORDER.every(key=>row[key])).length');
+data.snapshot.scoring='Meta MLE remaining-gap maps; original task baselines; normalize before AUARC and Elo';
+data.snapshot.scoringSha256=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'difficulty-reward-maps.js'))).digest('hex');
+fs.writeFileSync(path.join(root,'site-data.js'),'window.ARB_DATA = '+JSON.stringify(data)+';\n');
+let rendered='';
+context.document={getElementById:()=>({set innerHTML(value){rendered=value;}})};
+evaluate('renderModelEffort()');
+const file=path.join(root,'blog.html'),html=fs.readFileSync(file,'utf8');
+const pattern=/<figure class="model-effort" id="model-effort-plots">[\s\S]*?<\/figure>/;
+if(!pattern.test(html))throw new Error('Effort chart container missing');
+fs.writeFileSync(file,html.replace(pattern,()=>'<figure class="model-effort" id="model-effort-plots">'+rendered+'</figure>'));
+console.log(JSON.stringify({includedRuns:data.snapshot.includedRuns,modelCoverage:results.rows.map(row=>({model:row.name,tasks:row.taskCount})),scoringSha256:data.snapshot.scoringSha256},null,2));

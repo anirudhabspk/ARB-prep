@@ -12,6 +12,23 @@ See [`evaluation-replacements.md`](evaluation-replacements.md) for evaluations t
 
 The `api_cost_usd` field must come from the API usage ledger. Do not replace missing API costs with rollout or evaluation costs.
 
+## Refresh score comparisons
+
+The blog uses Meta MLE's remaining-gap reward formulas and the original baseline anchors for each task. It normalizes each observation before calculating AUARC. Elo compares normalized test AUARC within each task. The effort plots use the same model score means as the main results.
+
+The September 7 refresh uses one current evaluation per model and task across 29 tasks. Completed and running attempts contribute available results. Failed and known crashed attempts are excluded. The one approved exception is Astra's sparse-autoencoder result, with its missing iteration 23 test measurement carried from iteration 22. Running results remain provisional and are not extended to 24 hours.
+
+Submissions count through the last phase with recorded model activity. Time subtracts recorded grading from elapsed time. Missing grading durations use the median of the last three known durations, capped at the unaccounted tail. These definitions remain unchanged.
+
+`scripts/refresh_score_snapshot.py --help` lists the offline snapshot inputs. After rebuilding `site-data.js`, run `node scripts/build_score_summary.cjs` to update the summary and embedded effort charts. Both use the scoring functions in `results.js`. Run `node tests/test_score_consistency.cjs` and `python3 -m unittest discover -s tests` before review.
+
+Scoring references checked for this refresh:
+
+- Meta MLE `common/skills/open-ended-build/references/reward_maps.md` at commit `12aad4e80a8230f7a1c7da256bece32d1b095005`.
+- Preview Tasks `autoresearch-evaluations/curve-tools/build_curves.py` and `score_maps.json` at commit `d0d1eeaf5cf263354845b2b7220a8457caf2ea4a`.
+
+The newer pipeline-wide baseline reward of 0.1 and the separate three-anchor sigmoid are not applied retrospectively. The retained task baselines agree with the formula described in Experimental setup.
+
 ## Publishing task files
 
 The public task file browser publishes readable files for all 29 catalog tasks from commit `f0cfffb69c854c4b2b05f97a2b22dd38525fb55e` in `bespokelabsai/AutoResearchBench-Preview-Tasks`.
