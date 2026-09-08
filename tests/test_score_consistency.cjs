@@ -166,8 +166,12 @@ assert.ok(context.renderedHtml.includes('data-score-value="'+(effort.find(r=>r.k
 assert.ok(context.renderedHtml.includes('data-resource-value="'+effort.find(r=>r.key==='vesper-pro').activeTimePercent.toFixed(1)+'%"'));
 assert.ok(!context.renderedHtml.includes('data-score-value="59.3%"'));
 const timePanel=context.renderedHtml.split('<h4>Time vs. test AUARC</h4>')[1];
-assert.ok(timePanel.includes('aria-label="X-axis break; 0% to 60% omitted"'));
-for(const label of ['0%','60%','70%','80%','90%'])assert.ok(timePanel.includes(`>${label}</text>`));
+const submissionsPanel=context.renderedHtml.split('<h4>Number of submissions vs. test AUARC</h4>')[1].split('<h4>Time vs. test AUARC</h4>')[0];
+for(const label of ['0','15','30','45','60','75'])assert.ok(submissionsPanel.includes(`>${label}</text>`));
+assert.ok(!submissionsPanel.includes('>16.5</text>'));
+assert.ok(!timePanel.includes('axis-break'));
+for(const label of ['60%','70%','80%','90%'])assert.ok(timePanel.includes(`>${label}</text>`));
+assert.ok(!timePanel.includes('>0%</text>'));
 assert.ok(!timePanel.includes('>25%</text>'));
 assert.ok(evaluate('renderTask.toString()').includes('output-token count alone does not determine cost'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
