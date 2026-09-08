@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=interactive-task-example-opsd-single-plot-20260908">
+<link rel="stylesheet" href="site.css?v=posttrainbench-note-interactive-task-20260908">
 </head>
 <body>
 <section class="hero">
@@ -31,7 +31,7 @@
       </div>
       <div class="prose">
         <p>Progress toward recursive self-improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
-        <p>Open-ended ML research often takes many experiments. One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> can miss the gains agents make over longer runs. PostTrainBench studies long-horizon agents, but focuses on LLM post-training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. An agent that starts behind may eventually outperform one that improves more slowly.</p>
+        <p>Open-ended ML research often takes many experiments. One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> can miss the gains agents make over longer runs. <span class="posttrainbench-note">PostTrainBench studies long-horizon agents, but focuses on LLM post-training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>.</span> An agent that starts behind may eventually outperform one that improves more slowly.</p>
         <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> also need to distinguish progress from overfitting. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
         <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour AutoResearch runs while still generalizing to hidden test data.</p>
       </div>

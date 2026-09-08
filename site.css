@@ -231,6 +231,8 @@ main .effort-setting-chart{max-width:var(--content-measure)}
 
 .opsd-interaction--solo{display:block}
 
+.posttrainbench-note,.posttrainbench-note .cite{color:#c83220}
+
 /* Lead with the interactive results, then introduce the benchmark and costs. */
 #benchmark > .time-leaderboard:first-child{margin-top:0}
 #benchmark > #results{margin-bottom:32px}
