@@ -74,10 +74,12 @@
         <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">harness comparison</a>.</p>
         <p>All models used the maximum effort available at the time: max for Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, and GPT-6 Astra; xhigh for Qwen3.8 Max, Muse Spark 1.3, and Grok 4.6; high for Gemini 3.8 Flash.</p>
       </div>
-      <div class="prose"><p>We measure both progress during the run and performance on hidden tests:</p></div>
-      <div class="measure-grid">
-        <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
-        <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
+      <div class="prose">
+        <p>We measure both progress during the run and performance on hidden tests:</p>
+        <ul>
+          <li><strong>Progress over time.</strong> During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</li>
+          <li><strong>Hidden test generalization.</strong> At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</li>
+        </ul>
       </div>
       <div class="prose" id="reward-normalization">
         <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available. Validation and hidden-test results first recover the raw task metric, then use the same mapping based on the final hidden-test panel's anchors. This keeps their rewards and the reported generalization gap on one common scale.</p>
