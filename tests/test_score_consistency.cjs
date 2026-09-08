@@ -179,6 +179,10 @@ assert.ok(evaluate('renderTaskScoringExample.toString()').includes('vesper-pro')
 const interactiveTaskChart=evaluate('taskChart({...DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics"),models:[DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics").models.find(run=>run.model==="vesper-pro")]},"Validation","bestValidation")');
 assert.ok(interactiveTaskChart.includes('class="efficiency-point"'));
 assert.ok(interactiveTaskChart.includes('class="efficiency-tooltip"'));
+const hiddenAuarcChart=evaluate('taskChart({...DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics"),models:[DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics").models.find(run=>run.model==="vesper-pro")]},"Hidden test","testAtBest",null,{fillAuarc:true})');
+assert.ok(hiddenAuarcChart.includes('class="auarc-area"'));
+assert.ok(hiddenAuarcChart.includes('Hidden test AUARC ='));
+assert.ok(!hiddenAuarcChart.includes('fill="#fff"'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));
 
