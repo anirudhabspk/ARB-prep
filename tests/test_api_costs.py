@@ -1,5 +1,9 @@
 import unittest
-from scripts.refresh_score_snapshot import api_ledger_cost
+from scripts.refresh_score_snapshot import (
+    api_ledger_cost,
+    api_ledger_output_tokens,
+    validate_selected_evaluation,
+)
 
 
 class ApiLedgerCostTest(unittest.TestCase):
@@ -23,6 +27,39 @@ class ApiLedgerCostTest(unittest.TestCase):
     def test_unknown_price_is_not_silently_zero(self):
         with self.assertRaises(ValueError):
             api_ledger_cost(self.ledger(cost_usd=None), 'selected')
+
+    def test_output_tokens_come_from_the_api_ledger(self):
+        self.assertEqual(
+            api_ledger_output_tokens(self.ledger(output_tokens=1234), 'selected'),
+            1234,
+        )
+
+    def test_empty_ledger_has_no_output_token_count(self):
+        self.assertIsNone(
+            api_ledger_output_tokens(
+                self.ledger(requests=0, output_tokens=0),
+                'selected',
+            )
+        )
+
+    def test_output_tokens_for_another_evaluation_are_rejected(self):
+        with self.assertRaises(ValueError):
+            api_ledger_output_tokens(self.ledger(output_tokens=1234), 'superseded')
+
+    def test_invalid_output_tokens_are_rejected(self):
+        with self.assertRaises(ValueError):
+            api_ledger_output_tokens(self.ledger(output_tokens=None), 'selected')
+
+    def test_running_index_row_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'evaluation index'):
+            validate_selected_evaluation('Rerun submitted', 'completed')
+
+    def test_running_horizon_evaluation_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'Horizon'):
+            validate_selected_evaluation('Preempted after iteration 18', 'running')
+
+    def test_stopped_evaluation_is_accepted(self):
+        validate_selected_evaluation('Preempted after iteration 18', 'completed')
 
 
 if __name__ == '__main__':

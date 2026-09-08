@@ -51,19 +51,21 @@ assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId===
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="60a7e9e2-c234-4091-a258-242d0574dc30").points.length')>0);
 const overview=evaluate('overviewTrajectories()');
 const fable=overview.series.find(r=>r.key==='vesper-pro');
-const observedEnd=evaluate('Math.min(...DATA.tasks.flatMap(t=>t.models.filter(r=>r.model==="vesper-pro"&&r.provisional).map(r=>r.hours)))');
-close(fable.points.at(-1).hour,observedEnd);
-assert.ok(observedEnd<24);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional).length'),0);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.sourceStatus==="Rerun submitted").length'),0);
+close(fable.points.at(-1).hour,24);
 const costHtml=evaluate('costPerformancePlot(currentResults().rows)');
-assert.ok(costHtml.includes('Includes ongoing runs with provisional scores and costs'));
-const missingCosts=[];
+assert.ok(costHtml.includes('API costs include model calls only'));
+const missingCosts=[],missingOutputTokens=[];
 for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
   if(!run.points.length)continue;
   if(!Number.isFinite(run.apiCost))missingCosts.push(run.evaluationId);
+  if(!Number.isFinite(run.outputTokens))missingOutputTokens.push(run.evaluationId);
   if(run.provisional)assert.ok(Number.isFinite(run.apiCost));
   assert.ok(run.apiCostFetchedAt);
 }
 assert.deepEqual(missingCosts,['002958c6-cb2f-46e3-8536-ba8d421083af']); // Existing completed Sol run has an empty ledger.
+assert.deepEqual(missingOutputTokens,[]);
 const costRows=evaluate('costPerformanceRows(currentResults().rows)');
 assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,25);
 for(const row of costRows){
@@ -72,6 +74,11 @@ for(const row of costRows){
   assert.ok(costHtml.includes('data-score-value="'+evaluate('fmt('+row.test+')')+'"'));
 }
 assert.ok(!costHtml.includes('NaN'));
+
+const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');
+assert.ok(!tokenHtml.includes('Source data unavailable'));
+assert.ok(!tokenHtml.includes('Output tokens unavailable from Horizon'));
+assert.ok(tokenHtml.includes('Final hidden-test reward unavailable'));
 
 // Native SVG rendering shares these exact values and retains the model branding.
 evaluate('var rendered={};');context.document={getElementById:()=>({set innerHTML(value){context.renderedHtml=value;}})};
