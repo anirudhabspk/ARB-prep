@@ -39,6 +39,7 @@ for(const row of effort){
   close(row.test,context.window.ARB_DATA.aggregates.find(r=>r.key===row.key).test);
   close(row.elo,context.window.ARB_DATA.aggregates.find(r=>r.key===row.key).elo);
   assert.ok(Number.isFinite(row.submissions)&&Number.isFinite(row.hours));
+  assert.ok(row.activeTimePercent>=0&&row.activeTimePercent<=100);
   assert.ok(row.taskCount>0);
   assert.ok(row.elo_ci.every(Number.isFinite));
 }
@@ -64,5 +65,7 @@ assert.equal((context.renderedHtml.match(/class="model-dot efficiency-point"/g)|
 assert.ok(!context.renderedHtml.includes('NaN'));
 assert.equal((context.renderedHtml.match(/class="efficiency-tooltip"/g)||[]).length,2);
 assert.ok(context.renderedHtml.includes('data-score-value="59.3"'));
+assert.ok(context.renderedHtml.includes('data-resource-value="84.3%"'));
+assert.ok(!context.renderedHtml.includes('data-score-value="59.3%"'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));

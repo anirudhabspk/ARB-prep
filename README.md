@@ -18,7 +18,7 @@ The blog uses Meta MLE's remaining-gap reward formulas and the original baseline
 
 The September 7 refresh uses one current evaluation per model and task across 29 tasks. Completed and running attempts contribute available results. Failed and known crashed attempts are excluded. The one approved exception is Astra's sparse-autoencoder result, with its missing iteration 23 test measurement carried from iteration 22. Running results remain provisional and are not extended to 24 hours.
 
-Submissions count through the last phase with recorded model activity. Time subtracts recorded grading from elapsed time. Missing grading durations use the median of the last three known durations, capped at the unaccounted tail. These definitions remain unchanged.
+Submissions count through the last phase with recorded model activity. The time plot averages each run's percentage of active elapsed time spent outside grading. The window starts with the research budget and ends at the last nonempty model response or tool call. Both numerator and denominator exclude the later empty-response tail. Only grading completed before that last response is subtracted. Historical hour estimates remain in the data for reproducibility but are no longer the time plot's x-axis.
 
 `scripts/refresh_score_snapshot.py --help` lists the offline snapshot inputs. After rebuilding `site-data.js`, run `node scripts/build_score_summary.cjs` to update the summary and embedded effort charts. Both use the scoring functions in `results.js`. Run `node tests/test_score_consistency.cjs` and `python3 -m unittest discover -s tests` before review.
 

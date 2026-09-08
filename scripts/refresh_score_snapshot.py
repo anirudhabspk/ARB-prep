@@ -21,6 +21,50 @@ def elapsed(row):
     return max(row.get('public_elapsed_seconds') or 0, row.get('private_elapsed_seconds') or 0)
 
 
+def active_time_share(messages):
+    """Fraction outside grading, from research start through last model response.
+
+    Grading of the last active phase occurs after that response and is outside
+    this window. Later empty phases contribute neither time nor grading.
+    """
+    phase = last_phase = 0
+    start = last = None
+    grading = {}
+    stamp = lambda value: datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+    for message in sorted(messages, key=lambda m: m['sequence_number']):
+        text = message.get('content') or ''
+        if message['role'] == 'user':
+            phases = re.findall(r'- phase: (\d+)', text)
+            if phases:
+                phase = int(phases[-1])
+                values = re.findall(r'- previous validation grading: ([\d.]+) seconds', text)
+                if values:
+                    grading[phase - 1] = float(values[-1])
+                if start is None:
+                    budget = re.findall(r'- total autoresearch budget: ([\d.]+) seconds', text)
+                    remaining = re.findall(r'- wall-clock time remaining before this phase: ([\d.]+) seconds', text)
+                    if budget and remaining:
+                        start = stamp(message['timestamp']) - (float(budget[-1]) - float(remaining[-1]))
+        elif message['role'] == 'assistant':
+            content = message.get('content_json') or {}
+            if text.strip() or (isinstance(content, dict) and content.get('tool_calls')):
+                last = stamp(message['timestamp'])
+                last_phase = phase
+    if start is None or last is None or last <= start:
+        return {'percent': None, 'reason': 'No measured activity window'}
+    prior_phases = range(1, last_phase)
+    if any(p not in grading for p in prior_phases):
+        return {'percent': None, 'reason': 'Missing grading record inside activity window'}
+    duration = last - start
+    grade_seconds = sum(grading[p] for p in prior_phases)
+    if grade_seconds > duration:
+        return {'percent': None, 'reason': 'Grading exceeds activity window'}
+    outside = duration - grade_seconds
+    return {'percent': 100 * outside / duration, 'active_elapsed_seconds': duration,
+            'outside_grading_seconds': outside, 'grading_seconds': grade_seconds,
+            'last_active_phase': last_phase, 'last_response_timestamp': last}
+
+
 def activity_and_time(messages, iterations):
     phase = last_active = 0
     grades = {}
@@ -123,6 +167,7 @@ def main():
         end = min(86400, end)
         points = curve(iterations, end) if eligible else []
         count, hours, timing = activity_and_time(payload['rollouts'][0]['messages'], iterations)
+        active = active_time_share(payload['rollouts'][0]['messages'])
         old_run = old_runs.get(eid, {})
         run = {'model': models[source['model']], 'hours': end / 3600 if eligible else 0,
                # Only preserve the existing ledger value for this exact completed ID.
@@ -132,11 +177,14 @@ def main():
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],
                'status': status, 'provisional': eligible and status == 'running', 'extension': False,
                'points': points, 'submissions': count if eligible else None,
-               'workHours': hours if eligible else None}
+               'workHours': hours if eligible else None,
+               'activeTimePercent': active['percent'] if eligible else None,
+               'activeElapsedHours': active.get('active_elapsed_seconds', 0) / 3600 if eligible else None}
         task_lookup[names[source['task_slug']]]['models'].append(run)
         audit.append({**source, 'included': bool(eligible), 'status': status,
                       'attempt_status': attempt['status'], 'task_name': names[source['task_slug']],
                       'submissions': count, 'work_hours': hours, 'timing': timing,
+                      'active_time': active,
                       'score_carried_forward': carried, 'observed_end_hours': end / 3600})
     for task in site['tasks']:
         task['models'].sort(key=lambda r: list(models.values()).index(r['model']))
