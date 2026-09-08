@@ -144,3 +144,12 @@
 /* The blog uses its contents sidebar instead of a fixed header. */
 body:has(.hero) .contents{top:28px}
 body:has(.hero) .section{scroll-margin-top:28px}
+
+/* Task catalogue: one compact row per task. */
+.task-grid{grid-template-columns:minmax(0,1fr);gap:8px}
+.task-card{min-height:48px;flex-direction:row;align-items:center;gap:20px;padding:10px 14px}
+.task-card-title{flex:1 1 auto;min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-card-meta{display:grid;grid-template-columns:minmax(0,1fr) 38px;flex:0 1 360px;min-width:180px;align-items:center;gap:16px;margin:0;padding:0;border-top:0}
+.category-chip{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.compute-tag{text-align:right}
+@media(max-width:640px){.task-card{gap:12px}.task-card-meta{flex-basis:200px;gap:10px;grid-template-columns:minmax(0,1fr) 34px}.task-card-title{font-size:14px}.category-chip{font-size:10px}.compute-tag{font-size:10px}}
