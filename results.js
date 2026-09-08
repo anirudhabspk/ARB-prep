@@ -712,18 +712,22 @@ function effortModelRows(){
 function renderModelEffort(){
   const target=document.getElementById('model-effort-plots');if(!target)return;
   const rows=effortModelRows();
-  const panels=[['submissions','Number of submissions vs. test AUARC','Mean number of submissions per task',60],['activeTimePercent','Time vs. test AUARC','Active run time outside grading (%)',100]];
+  const panels=[['submissions','Number of submissions vs. test AUARC','Mean number of submissions per task',60]];
+  const mx=mean(rows.map(row=>row.submissions)),my=mean(rows.map(row=>row.test)),xx=rows.reduce((sum,row)=>sum+(row.submissions-mx)**2,0),yy=rows.reduce((sum,row)=>sum+(row.test-my)**2,0),xy=rows.reduce((sum,row)=>sum+(row.submissions-mx)*(row.test-my),0),slope=xx?xy/xx:0,intercept=my-slope*mx,correlation=xx&&yy?xy/Math.sqrt(xx*yy):0;
   target.innerHTML='<div class="model-effort-panels">'+panels.map(([field,title,xLabel,minimumMax])=>{
     const trimmedTimeAxis=field==='activeTimePercent',maximum=Math.max(...rows.map(row=>row[field])),xMin=trimmedTimeAxis?Math.floor(Math.min(...rows.map(row=>row[field]))/10)*10:0,xMax=trimmedTimeAxis?Math.ceil(maximum/10)*10:Math.max(minimumMax,Math.ceil(maximum/15)*15);
-    const x=value=>trimmedTimeAxis?45+310*(value-xMin)/(xMax-xMin):45+310*value/xMax,y=value=>255-215*value;
-    let svg=`<div><h4>${title}</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
-    for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}</text>`;
-    if(trimmedTimeAxis){for(let value=xMin;value<=xMax;value+=10)svg+=`<text x="${x(value)}" y="276" text-anchor="middle">${value}%</text>`}else for(let value=0;value<=xMax;value+=15)svg+=`<text x="${x(value)}" y="276" text-anchor="middle">${value}</text>`;
-    svg+=`<text x="200" y="303" text-anchor="middle">${xLabel}</text>`;
+    const x=value=>trimmedTimeAxis?60+590*(value-xMin)/(xMax-xMin):60+590*value/xMax,y=value=>290-250*value;
+    let svg=`<div><h4>${title}</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 680 350" role="img" aria-label="${title}"><text x="60" y="17">Mean test AUARC</text>`;
+    for(let v=0;v<=100;v+=25)svg+=`<text x="50" y="${y(v/100)+4}" text-anchor="end">${(v/100).toFixed(2)}</text>`;
+    svg+=`<path d="M60 40V290H650" fill="none" stroke="var(--line)"/>`;
+    const fitStart=Math.min(...rows.map(row=>row.submissions)),fitEnd=Math.max(...rows.map(row=>row.submissions));
+    svg+=`<line class="effort-trend" x1="${x(fitStart)}" y1="${y(intercept+slope*fitStart)}" x2="${x(fitEnd)}" y2="${y(intercept+slope*fitEnd)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"><title>Linear fit across model averages</title></line><text class="effort-correlation" x="${x(fitEnd)+12}" y="${y(intercept+slope*fitEnd)+4}">r = ${correlation.toFixed(2).replace("-","−")}</text>`;
+    if(trimmedTimeAxis){for(let value=xMin;value<=xMax;value+=10)svg+=`<text x="${x(value)}" y="311" text-anchor="middle">${value}%</text>`}else for(let value=0;value<=xMax;value+=15)svg+=`<text x="${x(value)}" y="311" text-anchor="middle">${value}</text>`;
+    svg+=`<text x="355" y="338" text-anchor="middle">${xLabel}</text>`;
     for(const row of [...rows].sort((a,b)=>b.test-a.test)){
-      const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.activeTimePercent.toFixed(1)}%`,score=(100*row.test).toFixed(1);
+      const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.activeTimePercent.toFixed(1)}%`,score=fmt(row.test);
       const description=`${MODEL[row.key].name}: ${row.submissions.toFixed(1)} submissions, ${row.activeTimePercent.toFixed(1)}% of active run time outside grading, test AUARC ${score}; ${row.taskCount} tasks.`;
-      svg+=`<g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="${esc(description)}" data-model="${esc(MODEL[row.key].name)}" data-resource-label="${xLabel}" data-resource-value="${resource}" data-score-label="Mean test AUARC" data-score-value="${score}" data-left="${px/390*100}" data-top="${py/315*100}" data-place-left="${px>300}" data-place-below="${py<80}"><circle class="efficiency-hit" cx="${px}" cy="${py}" r="13"/>${modelLogoSvg(row.key,px,py,16.5)}</g>`;
+      svg+=`<g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="${esc(description)}" data-model="${esc(MODEL[row.key].name)}" data-resource-label="${xLabel}" data-resource-value="${resource}" data-score-label="Mean test AUARC" data-score-value="${score}" data-left="${px/680*100}" data-top="${py/350*100}" data-place-left="${px>570}" data-place-below="${py<80}"><circle class="efficiency-hit" cx="${px}" cy="${py}" r="13"/>${modelLogoSvg(row.key,px,py,16.5)}</g>`;
     }
     return svg+'</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div>';
   }).join('')+'</div>';
