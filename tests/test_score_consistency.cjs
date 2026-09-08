@@ -64,8 +64,13 @@ for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
   if(run.provisional)assert.ok(Number.isFinite(run.apiCost));
   assert.ok(run.apiCostFetchedAt);
 }
-assert.deepEqual(missingCosts,['002958c6-cb2f-46e3-8536-ba8d421083af']); // Existing completed Sol run has an empty ledger.
+assert.deepEqual(missingCosts,[]);
 assert.deepEqual(missingOutputTokens,[]);
+const estimatedSol=evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="002958c6-cb2f-46e3-8536-ba8d421083af")');
+assert.equal(estimatedSol.apiCost,145);
+assert.equal(estimatedSol.apiCostEstimated,true);
+const cpuCostHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="CPU LLM decode throughput"),"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)');
+assert.ok(cpuCostHtml.includes('$145 (estimated)'));
 const costRows=evaluate('costPerformanceRows(currentResults().rows)');
 assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,25);
 for(const row of costRows){
