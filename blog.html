@@ -17,7 +17,6 @@
   <aside class="contents" aria-label="Contents">
     <strong>Contents</strong>
     <a href="#benchmark">Overview</a>
-    <a href="#results">Main results</a>
     <a href="#tasks">Task areas</a>
     <a href="#examples">Tasks</a>
     <a href="#setup">Experimental setup</a>
@@ -34,14 +33,13 @@
         <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
         <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
       </div>
-    </section>
-    <section class="section" id="results">
-      <h2>Main results</h2>
-      <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Twenty-one completed reruns are included. Sixteen reruns are still running, so their prior published results remain in the calculations. Two invalid replacements also retain their prior results.</p>
-      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it as the time-average of the best reward reached during the run. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration. The 21 completed replacement runs use their observed 23 hour research window for AUARC. Their plots hold the final score flat through hour 24.</p>
-      <div class="aggregate-grid" id="aggregate-plots"></div>
-      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
-      <ul class="result-points result-notes" id="result-notes"></ul>
+      <div id="results">
+        <p class="results-intro">Across 29 research tasks, the current results show:</p>
+        <ul class="result-points result-notes" id="result-notes"></ul>
+        <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Results remain provisional while replacement runs finish.</p>
+        <div class="aggregate-grid" id="aggregate-plots"></div>
+        <p class="plot-note">Elo compares models within each task using hidden-test AUARC. Lines show 95% bootstrap intervals.</p>
+      </div>
     </section>
     <section class="section" id="tasks">
       <h2>Task areas</h2>
@@ -245,6 +243,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=highlight-plot-20260908"></script>
+<script src="results.js?v=opening-highlights-20260908"></script>
 </body>
 </html>
