@@ -26,7 +26,7 @@
     <a href="#results">Results</a>
     <a href="#tasks">Task areas</a>
     <a href="#examples">Tasks</a>
-    <a href="#harness-ablations">Harness ablations</a>
+    <a href="#harness-ablations">Comparing harnesses</a>
     <a href="#opsd-hints">Hints (OPSD)</a>
     <a href="#general-analysis">General analysis</a>
   </aside>
@@ -52,7 +52,7 @@
         <p>We run AutoResearch with Terminus 2 on each task for <strong>24 hours of total wall-clock time</strong>. These extended runs let us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
         <p>Each task uses the Harbor format, with separate work and verifier containers. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
         <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
-        <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">Harness ablations section</a>.</p>
+        <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">harness comparison</a>.</p>
         <p>All models used the maximum effort available at the time: max for Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, and GPT-6 Astra; xhigh for Qwen3.8 Max, Muse Spark 1.3, and Grok 4.6; high for Gemini 3.8 Flash.</p>
       </div>
     </section>
@@ -95,10 +95,10 @@
       <div class="task-grid" id="task-grid"></div>
     </section>
     <section class="section" id="harness-ablations">
-      <h2>Harness ablations</h2>
+      <h2>Comparing harnesses</h2>
       <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
       <div id="harness-summary"></div>
-      <p id="harness-findings">Average difficulty-adjusted rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Both Codex and Claude Code submit more than Terminus 2 in these runs. Sol has a drop from validation to hidden test reward with both harnesses, mostly due to one task. Claude Code has no average drop. These results do not establish that extra submissions cause overfitting.</p>
+      <p id="harness-findings">Average scores differ across harnesses, but the aggregate hidden test ranking stays the same. Both Codex and Claude Code submit more than Terminus 2 in these runs. Sol has a drop from validation to hidden test score with both harnesses, mostly due to one task. Claude Code has no average drop. These results do not establish that extra submissions cause overfitting.</p>
       <div id="harness-ablation-plot"></div>
       <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
     </section>
