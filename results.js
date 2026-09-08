@@ -654,13 +654,13 @@ function renderModelEffort(){
   const panels=[['submissions','Number of submissions vs. test AUARC','Mean number of submissions per task',60],['hours','Time vs. test AUARC','Mean hours outside grading (estimated)',24]];
   target.innerHTML='<div class="model-effort-panels">'+panels.map(([field,title,xLabel,minimumMax])=>{
     const maximum=Math.max(minimumMax,...rows.map(row=>row[field])),xMax=Math.ceil(maximum/6)*6;
-    const x=value=>45+310*value/xMax,y=value=>255-215*value;
+    const x=value=>45+310*value/xMax,y=value=>255-215*value,scoreSuffix=field==='hours'?'%':'';
     let svg=`<div><h4>${title}</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
-    for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}</text>`;
+    for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}${scoreSuffix}</text>`;
     for(let i=0;i<=4;i++)svg+=`<text x="${x(xMax*i/4)}" y="276" text-anchor="middle">${xMax*i/4}</text>`;
     svg+=`<text x="200" y="303" text-anchor="middle">${xLabel}</text>`;
     for(const row of [...rows].sort((a,b)=>b.test-a.test)){
-      const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.hours.toFixed(1)} h`,score=(100*row.test).toFixed(1);
+      const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.hours.toFixed(1)} h`,score=(100*row.test).toFixed(1)+scoreSuffix;
       const description=`${MODEL[row.key].name}: ${row.submissions.toFixed(1)} submissions, ${row.hours.toFixed(1)} estimated hours, test AUARC ${score}; ${row.taskCount} tasks.`;
       svg+=`<g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="${esc(description)}" data-model="${esc(MODEL[row.key].name)}" data-resource-label="${xLabel}" data-resource-value="${resource}" data-score-label="Mean test AUARC" data-score-value="${score}" data-left="${px/390*100}" data-top="${py/315*100}" data-place-left="${px>300}" data-place-below="${py<80}"><circle class="efficiency-hit" cx="${px}" cy="${py}" r="13"/>${modelLogoSvg(row.key,px,py,16.5)}</g>`;
     }
