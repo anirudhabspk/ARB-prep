@@ -9,7 +9,7 @@ const results=evaluate('currentResults()'),data=context.window.ARB_DATA;
 data.aggregates=results.rows;
 data.rank_rho=results.rho;data.rank_rho_ci=results.rho_ci;
 data.complete_task_count=evaluate('difficultyAdjustedTaskRows().filter(row=>ORDER.every(key=>row[key])).length');
-data.snapshot.scoring='Meta MLE remaining-gap maps; original task baselines; normalize before AUARC and Elo';
+data.snapshot.scoring='Meta MLE remaining-gap maps; final-panel task anchors shared by validation and hidden test; normalize before AUARC and Elo';
 data.snapshot.scoringSha256=crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'difficulty-reward-maps.js'))).digest('hex');
 fs.writeFileSync(path.join(root,'site-data.js'),'window.ARB_DATA = '+JSON.stringify(data)+';\n');
 let rendered='';

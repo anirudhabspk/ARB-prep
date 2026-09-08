@@ -17,6 +17,23 @@ close(evaluate('DIFFICULTY_REWARD_MAPS["Budgeted Covtype dual market"].score(0.5
 close(evaluate('DIFFICULTY_REWARD_MAPS["TIES CLIP model merging"].score(86,"final")'),.55);
 close(evaluate('DIFFICULTY_REWARD_MAPS["TIES CLIP model merging"].score(100,"final")'),1);
 
+// Validation and hidden test use one common final-panel normalization.
+const commonMapCases=[
+  ["CARPS star discrepancy subset selection",.3,.21641915488349533],
+  ["SOPCC online chance constrained policy",5.2,.45327089158337075],
+  ["TGAT MILP branching",300,.30615054518287543],
+  ["FasterCache video DiT policy",27,.381894549396098],
+  ["FasterGCG candidate token ranking",.2,.19067311693454814],
+];
+for(const [name,raw,expected] of commonMapCases){
+  const point={bestValidation:.25,testAtBest:.75,rawValidation:raw,rawTestAtBest:raw};
+  close(evaluate(`difficultyAdjustedPoint({name:${JSON.stringify(name)}},${JSON.stringify(point)},"bestValidation")`),expected);
+  close(evaluate(`difficultyAdjustedPoint({name:${JSON.stringify(name)}},${JSON.stringify(point)},"testAtBest")`),expected);
+}
+const sopccWithoutRaw={bestValidation:.2241940383685004,testAtBest:.45327089158337075};
+close(evaluate(`difficultyAdjustedPoint({name:"SOPCC online chance constrained policy"},${JSON.stringify(sopccWithoutRaw)},"bestValidation")`),.45327089158337075);
+close(evaluate(`difficultyAdjustedPoint({name:"SOPCC online chance constrained policy"},${JSON.stringify(sopccWithoutRaw)},"testAtBest")`),.45327089158337075);
+
 // Normalize every observation BEFORE integration, never the resulting AUARC.
 evaluate('var syntheticTask={name:"Budgeted imputation MCAR 50"};var syntheticRun={hours:1,points:[{seconds:0,bestValidation:.5,testAtBest:.5},{seconds:1800,bestValidation:.75,testAtBest:.75}]};');
 const converted=evaluate('difficultyAdjustedRunStats(syntheticTask,syntheticRun).test');

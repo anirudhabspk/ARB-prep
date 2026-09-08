@@ -14,7 +14,7 @@ The `api_cost_usd` field must come from the API usage ledger. Do not replace mis
 
 ## Refresh score comparisons
 
-The blog uses Meta MLE's remaining-gap reward formulas and the original baseline anchors for each task. It normalizes each observation before calculating AUARC. Elo compares normalized test AUARC within each task. The effort plots use the same model score means as the main results.
+The blog uses Meta MLE's remaining-gap reward formulas and the original final-panel baseline anchors for each task. It recovers the raw metric from each validation or hidden-test observation, then applies that same final-panel mapping before calculating AUARC. The source split is used only to invert legacy observations that lack a native raw metric. Elo compares normalized test AUARC within each task. The effort plots use the same model score means as the main results.
 
 The 2 a.m. September 8 refresh uses `--include-current-runs`: one latest non-cancelled evaluation per model and task across 29 tasks, including results so far from running replacements. Failed and known crashed runs are excluded. Running results remain provisional and are not extended to 24 hours. Missing API ledgers remain missing rather than estimated. The default offline builder retains the separate terminal-run policy for reproducing earlier snapshots. The approved Astra sparse autoencoder exception carries iteration 22's test measurement into the missing iteration 23 measurement.
 

@@ -49,10 +49,10 @@ function runStats(run){return{key:run.model,hours:run.hours,points:run.points}}
 const taskStats=task=>task.models.map(runStats);
 const rewardSplit=key=>key==="bestValidation"?"intermediate":"final";
 
-function difficultyAdjustedReward(task,reportedReward,split,rawMetric=null){
-  const raw=Number.isFinite(rawMetric)?rawMetric:RAW_SCORE_MAPS[task.name]?.invert(reportedReward,split);
+function difficultyAdjustedReward(task,reportedReward,sourceSplit,rawMetric=null){
+  const raw=Number.isFinite(rawMetric)?rawMetric:RAW_SCORE_MAPS[task.name]?.invert(reportedReward,sourceSplit);
   if(!Number.isFinite(raw))return reportedReward===0?0:null;
-  const reward=DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,split);
+  const reward=DIFFICULTY_REWARD_MAPS[task.name]?.score(raw,"final");
   return Number.isFinite(reward)?Math.max(0,Math.min(1,reward)):null;
 }
 
