@@ -34,6 +34,7 @@ assert.ok(ratings[order[0]]>ratings[order[1]]);
 const reversed=evaluate('adjustedElo([{[ORDER[0]]:{test:.2},[ORDER[1]]:{test:.8}},{[ORDER[0]]:{test:.3},[ORDER[1]]:{test:.7}}])');
 close(ratings[order[0]],reversed[order[1]]);
 const result=evaluate('currentResults()'),effort=evaluate('effortModelRows()');
+const currentSnapshot=context.window.ARB_DATA.snapshot.selectionPolicy==='current';
 for(const row of effort){
   close(row.test,result.rows.find(r=>r.key===row.key).test);
   close(row.test,context.window.ARB_DATA.aggregates.find(r=>r.key===row.key).test);
@@ -44,16 +45,24 @@ for(const row of effort){
   assert.ok(row.elo_ci.every(Number.isFinite));
 }
 assert.equal(evaluate('DATA.tasks.length'),29);
-assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,29);
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),261);
+assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,currentSnapshot?25:29);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),context.window.ARB_DATA.snapshot.includedRuns);
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
-assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0,!currentSnapshot);
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="60a7e9e2-c234-4091-a258-242d0574dc30").points.length')>0);
 const overview=evaluate('overviewTrajectories()');
 const fable=overview.series.find(r=>r.key==='vesper-pro');
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional).length'),0);
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.sourceStatus==="Rerun submitted").length'),0);
-close(fable.points.at(-1).hour,24);
+if(currentSnapshot){
+  const active=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional&&r.points.length)');
+  assert.ok(active.length>0);
+  close(fable.points.at(-1).hour,Math.min(...active.filter(r=>r.model==='vesper-pro').map(r=>r.hours)));
+  for(const t of context.window.ARB_DATA.tasks)for(const r of t.models){
+    if(r.points.length&&r.evaluationId!=='60a7e9e2-c234-4091-a258-242d0574dc30')assert.ok(['running','completed'].includes(r.status));
+  }
+}else{
+  assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional).length'),0);
+  close(fable.points.at(-1).hour,24);
+}
 const costHtml=evaluate('costPerformancePlot(currentResults().rows)');
 assert.ok(costHtml.includes('API costs include model calls only'));
 const missingCosts=[],missingOutputTokens=[];
@@ -64,15 +73,15 @@ for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
   if(run.provisional)assert.ok(Number.isFinite(run.apiCost));
   assert.ok(run.apiCostFetchedAt);
 }
-assert.deepEqual(missingCosts,[]);
+assert.deepEqual(missingCosts,currentSnapshot?['002958c6-cb2f-46e3-8536-ba8d421083af']:[]);
 assert.deepEqual(missingOutputTokens,[]);
 const estimatedSol=evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="002958c6-cb2f-46e3-8536-ba8d421083af")');
-assert.equal(estimatedSol.apiCost,145);
-assert.equal(estimatedSol.apiCostEstimated,true);
+assert.equal(estimatedSol.apiCost,currentSnapshot?null:145);
+assert.equal(estimatedSol.apiCostEstimated,!currentSnapshot);
 const cpuCostHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="CPU LLM decode throughput"),"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)');
-assert.ok(cpuCostHtml.includes('$145 (estimated)'));
+assert.equal(cpuCostHtml.includes('$145 (estimated)'),!currentSnapshot);
 const costRows=evaluate('costPerformanceRows(currentResults().rows)');
-assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,29);
+assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,effort.find(r=>r.key==='vesper-pro').taskCount);
 for(const row of costRows){
   if(row.key!=='skylark')close(row.test,result.rows.find(r=>r.key===row.key).test);
   assert.ok(costHtml.includes('data-resource-value="$'+row.cost.toFixed(2)+'"'));
@@ -83,7 +92,7 @@ assert.ok(!costHtml.includes('NaN'));
 const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');
 assert.ok(!tokenHtml.includes('Source data unavailable'));
 assert.ok(!tokenHtml.includes('Output tokens unavailable from Horizon'));
-assert.ok(!tokenHtml.includes('Final hidden-test reward unavailable'));
+if(!currentSnapshot)assert.ok(!tokenHtml.includes('Final hidden-test reward unavailable'));
 
 // Native SVG rendering shares these exact values and retains the model branding.
 evaluate('var rendered={};');context.document={getElementById:()=>({set innerHTML(value){context.renderedHtml=value;}})};

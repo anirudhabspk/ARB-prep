@@ -2,7 +2,8 @@
 
 No network calls. Terminal runs retain their fully graded checkpoints, including
 cancelled or failed runs selected by the evaluation index. Running replacements
-are rejected. Run with --help for inputs. The audit belongs in the local
+are rejected by default. --include-current-runs applies the scheduled current-run
+policy instead. Run with --help for inputs. The audit belongs in the local
 snapshot directory.
 """
 import argparse
@@ -78,6 +79,14 @@ def fully_graded_checkpoint(row):
 def eligible_terminal_result(status, iterations):
     terminal = (status or '').strip().lower() in {'completed', 'cancelled', 'failed'}
     return terminal and any(fully_graded_checkpoint(row) for row in iterations)
+
+
+def eligible_current_result(source, status, attempt, rollout_statuses):
+    """Scheduled refresh policy: current running/completed runs, no crashed fallback."""
+    return ((status == 'running' or (status == 'completed' and attempt['status'] == 'completed'))
+            and not attempt.get('error')
+            and 'crash' not in source['manifest_status'].lower()
+            and not any(row['status'] == 'errored' for row in rollout_statuses))
 
 
 def active_time_share(messages):
@@ -180,6 +189,8 @@ def main():
     parser.add_argument('--previous', type=Path, required=True)
     parser.add_argument('--older-manifest', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--include-current-runs', action='store_true',
+                        help='Use current completed/running IDs; exclude crashes and cost estimates.')
     args = parser.parse_args()
     site = read_site(args.previous)
     known = {r['evaluationId']: t['name'] for t in site['tasks'] for r in t['models']}
@@ -202,8 +213,16 @@ def main():
         attempts = result['attempts']
         attempt = next((a for a in attempts if a.get('is_final_attempt')), attempts[-1])
         status = payload['status']['job_status']
-        validate_selected_evaluation(source['manifest_status'], status)
-        eligible = eligible_terminal_result(status, attempt['iterations'])
+        # Batch-job records may expire after a completed evaluation. Use the
+        # evaluation status fetched in this same inventory, never a cached status.
+        if args.include_current_runs and status == 'unknown':
+            status = source.get('live_status', status)
+        if args.include_current_runs:
+            eligible = eligible_current_result(source, status, attempt,
+                                               payload['status'].get('rollout_statuses', []))
+        else:
+            validate_selected_evaluation(source['manifest_status'], status)
+            eligible = eligible_terminal_result(status, attempt['iterations'])
         # Explicit user-approved exception: retain this result and carry iteration 22
         # into its missing iteration 23 test measurement. Never generalize to errors.
         if eid == '60a7e9e2-c234-4091-a258-242d0574dc30':
@@ -227,6 +246,8 @@ def main():
         # The tracker explicitly approved this stopped run as a flat extension.
         if eid == '1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d':
             extension = True
+        if args.include_current_runs:
+            extension = False
         if extension:
             end = 86400
         points = curve(iterations, end) if eligible else []
@@ -235,15 +256,15 @@ def main():
         old_run = old_runs.get(eid, {})
         ledger = payload.get('api_ledger')
         cost = api_ledger_cost(ledger, eid) if ledger is not None else old_run.get('apiCost')
-        if cost is None:
+        if cost is None and not args.include_current_runs:
             cost = ESTIMATED_API_COSTS.get(eid)
         ledger_output_tokens = api_ledger_output_tokens(ledger, eid) if ledger is not None else None
         output_tokens = ledger_output_tokens if ledger_output_tokens is not None else ro.get('total_output_tokens')
         run = {'model': models[source['model']], 'hours': end / 3600 if eligible else 0,
                # Running and completed results use the same verified ledger source.
                # Never substitute rollout total_cost for missing API ledger data.
-               'apiCost': cost,
-               'apiCostEstimated': eid in ESTIMATED_API_COSTS,
+               'apiCost': cost if eligible else None,
+               'apiCostEstimated': not args.include_current_runs and eid in ESTIMATED_API_COSTS,
                'apiCostFetchedAt': payload.get('api_ledger_fetched_at', old_run.get('apiCostFetchedAt')),
                'outputTokens': output_tokens, 'evaluationId': eid,
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],
@@ -255,6 +276,7 @@ def main():
                'activeElapsedHours': active.get('active_elapsed_seconds', 0) / 3600 if eligible else None}
         task_lookup[names[source['task_slug']]]['models'].append(run)
         audit.append({**source, 'included': bool(eligible), 'status': status,
+                      'batch_job_status': payload['status']['job_status'],
                       'attempt_status': attempt['status'], 'task_name': names[source['task_slug']],
                       'submissions': count, 'work_hours': hours, 'timing': timing,
                       'active_time': active,
@@ -265,8 +287,11 @@ def main():
         task['models'].sort(key=lambda r: list(models.values()).index(r['model']))
         assert len(task['models']) == 9
     site['snapshot'] = {'fetchedAt': max(json.loads(line)['fetched_at'] for line in (args.snapshot / 'download_progress.jsonl').read_text().splitlines()),
-                        'sourceCommit': manifest['source_commit'], 'provisional': False,
-                        'includedRuns': sum(r['included'] for r in audit)}
+                        'sourceCommit': manifest['source_commit'],
+                        'selectionPolicy': 'current' if args.include_current_runs else 'terminal',
+                        'provisional': any(r['provisional'] for t in site['tasks'] for r in t['models']),
+                        'eligibleRuns': sum(r['included'] for r in audit),
+                        'includedRuns': sum(bool(r['points']) for t in site['tasks'] for r in t['models'])}
     args.output.write_text('window.ARB_DATA = ' + json.dumps(site, separators=(',', ':')) + ';\n')
     (args.snapshot / 'score-refresh-audit.json').write_text(json.dumps(audit, indent=2) + '\n')
     print(json.dumps(site['snapshot']))
