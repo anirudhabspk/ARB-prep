@@ -11,27 +11,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     MKL_NUM_THREADS=1
 
-# uid 1001 must exist here too: the grader drops privilege to it before running the
-# submitted deliverable. No USER line -- the verifier itself stays root, which is what
-# keeps /tests/hidden_data sealed from that process.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs -- the verifier executes the agent's deliverable
-# under this interpreter, so anything missing here is an ImportError the agent could not
-# have foreseen.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# Parent of every declared artifact path, so the handoff has somewhere to land.
 RUN mkdir -p /app/output /logs/verifier
 
 COPY . /tests
 
-# The one trusted file the privilege-dropped process must be able to read lives outside
-# the 0700 tree; /tests itself is sealed.
 RUN mkdir -p /opt/harness \
     && cp /tests/candidate_runner.py /opt/harness/candidate_runner.py \
     && chown -R root:root /opt/harness /tests \

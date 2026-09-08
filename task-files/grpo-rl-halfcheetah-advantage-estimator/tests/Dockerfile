@@ -12,11 +12,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     MUJOCO_GL=disable
 
-# uid 1001 must exist here too: the verifier drops to it before running any submitted code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs — the verifier executes the agent's deliverable under this
-# interpreter, so anything missing here is an ImportError the agent could not have foreseen.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \

@@ -1,9 +1,5 @@
 FROM --platform=linux/amd64 public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
 
-# Install tmux=3.3a-3 asciinema (required by harbor terminus-2 agent)
-# Pinned AND pulled from a frozen archive snapshot (20260801T000000Z) so the pin
-# cannot rot -- the rolling pocket can drop this exact version, the
-# snapshot cannot. Sources are scoped to this install and removed after.
 RUN set -eu; \
     if [ ! -s /etc/ssl/certs/ca-certificates.crt ]; then \
       apt-get update && apt-get install -y --no-install-recommends ca-certificates=20230311+deb12u1; \
@@ -31,15 +27,10 @@ RUN git config --system user.email "agent@horizon.local" \
 
 RUN useradd --create-home --uid 1001 agent
 
-# Least-volatile first: the requirement set changes far less often than the app tree.
 COPY ./requirements.txt /tmp/requirements.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
 
-# Rebuild the development series matrices from their shards; the materializer checks each
-# reassembled array against the sha256 in the manifest and fails this build on a mismatch.
-# Ownership and timestamps are set inside this same layer: a later chown -R or touch over
-# half a gigabyte of arrays would copy every one of them into a second layer.
 COPY ./materialize_data.py /tmp/materialize_data.py
 COPY ./shards /tmp/shards
 RUN /usr/local/bin/python3 /tmp/materialize_data.py /tmp/shards /app/data \
@@ -54,7 +45,6 @@ RUN mkdir -p /app/output \
     && chown agent:agent /app /app/output \
     && find /app ! -name '*.npy' -exec touch -d @1700000000 {} +
 
-# Runtime-only seal: after every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1
 

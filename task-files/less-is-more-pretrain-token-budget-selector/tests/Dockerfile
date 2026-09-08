@@ -1,10 +1,3 @@
-# Base: gcr.io/kaggle-gpu-images/python (tag v170 at pin time), digest-pinned below.
-# Substitution justified per Base Image and Dockerfile Structuring sub-check 1: this task runs
-# CUDA-linked training/inference on an H100 and needs a CUDA 12.8 runtime, cuDNN 9.8 and the
-# NVIDIA driver-compatibility libraries at grade time. None of the 10 approved bases is a GPU
-# image — they are CPU language runtimes and ship no CUDA runtime at all. The task additionally
-# runs under `network_mode = "no-network"`, so the entire ML stack has to be present in the
-# image rather than installed at run time, and this base ships it preinstalled.
 FROM --platform=linux/amd64 gcr.io/kaggle-gpu-images/python@sha256:37c64f7dd9c54116ecd1bcc88817c5469b88387388fade02bfa8bf3fc647d461
 
 ENTRYPOINT []
@@ -21,23 +14,16 @@ ENV PYTHONHASHSEED=0 \
     CUBLAS_WORKSPACE_CONFIG=:4096:8 \
     HF_HUB_DISABLE_PROGRESS_BARS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/bin/python3 -m pip install --no-cache-dir -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements-verifier.txt
 
-# The same reference checkpoints the agent developed against, at the same 40-hex commit shas,
-# because the submitted selector may load them while it is being graded.
 RUN /usr/bin/python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='openai-community/gpt2', revision='607a30d783dfa663caf39e06633721c8d4cfcd7e', local_dir='/opt/assets/gpt2', allow_patterns=['config.json','generation_config.json','merges.txt','vocab.json','tokenizer.json','model.safetensors']); snapshot_download(repo_id='EleutherAI/pythia-160m', revision='50f5173d932e8e61f858120bcb800b97af589f46', local_dir='/opt/assets/pythia-160m', allow_patterns=['config.json','generation_config.json','tokenizer.json','tokenizer_config.json','special_tokens_map.json','model.safetensors'])" && rm -rf /opt/assets/gpt2/.cache /opt/assets/pythia-160m/.cache
 
 COPY . /tests
 
-# The two SEALED halves. Their corpus files are disjoint from each other and from the ones the
-# agent image uses, and each half's evaluation shard is a different corpus file from its pool,
-# so the partition is fixed before any row is derived. The generator is deliberately retained
-# here: this image already holds the sealed slice by design.
 RUN set -eux; \
     REV=1588ec454efa1a09f29cd18ddd04fe05fc8653a2; \
     B="https://huggingface.co/datasets/allenai/c4/resolve/$REV"; \
@@ -75,6 +61,5 @@ RUN chown -R root:root /tests \
 
 WORKDIR /tests
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

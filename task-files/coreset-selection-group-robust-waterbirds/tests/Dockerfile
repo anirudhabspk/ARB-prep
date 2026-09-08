@@ -11,16 +11,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MKL_NUM_THREADS=1 \
     OPENBLAS_NUM_THREADS=1
 
-# The SAME set the agent image installs -- the verifier executes the agent's deliverable under
-# this interpreter, so anything missing here is an ImportError the agent could not have foreseen.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# The unprivileged identity the candidate's deliverable is executed under, and the mount point of
-# the declared artifact directory (its parent must exist before the scorer looks for it).
 RUN useradd --create-home --uid 1001 agent \
     && { test -x /usr/sbin/runuser || test -x /sbin/runuser; } \
     && test -x /usr/bin/setsid \

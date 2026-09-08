@@ -12,26 +12,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     NUMEXPR_NUM_THREADS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs: the verifier executes the candidate's module under
-# this interpreter, so anything missing here is an ImportError it could not have foreseen.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# /app/output is where the declared artifact is re-materialised inside this image.
 RUN mkdir -p /app/output /logs/verifier
 
 COPY . /tests
 
-# Sealed series matrix, checked against its manifest sha256; the untrusted-side batch runner
-# goes to /opt/grade because it has to be readable by uid 1001 while /tests stays 0700 root.
-# One layer, so the 245 MB matrix is not copied again by a later chown or touch. The runuser
-# check fails the build here rather than at grade time: test_state.py drops privilege with it.
 RUN /usr/local/bin/python3 /tests/materialize_data.py /tests/shards /tests/hidden_data \
     && rm -rf /tests/shards \
     && mkdir -p /opt/grade \
@@ -46,6 +38,5 @@ RUN /usr/local/bin/python3 /tests/materialize_data.py /tests/shards /tests/hidde
 
 WORKDIR /tests
 
-# Runtime-only seal: after every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

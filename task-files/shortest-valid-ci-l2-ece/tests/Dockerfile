@@ -12,27 +12,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     NUMEXPR_NUM_THREADS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs - the verifier executes the agent's routine
-# under this interpreter - plus the grading-only packages the agent must not have.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# /app/output is the declared artifact path: its parent must exist before the
-# handoff copies the deliverable in.  /opt/candrun holds the unprivileged runner.
 RUN mkdir -p /app/output /logs/verifier /opt/candrun
 
 COPY . /tests
 
-# Candidate calls run as uid 1001 in a per-worker sandbox created at grade time.
-# Every other path that uid could write is closed here, so no state can survive
-# from one call to the next: /tmp and /var/tmp lose their sticky world-write bit
-# and the agent home is root-owned.
 RUN cp /tests/run_call.py /opt/candrun/run_call.py \
     && chown root:root /opt/candrun /opt/candrun/run_call.py \
     && chmod 755 /opt/candrun \
@@ -46,6 +37,5 @@ RUN cp /tests/run_call.py /opt/candrun/run_call.py \
 
 WORKDIR /tests
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

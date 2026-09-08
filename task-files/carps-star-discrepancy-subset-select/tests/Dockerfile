@@ -11,24 +11,18 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MKL_NUM_THREADS=1 \
     OPENBLAS_NUM_THREADS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs - the verifier executes the agent's deliverable
-# under this interpreter - plus the verifier-only scoring dependencies.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# /app/output is where task.toml's declared artifact lands.
 RUN mkdir -p /app/output /logs/verifier
 
 COPY . /tests
 
-# /tests stays 0700 root. The sandbox runner is the one verifier file candidate code has
-# to be able to execute, so it gets its own root-owned, non-agent-writable home.
 RUN chown -R root:root /tests \
     && chmod 700 /tests \
     && chmod 700 /tests/hidden_data /tests/hidden_data/intermediate /tests/hidden_data/final \
@@ -42,6 +36,5 @@ RUN chown -R root:root /tests \
 
 WORKDIR /tests
 
-# Runtime-only seal: after every build-time RUN, one ENV per line.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

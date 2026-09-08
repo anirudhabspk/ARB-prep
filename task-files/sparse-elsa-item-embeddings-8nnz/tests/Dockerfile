@@ -15,17 +15,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1
 
-# uid 1001 must match the agent image: the graded run drops to this unprivileged user, which is
-# what keeps the sealed slice and the trusted metric channel out of reach of submitted code.
 RUN useradd --create-home --uid 1001 agent
 
-# Fail the build loudly if privilege drop or the wall-clock kill would be unavailable, rather
-# than silently scoring every submission 0 at grade time.
 RUN command -v runuser >/dev/null || command -v /usr/sbin/runuser >/dev/null \
     && command -v setsid >/dev/null && command -v timeout >/dev/null
 
-# The SAME set the agent image installs -- the verifier executes the agent's deliverable under
-# this interpreter, so anything missing here is an ImportError the agent could not have foreseen.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \

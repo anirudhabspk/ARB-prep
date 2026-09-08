@@ -11,22 +11,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     MKL_NUM_THREADS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs -- the verifier executes the agent's deliverable under
-# this interpreter, so anything missing here is an ImportError the agent could not foresee.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# Parents of every declared artifact path, plus the verifier's own log and staging roots.
-# Every world-writable directory is closed to the candidate uid as well: the only path it may
-# write during grading is the per-run scratch directory the scorer creates and then deletes,
-# so no filesystem state -- least of all oracle labels -- can survive from one seeded run of
-# the panel into the next.
 RUN mkdir -p /app/output /logs/verifier /grade_stage \
     && chmod 755 /tmp /var/tmp /dev/shm /home/agent
 
@@ -39,6 +31,5 @@ RUN chown -R root:root /tests \
 
 WORKDIR /tests
 
-# Runtime-only seal: after every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

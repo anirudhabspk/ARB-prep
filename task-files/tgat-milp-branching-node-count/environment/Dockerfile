@@ -1,9 +1,5 @@
 FROM --platform=linux/amd64 public.ecr.aws/docker/library/python:3.13-slim-bookworm@sha256:01f42367a0a94ad4bc17111776fd66e3500c1d87c15bbd6055b7371d39c124fb
 
-# Install tmux=3.3a-3 asciinema (required by harbor terminus-2 agent)
-# Pinned AND pulled from a frozen archive snapshot (20260801T000000Z) so the pin
-# cannot rot -- the rolling pocket can drop this exact version, the
-# snapshot cannot. Sources are scoped to this install and removed after.
 RUN set -eu; \
     if [ ! -s /etc/ssl/certs/ca-certificates.crt ]; then \
       apt-get update && apt-get install -y --no-install-recommends ca-certificates=20230311+deb12u1; \
@@ -23,7 +19,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     OMP_NUM_THREADS=1
 
-# git: the experiment harness initialises the workspace as a git repository.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.39.5-0+deb12u3 \
@@ -31,8 +26,6 @@ RUN apt-get update \
 
 RUN useradd --create-home --uid 1001 agent
 
-# Least-volatile first: the requirement set changes far less often than the app
-# tree, so the expensive install layer survives every edit under /app.
 COPY ./requirements.txt /tmp/requirements.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
@@ -40,19 +33,12 @@ RUN /usr/local/bin/python3 -m pip install --no-cache-dir -r /tmp/requirements.tx
 WORKDIR /app
 COPY ./app /app
 
-# The whole workspace belongs to the agent: the experiment harness git-inits it,
-# and the deliverable is written under /app/submission. The grading copy of the
-# environment lives in the verifier image, so nothing here is load-bearing for
-# the score. The harness runs `git rev-parse --git-dir || git init` but does not
-# set an identity, so configure one system-wide before the final runtime ENV
-# seal; it then applies regardless of the agent process's HOME.
 RUN mkdir -p /app/submission \
     && chown -R agent:agent /app \
     && find /app -exec touch -d @1700000000 {} + \
     && git config --system user.email "agent@localhost" \
     && git config --system user.name "autoresearch agent"
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1
 USER agent

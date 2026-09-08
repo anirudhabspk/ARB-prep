@@ -13,20 +13,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     HF_HUB_OFFLINE=1 \
     TRANSFORMERS_OFFLINE=1
 
-# uid 1001 must exist here too: the scorer drops privilege to it with runuser before it
-# executes the submitted deliverable.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs — the verifier executes the agent's deliverable under
-# this interpreter, so anything missing here is an ImportError the agent could not foresee.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# /app/output is the declared artifact path: its parent must exist before harbor copies the
-# deliverable in.
 RUN mkdir -p /app/output /logs/verifier
 
 COPY . /tests

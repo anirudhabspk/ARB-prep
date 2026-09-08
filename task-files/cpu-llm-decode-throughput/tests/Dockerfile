@@ -11,19 +11,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MKL_NUM_THREADS=8 \
     OPENBLAS_NUM_THREADS=8
 
-# The root verifier drops to this uid (runuser, from the base image's util-linux) before
-# it executes any submitted code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs - the verifier executes the submitted engine
-# under this interpreter, so anything missing here is an ImportError nobody could foresee.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# Same weights, same revision, same path as the agent image.
 RUN /usr/local/bin/python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='openai-community/gpt2', revision='607a30d783dfa663caf39e06633721c8d4cfcd7e', allow_patterns=['model.safetensors', 'config.json'], local_dir='/opt/model')" \
     && rm -rf /opt/model/.cache \
     && find /opt/model -type d -exec chmod 755 {} + \
@@ -31,9 +26,6 @@ RUN /usr/local/bin/python3 -c "from huggingface_hub import snapshot_download; sn
 
 COPY . /tests
 
-# /tests is sealed to root here as well as in test.sh: the graded engine runs as uid 1001
-# inside this image, and a directory it cannot traverse denies it every file underneath -
-# the reward anchors in grader_core.py included - without depending on the runner script.
 RUN chown -R root:root /tests \
     && chmod 700 /tests \
     && chmod 700 /tests/hidden_data /tests/hidden_data/intermediate /tests/hidden_data/final \
@@ -42,6 +34,5 @@ RUN chown -R root:root /tests \
 
 WORKDIR /tests
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1

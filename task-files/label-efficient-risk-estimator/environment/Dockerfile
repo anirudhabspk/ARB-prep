@@ -7,7 +7,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     OMP_NUM_THREADS=1
 
-# Runtime tools used by the experiment harness and Terminus.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.39.5-0+deb12u3 \
@@ -17,7 +16,6 @@ RUN apt-get update \
 
 RUN useradd --create-home --uid 1001 agent
 
-# Least-volatile first: the requirement set changes far less often than the app tree.
 COPY ./requirements.txt /tmp/requirements.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
@@ -29,15 +27,9 @@ RUN mkdir -p /app/output \
     && chown -R agent:agent /app \
     && find /app -exec touch -d @1700000000 {} +
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1
 
-# The autoresearch harness inits the agent workspace as a Git repository and its prompt tells
-# the agent to keep, compare and revert experiments with Git -- but it runs exactly
-# `git rev-parse --git-dir || git init` and never sets an identity, so without this the first
-# commit dies with "unable to auto-detect email address". --system (/etc/gitconfig), not
-# --global, so it applies whatever HOME the agent process gets. git itself is installed above.
 RUN git config --system user.email "agent@localhost" \
     && git config --system user.name "autoresearch agent"
 USER agent

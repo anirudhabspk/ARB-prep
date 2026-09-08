@@ -1,10 +1,3 @@
-# Base: gcr.io/kaggle-gpu-images/python (tag v170 at pin time), digest-pinned below.
-# Substitution justified per Base Image and Dockerfile Structuring sub-check 1: this task runs
-# CUDA-linked training/inference on an H100 and needs a CUDA 12.8 runtime, cuDNN 9.8 and the
-# NVIDIA driver-compatibility libraries at grade time. None of the 10 approved bases is a GPU
-# image — they are CPU language runtimes and ship no CUDA runtime at all. The task additionally
-# runs under `network_mode = "no-network"`, so the entire ML stack has to be present in the
-# image rather than installed at run time, and this base ships it preinstalled.
 FROM --platform=linux/amd64 gcr.io/kaggle-gpu-images/python@sha256:37c64f7dd9c54116ecd1bcc88817c5469b88387388fade02bfa8bf3fc647d461
 
 ENTRYPOINT []

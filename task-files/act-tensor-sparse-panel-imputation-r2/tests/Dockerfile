@@ -12,19 +12,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     MKL_NUM_THREADS=1 \
     NUMEXPR_NUM_THREADS=1
 
-# The root verifier drops privileges to this user before it executes candidate code.
 RUN useradd --create-home --uid 1001 agent
 
-# The SAME set the agent image installs -- the verifier executes the agent's deliverable
-# under this interpreter, so anything missing here is an ImportError the agent could not
-# have foreseen.  The verifier-only packages stay in their own file.
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-verifier.txt /tmp/requirements-verifier.txt
 RUN /usr/local/bin/python3 -m pip install --no-cache-dir \
         -r /tmp/requirements.txt -r /tmp/requirements-verifier.txt \
     && rm /tmp/requirements.txt /tmp/requirements-verifier.txt
 
-# The declared artifact is /app/solution; harbor copies the agent's tree onto this path.
 RUN mkdir -p /app/solution /logs/verifier
 
 COPY . /tests
@@ -36,6 +31,5 @@ RUN chown -R root:root /tests \
 
 WORKDIR /tests
 
-# Runtime-only seal: AFTER every build-time RUN, one ENV per line, no continuation.
 ENV HF_HUB_OFFLINE=1
 ENV TRANSFORMERS_OFFLINE=1
