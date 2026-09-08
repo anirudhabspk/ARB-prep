@@ -37,9 +37,9 @@
     <section class="section" id="results">
       <h2>Main results</h2>
       <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Fable 5.1 scores are provisional and will be recalculated, including Elo and hidden test AUARC.</p>
-      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it by averaging the best difficulty-adjusted reward reached at each iteration. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration.</p>
+      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it as the time-average of the best reward reached during the run. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration.</p>
       <div id="trajectory-overview"></div>
-      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show means on the task-specific difficulty-adjusted reward scale. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
+      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show means on the task-specific reward scale. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
       <div class="aggregate-grid" id="aggregate-plots"></div>
       <ul class="result-points result-notes" id="result-notes"></ul>
     </section>
@@ -70,6 +70,7 @@
     </section>
     <section class="section" id="setup">
       <h2>Evaluation setup</h2>
+      <div class="prose" id="reward-normalization"><p>We normalize task metrics to rewards between 0 and 1 using a task-specific baseline and reference result. For metrics with a theoretical limit, such as perfect accuracy or zero error, progress measures the logarithmic reduction in the remaining gap relative to the reference. For the other tasks, it measures improvement over the baseline relative to the reference. Without a reference, we count halvings of the remaining gap.</p><p>We convert progress <em>u</em> to <em>u / (1 + u)</em>. Matching the reference earns 0.5. Tasks that reserve a 0.1 reward for the baseline use <em>0.1 + 0.9u / (1 + u)</em>, so matching the reference earns 0.55; weaker results score within the band below 0.1. Better solutions continue to earn higher rewards.</p></div>
       <div class="prose"><p>Measuring both requires separating the feedback the agent can see from the hidden performance used to rank it. We therefore evaluate each run along two axes:</p></div>
       <div class="measure-grid">
         <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
@@ -258,7 +259,7 @@
       <h2>Comparing harnesses</h2>
       <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
       <div id="harness-summary"></div>
-      <p id="harness-findings">Average difficulty-adjusted rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2, but we see no clear increase in overfitting in these runs.</p>
+      <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2, but we see no clear increase in overfitting in these runs.</p>
       <div id="harness-ablation-plot"></div>
       <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
     </section>
@@ -273,6 +274,6 @@
 <script src="task-catalog.js?v=clean-task-names-20260907"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=shared-score-axes-20260907"></script>
+<script src="results.js?v=normalized-reward-labels-20260907"></script>
 </body>
 </html>
