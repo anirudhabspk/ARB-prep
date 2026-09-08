@@ -83,7 +83,6 @@
         <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
       </div>
       <div class="prose" id="reward-normalization">
-        <h3>How we score improvements</h3>
         <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available.</p>
         <p>For metrics with a perfect score, we reward proportional reductions in the remaining error. Improving accuracy from 90% to 95% removes half the remaining error.</p>
         <details class="reward-formula">
