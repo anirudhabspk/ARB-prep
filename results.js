@@ -402,7 +402,7 @@ function aggregatePlot(title,subtitle,rows,valueKey,ciKey,format="score",wide=fa
   for(const tick of domain.ticks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${H-9}" text-anchor="middle">${tickLabel(tick)}</text>`}
   rows.forEach((row,index)=>{
     const y=T+(index+.5)*rowH,ci=row[ciKey],value=row[valueKey],estimate=`<g class="estimate"><title>${esc(row.name)}: ${label(value)}</title>${modelLogoSvg(row.key,x(value),y,16.5)}</g>`;
-    body+=`${modelLogoSvg(row.key,8,y,12)}<text class="plot-label" x="17" y="${y+4}">${esc(row.name)}</text><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[1])}" y1="${y}" y2="${y}"/><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[0])}" y1="${y-4}" y2="${y+4}"/><line class="whisker" x1="${x(ci[1])}" x2="${x(ci[1])}" y1="${y-4}" y2="${y+4}"/>${estimate}<text class="plot-value" x="${W-3}" y="${y+4}" text-anchor="end">${label(value)}</text>`;
+    body+=`${wide?modelLogoSvg(row.key,8,y,12):""}<text class="plot-label" x="${wide?17:8}" y="${y+4}">${esc(row.name)}</text><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[1])}" y1="${y}" y2="${y}"/><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[0])}" y1="${y-4}" y2="${y+4}"/><line class="whisker" x1="${x(ci[1])}" x2="${x(ci[1])}" y1="${y-4}" y2="${y+4}"/>${estimate}<text class="plot-value" x="${W-3}" y="${y+4}" text-anchor="end">${label(value)}</text>`;
   });
   return`<article class="metric-plot${wide?" metric-plot-wide":""}"><h3>${esc(title)}</h3><p>${esc(subtitle)}</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></article>`;
 }
