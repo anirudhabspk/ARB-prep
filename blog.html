@@ -38,7 +38,6 @@
       <h2>Main results</h2>
       <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Twenty-one completed reruns are included. Sixteen reruns are still running, so their prior published results remain in the calculations. Two invalid replacements also retain their prior results.</p>
       <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it as the time-average of the best reward reached during the run. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration. The 21 completed replacement runs use their observed 23 hour research window for AUARC. Their plots hold the final score flat through hour 24.</p>
-      <div id="trajectory-overview"></div>
       <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
       <div class="aggregate-grid" id="aggregate-plots"></div>
       <ul class="result-points result-notes" id="result-notes"></ul>
@@ -98,6 +97,7 @@
         </details>
       </div>
     </section>
+    <div id="trajectory-overview"></div>
     <section class="section" id="general-analysis">
       <h2>Analyzing agent behavior</h2>
       <div class="todo-items">
