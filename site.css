@@ -107,8 +107,8 @@
 .overview-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;margin:16px 0 22px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
 .overview-legend-item{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;min-width:0;white-space:nowrap;cursor:help}
 .overview-legend-item>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
-.overview-legend-logo{display:grid;place-items:center;width:24px;height:24px;flex:0 0 auto;border:2px solid;background:#fff}
-.overview-legend-logo .company-logo{width:18px;height:18px}
+.overview-legend-logo{position:relative;display:block;width:24px;height:24px;flex:0 0 auto;border:2px solid;background:#fff;line-height:0}
+.overview-legend-logo .company-logo{position:absolute;top:50%;left:50%;width:18px;height:18px;margin:0;transform:translate(-50%,-50%);transform-origin:center;object-position:center}
 .overview-legend-fallback::after{content:"";width:10px;height:10px;background:currentColor}
 .cost-legend{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin:12px 0 4px;overflow-x:auto;scrollbar-width:thin;font-size:10px;color:var(--muted)}
 .cost-legend .model-identity{flex:0 0 auto}
