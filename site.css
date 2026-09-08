@@ -276,3 +276,5 @@ main .effort-setting-chart{max-width:var(--content-measure)}
 
 .plot-takeaway{margin:18px 0 0;font-size:15px;line-height:1.6;color:var(--ink)}
 .plot-takeaway strong{font-weight:600}
+
+.trajectory-summary>.trajectory-takeaway{color:var(--ink);font-size:16px;line-height:1.55}.trajectory-method{margin-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.55}.trajectory-method summary{padding:12px 0;cursor:pointer;color:var(--ink)}.trajectory-method p{max-width:850px;margin:0 0 12px}
