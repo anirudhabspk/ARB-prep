@@ -663,11 +663,11 @@ function renderModelEffort(){
   const rows=effortModelRows();
   const panels=[['submissions','Number of submissions vs. test AUARC','Mean number of submissions per task',60],['activeTimePercent','Time vs. test AUARC','Active run time outside grading (%)',100]];
   target.innerHTML='<div class="model-effort-panels">'+panels.map(([field,title,xLabel,minimumMax])=>{
-    const broken=field==='activeTimePercent',maximum=Math.max(...rows.map(row=>row[field])),xMin=broken?Math.floor(Math.min(...rows.map(row=>row[field]))/10)*10:0,xMax=broken?Math.ceil(maximum/10)*10:Math.ceil(Math.max(minimumMax,maximum)/6)*6,breakStart=62,breakEnd=82;
-    const x=value=>broken?breakEnd+(355-breakEnd)*(value-xMin)/(xMax-xMin):45+310*value/xMax,y=value=>255-215*value,timeSuffix=broken?'%':'';
+    const trimmedTimeAxis=field==='activeTimePercent',maximum=Math.max(...rows.map(row=>row[field])),xMin=trimmedTimeAxis?Math.floor(Math.min(...rows.map(row=>row[field]))/10)*10:0,xMax=trimmedTimeAxis?Math.ceil(maximum/10)*10:Math.max(minimumMax,Math.ceil(maximum/15)*15);
+    const x=value=>trimmedTimeAxis?45+310*(value-xMin)/(xMax-xMin):45+310*value/xMax,y=value=>255-215*value;
     let svg=`<div><h4>${title}</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
     for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}</text>`;
-    if(broken){svg+=`<g aria-label="X-axis break; 0% to ${xMin}% omitted"><rect x="${breakStart-3}" y="248" width="${breakEnd-breakStart+6}" height="14" fill="#fff"/><path class="axis-break" d="M${breakStart} 250L${breakStart+5} 260L${breakStart+10} 250L${breakStart+15} 260"/></g><text x="45" y="276" text-anchor="middle">0%</text>`;for(let value=xMin;value<=xMax;value+=10)svg+=`<text x="${x(value)}" y="276" text-anchor="middle">${value}%</text>`}else for(let i=0;i<=4;i++)svg+=`<text x="${x(xMax*i/4)}" y="276" text-anchor="middle">${xMax*i/4}${timeSuffix}</text>`;
+    if(trimmedTimeAxis){for(let value=xMin;value<=xMax;value+=10)svg+=`<text x="${x(value)}" y="276" text-anchor="middle">${value}%</text>`}else for(let value=0;value<=xMax;value+=15)svg+=`<text x="${x(value)}" y="276" text-anchor="middle">${value}</text>`;
     svg+=`<text x="200" y="303" text-anchor="middle">${xLabel}</text>`;
     for(const row of [...rows].sort((a,b)=>b.test-a.test)){
       const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.activeTimePercent.toFixed(1)}%`,score=(100*row.test).toFixed(1);
