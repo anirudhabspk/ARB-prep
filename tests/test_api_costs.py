@@ -4,11 +4,22 @@ from scripts.refresh_score_snapshot import (
     api_ledger_output_tokens,
     curve,
     eligible_terminal_result,
+    eligible_current_result,
     validate_selected_evaluation,
 )
 
 
 class ApiLedgerCostTest(unittest.TestCase):
+    def test_current_policy_accepts_running_and_rejects_crashes(self):
+        source = {'manifest_status': 'Rerun submitted'}
+        attempt = {'status': 'running'}
+        self.assertTrue(eligible_current_result(source, 'running', attempt, []))
+        self.assertFalse(eligible_current_result(source, 'failed', attempt, []))
+        self.assertFalse(eligible_current_result({'manifest_status': 'Crashed'},
+                                                 'completed', {'status': 'completed'}, []))
+        self.assertFalse(eligible_current_result(source, 'completed',
+                                                 {'status': 'completed'}, [{'status': 'errored'}]))
+
     def ledger(self, **fields):
         return {'selector': {'kind': 'evaluation_id', 'id': 'selected'},
                 'workload_ids': ['workload'], 'requests': 10, **fields}
