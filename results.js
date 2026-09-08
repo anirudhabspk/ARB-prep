@@ -441,27 +441,41 @@ function costPerformancePlot(rows){
   return`<article class="metric-plot metric-plot-wide">${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
 }
 
-// Use the same monotone observations and fitted trajectories as the analysis plot.
-function leaderboardAtTime(overview,hour){
-  return overview.series.map(series=>({key:series.key,name:series.name,count:series.count,
-    value:hour<=series.points.at(-1).hour+1e-9?series.fit.predict(hour):null
-  })).sort((a,b)=>(b.value??-Infinity)-(a.value??-Infinity)||ORDER.indexOf(a.key)-ORDER.indexOf(b.key));
+function mainAuarcLeaderboard(rows){
+  const ranked=[...rows].sort((a,b)=>b.test-a.test);
+  return `<h3>Test AUARC leaderboard</h3><p class="plot-note">Average across 29 tasks over 24 hours. Higher is better. Lines show 95% confidence intervals.</p><ol class="auarc-ranking">${ranked.map(row=>`<li aria-label="${esc(row.name)}: ${fmt(row.test)}, 95% interval ${fmt(row.test_ci[0])} to ${fmt(row.test_ci[1])}"><span class="model-identity">${modelIdentity(row.key)}</span><span class="auarc-track" aria-hidden="true"><span class="auarc-fill" style="width:${row.test*100}%;background:${MODEL[row.key].color}"></span><span class="auarc-interval" style="left:${row.test_ci[0]*100}%;width:${(row.test_ci[1]-row.test_ci[0])*100}%"></span></span><strong>${fmt(row.test)}</strong></li>`).join('')}</ol><div class="auarc-axis" aria-hidden="true"><span></span><span><i>0</i><i>0.5</i><i>1.0</i></span><span></span></div>`;
+}
+
+// Integrate the same normalized checkpoints as the headline AUARC, up to the chosen time.
+function leaderboardRuns(){
+  return DATA.tasks.flatMap(task=>task.models.flatMap(run=>{
+    if(!difficultyAdjustedRunStats(task,run))return[];
+    return[{key:run.model,end:run.hours*3600,points:run.points.map(point=>({seconds:point.seconds,value:difficultyAdjustedPoint(task,point,"testAtBest")}))}];
+  }));
+}
+function leaderboardAtTime(runs,hour){
+  return ORDER.map(key=>{
+    const values=runs.filter(run=>run.key===key).map(run=>{
+      const end=Math.min(hour*3600,run.end);
+      return timeAuc(run.points.filter(point=>point.seconds<=end),"value",end)??0;
+    });
+    return{key,name:MODEL[key].name,value:mean(values),count:values.length};
+  }).sort((a,b)=>b.value-a.value||ORDER.indexOf(a.key)-ORDER.indexOf(b.key));
 }
 function renderTimeLeaderboard(){
   const target=document.getElementById("time-leaderboard");if(!target)return;
-  const overview=overviewTrajectories(),steps=240,minHour=1,maxHour=overview.maxHours,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
-  const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(overview,hourAt(index)));
+  const runs=leaderboardRuns(),steps=240,minHour=.25,maxHour=24,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
+  const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(runs,hourAt(index)));
   const W=680,H=390,L=48,R=16,T=18,B=48,x=hour=>L+Math.log(hour/minHour)/Math.log(maxHour/minHour)*(W-L-R),y=value=>H-B-value/.8*(H-T-B);
   let svg='';
   for(const value of [0,.2,.4,.6,.8])svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text class="plot-tick" x="${L-10}" y="${y(value)+4}" text-anchor="end">${value.toFixed(1)}</text>`;
-  for(const hour of [1,2,4,8,16,maxHour])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
-  for(const series of overview.series){
-    const path=frames.flatMap((rows,index)=>{const value=rows.find(row=>row.key===series.key).value;return value==null?[]:[`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(value).toFixed(2)}`];}).join(' ');
-    svg+=`<path d="${path}" stroke="${series.color}" fill="none" stroke-width="2.5"><title>${esc(series.name)}</title></path>`;
-    for(const point of series.points.filter(point=>point.hour>=minHour))svg+=`<circle cx="${x(point.hour)}" cy="${y(point.value)}" r="2.8" fill="${series.color}" opacity=".4"/>`;
+  for(const hour of [.25,1,4,12,maxHour])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
+  for(const key of ORDER){
+    const path=frames.map((rows,index)=>`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(rows.find(row=>row.key===key).value).toFixed(2)}`).join(' ');
+    svg+=`<path d="${path}" stroke="${MODEL[key].color}" fill="none" stroke-width="2.5"><title>${esc(MODEL[key].name)}</title></path>`;
   }
-  svg+=`<line class="leaderboard-cursor" y1="${T}" y2="${H-B}"/><g class="leaderboard-dots"></g><text class="plot-tick" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="plot-tick" x="13" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+H-B)/2})">Mean hidden-test reward</text>`;
-  target.innerHTML=`<div class="leaderboard-heading"><h3>Log-time hidden-test trajectories</h3><output id="leaderboard-time" for="leaderboard-slider">24 hours</output></div><p class="plot-note">Dots show measured rewards; lines show fitted trends. Drag or scroll to rank models along the fitted curves.</p><div class="leaderboard-layout"><div class="leaderboard-timeline"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories with leaderboard">${svg}</svg><input id="leaderboard-slider" type="range" min="0" max="${steps}" value="${steps}" aria-label="Research time" aria-describedby="leaderboard-time"></div><div class="leaderboard-ranking" role="list" aria-label="Models ranked by fitted hidden-test reward">${ORDER.map(key=>`<div class="leaderboard-row" role="listitem" data-key="${key}"><span class="leaderboard-rank"></span><span class="model-identity">${modelIdentity(key,{short:true})}</span><strong></strong><span class="leaderboard-bar" style="background:${MODEL[key].color}"></span></div>`).join('')}</div></div>`;
+  svg+=`<line class="leaderboard-cursor" y1="${T}" y2="${H-B}"/><g class="leaderboard-dots"></g><text class="plot-tick" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="plot-tick" x="13" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+H-B)/2})">Mean test AUARC</text>`;
+  target.innerHTML=`<div class="leaderboard-heading"><h3>Test AUARC over time</h3><output id="leaderboard-time" for="leaderboard-slider">24 hours</output></div><p class="plot-note">Drag or scroll to compare test AUARC up to each time. At 24 hours, these scores match the leaderboard above.</p><div class="leaderboard-layout"><div class="leaderboard-timeline"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Test AUARC over logarithmic time with leaderboard">${svg}</svg><input id="leaderboard-slider" type="range" min="0" max="${steps}" value="${steps}" aria-label="Research time" aria-describedby="leaderboard-time"></div><div class="leaderboard-ranking" role="list" aria-label="Models ranked by test AUARC">${ORDER.map(key=>`<div class="leaderboard-row" role="listitem" data-key="${key}"><span class="leaderboard-rank"></span><span class="model-identity">${modelIdentity(key,{short:true})}</span><strong></strong><span class="leaderboard-bar" style="background:${MODEL[key].color}"></span></div>`).join('')}</div></div>`;
   const slider=target.querySelector('input'),timeline=target.querySelector('.leaderboard-timeline'),chart=target.querySelector('svg'),cursor=target.querySelector('.leaderboard-cursor'),dots=target.querySelector('.leaderboard-dots'),output=target.querySelector('output');
   function update(){
     const index=Number(slider.value),hour=hourAt(index),minutes=Math.round(hour*60),label=minutes<60?`${minutes} minutes`:`${Math.floor(minutes/60)}h${minutes%60?' '+minutes%60+'m':''}`;
@@ -480,6 +494,7 @@ function renderTimeLeaderboard(){
 
 function renderAggregates(){
   const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
+  document.getElementById("main-leaderboard").innerHTML=mainAuarcLeaderboard(result.rows);
   document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
   document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent");
   bindEfficiencyTooltips();

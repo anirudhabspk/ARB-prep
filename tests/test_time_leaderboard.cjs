@@ -3,15 +3,17 @@ const root=path.resolve(__dirname,'..'),c=vm.createContext({window:{},console});
 for(const file of ['site-data.js','raw-score-maps.js','difficulty-reward-maps.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),c);
 vm.runInContext(fs.readFileSync(path.join(root,'results.js'),'utf8').split('if(document.body.dataset.page')[0],c);
 const read=s=>vm.runInContext(s,c);
-read('var overview=overviewTrajectories()');
-// Every leaderboard entry must match the existing trajectory fit, including between hourly dots.
-for(const hour of [1,1.5,2,4,8,16,24]){
-  const rows=read(`leaderboardAtTime(overview,${hour})`);
-  const expected=read(`overview.series.map(s=>({key:s.key,value:s.fit.predict(${hour})}))`);
-  for(const row of rows)assert.ok(Math.abs(row.value-expected.find(r=>r.key===row.key).value)<1e-12);
-  for(let i=1;i<rows.length;i++)assert.ok(rows[i-1].value>=rows[i].value);
+// Final frame must agree with every headline mean, including the existing duration policy.
+const final=read('leaderboardAtTime(leaderboardRuns(),24)'),headline=read('currentResults().rows');
+for(const row of final){assert.ok(Math.abs(row.value-headline.find(r=>r.key===row.key).test)<1e-12);assert.equal(row.count,29);}
+// An independent integration verifies partial windows without future checkpoint leakage.
+read('var reviewRuns=leaderboardRuns()');
+for(const hour of [.25,1,4,16,24]){
+  const actual=read(`leaderboardAtTime(reviewRuns,${hour})`),runs=read('reviewRuns');
+  for(const row of actual){const values=runs.filter(r=>r.key===row.key).map(run=>{const end=Math.min(hour*3600,run.end);let area=0,t=0,v=0;for(const p of run.points){if(p.seconds>end)break;area+=v*(p.seconds-t);t=p.seconds;if(p.value!=null)v=p.value;}return(area+v*(end-t))/end;});const expected=values.reduce((a,b)=>a+b,0)/values.length;assert.ok(Math.abs(row.value-expected)<1e-10);}
 }
-assert.notEqual(read('leaderboardAtTime(overview,1).map(r=>r.key).join()'),read('leaderboardAtTime(overview,24).map(r=>r.key).join()'));
-// No predictions beyond a model's available trajectory.
-assert.equal(read('leaderboardAtTime({series:[{key:ORDER[0],points:[{hour:2}],fit:{predict:()=>.5}}]},3)[0].value'),null);
-console.log('Trajectory leaderboard matches all 9 existing fits; ranks change; no extrapolation past observed horizons.');
+const early=read('leaderboardAtTime(reviewRuns,.25).map(r=>r.key).join()'),late=final.map(r=>r.key).join();assert.notEqual(early,late);
+console.log('Leaderboard checks passed: all 9 endpoints, 29 tasks each, partial-window integration, changing ranks.');
+const html=read('mainAuarcLeaderboard(currentResults().rows)');
+assert.equal((html.match(/class="auarc-interval"/g)||[]).length,9);
+for(const row of headline)assert.ok(html.includes(`>${row.test.toFixed(3)}</strong>`));

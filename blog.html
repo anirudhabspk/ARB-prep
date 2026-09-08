@@ -26,7 +26,7 @@
   </aside>
   <main>
     <section class="section" id="benchmark">
-      <div id="time-leaderboard" class="time-leaderboard"></div>
+      <div id="main-leaderboard" class="main-leaderboard"></div>
       <div id="results">
         <p class="results-intro">Across 29 research tasks, the current results show:</p>
         <ul class="result-points result-notes" id="result-notes"></ul>
@@ -38,6 +38,7 @@
         <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
         <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
       </div>
+      <div id="time-leaderboard" class="time-leaderboard"></div>
       <div class="aggregate-grid lead-cost-plot" id="cost-performance-plot"></div>
     </section>
     <section class="section" id="tasks">
@@ -246,6 +247,6 @@
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="opsd-hints-data.js?v=hint-experiment-20260908"></script>
 <script src="opsd-hints.js?v=hint-experiment-20260908"></script>
-<script src="results.js?v=whole-dollar-frontier-20260908"></script>
+<script src="results.js?v=main-auarc-leaderboard-20260908"></script>
 </body>
 </html>
