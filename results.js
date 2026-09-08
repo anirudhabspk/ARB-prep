@@ -436,6 +436,49 @@ function costPerformancePlot(rows){
   return`<article class="metric-plot metric-plot-wide">${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
 }
 
+// Integrate observed rewards on linear time; only the timeline display is logarithmic.
+function leaderboardRuns(){
+  return DATA.tasks.flatMap(task=>task.models.flatMap(run=>{
+    if(!difficultyAdjustedRunStats(task,run))return[];
+    return[{key:run.model,end:run.hours*3600,points:run.points.map(point=>({seconds:point.seconds,value:difficultyAdjustedPoint(task,point,"testAtBest")}))}];
+  }));
+}
+function leaderboardAtTime(runs,hour){
+  return ORDER.map(key=>{
+    const values=runs.filter(run=>run.key===key).map(run=>{
+      const end=Math.min(hour*3600,run.end);
+      return timeAuc(run.points.filter(point=>point.seconds<=end),"value",end)??0;
+    });
+    return{key,name:MODEL[key].name,value:mean(values),count:values.length};
+  }).sort((a,b)=>b.value-a.value||ORDER.indexOf(a.key)-ORDER.indexOf(b.key));
+}
+function renderTimeLeaderboard(){
+  const target=document.getElementById("time-leaderboard");if(!target)return;
+  const runs=leaderboardRuns(),steps=240,minHour=.25,maxHour=24,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
+  const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(runs,hourAt(index)));
+  const W=680,H=390,L=48,R=16,T=18,B=48,x=hour=>L+Math.log(hour/minHour)/Math.log(maxHour/minHour)*(W-L-R),y=value=>H-B-value*(H-T-B);
+  let svg='';
+  for(const value of [0,.2,.4,.6,.8,1])svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text class="plot-tick" x="${L-10}" y="${y(value)+4}" text-anchor="end">${value.toFixed(1)}</text>`;
+  for(const hour of [.25,1,4,12,24])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
+  for(const key of ORDER){const path=frames.map((rows,index)=>`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(rows.find(row=>row.key===key).value).toFixed(2)}`).join(' ');svg+=`<path d="${path}" stroke="${MODEL[key].color}" fill="none" stroke-width="2.5" opacity=".8"><title>${esc(MODEL[key].name)}</title></path>`;}
+  svg+=`<line class="leaderboard-cursor" y1="${T}" y2="${H-B}"/><g class="leaderboard-dots"></g><text class="plot-tick" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Research time (log scale)</text>`;
+  target.innerHTML=`<div class="leaderboard-heading"><h3>How rankings change over time</h3><output id="leaderboard-time" for="leaderboard-slider">24 hours</output></div><p class="plot-note">Hidden-test AUARC up to the selected time. Drag or scroll the timeline to compare rankings.</p><div class="leaderboard-layout"><div class="leaderboard-timeline"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC over research time">${svg}</svg><input id="leaderboard-slider" type="range" min="0" max="${steps}" value="${steps}" aria-label="Research time" aria-describedby="leaderboard-time"></div><div class="leaderboard-ranking" role="list" aria-label="Models ranked by hidden-test AUARC">${ORDER.map(key=>`<div class="leaderboard-row" role="listitem" data-key="${key}"><span class="leaderboard-rank"></span><span class="model-identity">${modelIdentity(key,{short:true})}</span><strong></strong><span class="leaderboard-bar" style="background:${MODEL[key].color}"></span></div>`).join('')}</div></div>`;
+  const slider=target.querySelector('input'),timeline=target.querySelector('.leaderboard-timeline'),chart=target.querySelector('svg'),cursor=target.querySelector('.leaderboard-cursor'),dots=target.querySelector('.leaderboard-dots'),output=target.querySelector('output');
+  function update(){
+    const index=Number(slider.value),hour=hourAt(index),minutes=Math.round(hour*60),label=minutes<60?`${minutes} minutes`:`${Math.floor(minutes/60)}h${minutes%60?' '+minutes%60+'m':''}`;
+    output.value=label;slider.setAttribute('aria-valuetext',label);cursor.setAttribute('x1',x(hour));cursor.setAttribute('x2',x(hour));
+    dots.innerHTML=frames[index].map(row=>`<circle cx="${x(hour)}" cy="${y(row.value)}" r="4" fill="${MODEL[row.key].color}"/>`).join('');
+    frames[index].forEach((row,rank)=>{const element=target.querySelector(`[data-key="${row.key}"]`);element.style.transform=`translateY(${rank*42}px)`;element.setAttribute('aria-posinset',rank+1);element.setAttribute('aria-setsize',ORDER.length);element.querySelector('.leaderboard-rank').textContent=rank+1;element.querySelector('strong').textContent=fmt(row.value);element.querySelector('.leaderboard-bar').style.width=`${row.value*100}%`;});
+  }
+  slider.addEventListener('input',update);
+  timeline.addEventListener('wheel',event=>{const delta=event.deltaY||event.deltaX;if(!delta)return;const next=Math.max(0,Math.min(steps,Number(slider.value)+Math.sign(delta)*3));if(next===Number(slider.value))return;event.preventDefault();slider.value=next;update();},{passive:false});
+  function scrub(event){const bounds=chart.getBoundingClientRect(),ratio=((event.clientX-bounds.left)/bounds.width*W-L)/(W-L-R);slider.value=Math.round(Math.max(0,Math.min(1,ratio))*steps);update();}
+  chart.addEventListener('pointerdown',event=>{chart.setPointerCapture(event.pointerId);scrub(event);});
+  chart.addEventListener('pointermove',event=>{if(chart.hasPointerCapture(event.pointerId))scrub(event);});
+  chart.addEventListener('pointerup',event=>{if(chart.hasPointerCapture(event.pointerId))chart.releasePointerCapture(event.pointerId);});
+  update();
+}
+
 function renderAggregates(){
   const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),final=[...result.rows].sort((a,b)=>b.final-a.final),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
   document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
@@ -725,7 +768,7 @@ function decorateHpoChartBars(){
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelEffort();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateHpoChartBars()}
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelEffort();renderAggregates();renderTimeLeaderboard();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateHpoChartBars()}
 
 // Keep the contents marker aligned with the section being read.
 (() => {
