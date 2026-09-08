@@ -36,6 +36,7 @@
     </section>
     <section class="section" id="results">
       <h2>Main results</h2>
+      <div class="aggregate-grid" id="cost-performance-plot"></div>
       <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Twenty-one completed reruns are included. Sixteen reruns are still running, so their prior published results remain in the calculations. Two invalid replacements also retain their prior results.</p>
       <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it as the time-average of the best reward reached during the run. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration. The 21 completed replacement runs use their observed 23 hour research window for AUARC. Their plots hold the final score flat through hour 24.</p>
       <div class="aggregate-grid" id="aggregate-plots"></div>
@@ -244,6 +245,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=plot-order-20260908"></script>
+<script src="results.js?v=cost-first-20260908"></script>
 </body>
 </html>

@@ -438,7 +438,8 @@ function costPerformancePlot(rows){
 
 function renderAggregates(){
   const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),final=[...result.rows].sort((a,b)=>b.final-a.final),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
-  document.getElementById("aggregate-plots").innerHTML=costPerformancePlot(result.rows)+aggregatePlot("Task-relative Elo","Pairwise comparisons within each task.",elo,"elo","elo_ci","integer",true);
+  document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
+  document.getElementById("aggregate-plots").innerHTML=aggregatePlot("Task-relative Elo","Pairwise comparisons within each task.",elo,"elo","elo_ci","integer",true);
   document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Final hidden test","Checkpoint chosen by validation",final,"final","final_ci")+aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent");
   bindEfficiencyTooltips();
   const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1];
