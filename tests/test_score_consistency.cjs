@@ -44,10 +44,10 @@ for(const row of effort){
   assert.ok(row.elo_ci.every(Number.isFinite));
 }
 assert.equal(evaluate('DATA.tasks.length'),29);
-assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,25);
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),232);
+assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,29);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),261);
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length'),0);
+assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0);
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="60a7e9e2-c234-4091-a258-242d0574dc30").points.length')>0);
 const overview=evaluate('overviewTrajectories()');
 const fable=overview.series.find(r=>r.key==='vesper-pro');
@@ -72,7 +72,7 @@ assert.equal(estimatedSol.apiCostEstimated,true);
 const cpuCostHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="CPU LLM decode throughput"),"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)');
 assert.ok(cpuCostHtml.includes('$145 (estimated)'));
 const costRows=evaluate('costPerformanceRows(currentResults().rows)');
-assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,25);
+assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,29);
 for(const row of costRows){
   if(row.key!=='skylark')close(row.test,result.rows.find(r=>r.key===row.key).test);
   assert.ok(costHtml.includes('data-resource-value="$'+row.cost.toFixed(2)+'"'));
@@ -83,7 +83,7 @@ assert.ok(!costHtml.includes('NaN'));
 const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');
 assert.ok(!tokenHtml.includes('Source data unavailable'));
 assert.ok(!tokenHtml.includes('Output tokens unavailable from Horizon'));
-assert.ok(tokenHtml.includes('Final hidden-test reward unavailable'));
+assert.ok(!tokenHtml.includes('Final hidden-test reward unavailable'));
 
 // Native SVG rendering shares these exact values and retains the model branding.
 evaluate('var rendered={};');context.document={getElementById:()=>({set innerHTML(value){context.renderedHtml=value;}})};

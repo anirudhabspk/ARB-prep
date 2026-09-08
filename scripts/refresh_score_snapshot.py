@@ -1,7 +1,9 @@
 """Build display curves from a selected, immutable Horizon download.
 
-No network calls. Missing/current failed attempts never fall back to older IDs.
-Run with --help for inputs. The audit belongs in the local snapshot directory.
+No network calls. Terminal runs retain their fully graded checkpoints, including
+cancelled or failed runs selected by the evaluation index. Running replacements
+are rejected. Run with --help for inputs. The audit belongs in the local
+snapshot directory.
 """
 import argparse
 import copy
@@ -65,6 +67,17 @@ def validate_selected_evaluation(source_status, horizon_status):
         raise ValueError('Selected evaluation is still marked as running in the evaluation index')
     if horizon_status.strip().lower() == 'running':
         raise ValueError('Selected evaluation is still running in Horizon')
+
+
+def fully_graded_checkpoint(row):
+    return (row.get('public_score') is not None
+            and row.get('private_score') is not None
+            and row.get('artifact_uploaded') is not False)
+
+
+def eligible_terminal_result(status, iterations):
+    terminal = (status or '').strip().lower() in {'completed', 'cancelled', 'failed'}
+    return terminal and any(fully_graded_checkpoint(row) for row in iterations)
 
 
 def active_time_share(messages):
@@ -150,7 +163,7 @@ def curve(iterations, end):
     best, selected, previous = float('-inf'), None, 0
     points = []
     for row in iterations:
-        if row.get('public_score') is not None and row['public_score'] > best:
+        if fully_graded_checkpoint(row) and row['public_score'] > best:
             best, selected = row['public_score'], row
         previous = max(previous, min(end, elapsed(row)))
         points.append({'iteration': row['iteration'], 'seconds': previous,
@@ -190,9 +203,7 @@ def main():
         attempt = next((a for a in attempts if a.get('is_final_attempt')), attempts[-1])
         status = payload['status']['job_status']
         validate_selected_evaluation(source['manifest_status'], status)
-        eligible = status == 'completed' and attempt['status'] == 'completed'
-        eligible = eligible and not attempt.get('error') and 'crash' not in source['manifest_status'].lower()
-        eligible = eligible and not any(r['status'] == 'errored' for r in payload['status'].get('rollout_statuses', []))
+        eligible = eligible_terminal_result(status, attempt['iterations'])
         # Explicit user-approved exception: retain this result and carry iteration 22
         # into its missing iteration 23 test measurement. Never generalize to errors.
         if eid == '60a7e9e2-c234-4091-a258-242d0574dc30':
@@ -212,6 +223,12 @@ def main():
             dt = lambda s: datetime.fromisoformat(s.replace('Z', '+00:00'))
             end = max(end, (dt(ro['completed_at']) - dt(ro['created_at'])).total_seconds())
         end = min(86400, end)
+        extension = 'flat extension' in source['manifest_status'].lower()
+        # The tracker explicitly approved this stopped run as a flat extension.
+        if eid == '1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d':
+            extension = True
+        if extension:
+            end = 86400
         points = curve(iterations, end) if eligible else []
         count, hours, timing = activity_and_time(payload['rollouts'][0]['messages'], iterations)
         active = active_time_share(payload['rollouts'][0]['messages'])
@@ -230,7 +247,8 @@ def main():
                'apiCostFetchedAt': payload.get('api_ledger_fetched_at', old_run.get('apiCostFetchedAt')),
                'outputTokens': output_tokens, 'evaluationId': eid,
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],
-               'status': status, 'provisional': eligible and status == 'running', 'extension': False,
+               'status': status, 'provisional': eligible and status == 'running',
+               'extension': extension,
                'points': points, 'submissions': count if eligible else None,
                'workHours': hours if eligible else None,
                'activeTimePercent': active['percent'] if eligible else None,
