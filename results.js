@@ -45,7 +45,7 @@ const usableRun=run=>run.attempt_status!=="agent_error"&&run.iterations.some(row
 function runEnd(run){const last=Math.max(0,...run.iterations.map(elapsed)),status=(run.status||"").toLowerCase(),start=new Date(run.created_at).getTime(),finish=status==="running"?new Date(DATA.fetched_at).getTime():new Date(run.completed_at).getTime(),wall=Number.isFinite(start)&&Number.isFinite(finish)?Math.max(0,(finish-start)/1000):0;return Math.min(DATA.duration_seconds,Math.max(last,wall))}
 function derive(run){let best=-Infinity,pick=null;const points=[];for(const row of run.iterations){if(row.public_score!=null&&row.public_score>best){best=row.public_score;pick=row}points.push({iteration:row.iteration,seconds:elapsed(row),bestValidation:pick?.public_score??null,testAtBest:pick?.private_score??null})}return{points,endSeconds:runEnd(run),selected:pick?{iteration:pick.iteration,validation:pick.public_score,test:pick.private_score}:null}}
 function timeAuc(points,key,endSeconds){if(!points.length||!endSeconds)return null;let total=0,previousTime=0,previousValue=0;for(const point of points){const time=Math.min(endSeconds,Math.max(previousTime,point.seconds||0));total+=previousValue*(time-previousTime);if(point[key]!=null)previousValue=point[key];previousTime=time}total+=previousValue*Math.max(0,endSeconds-previousTime);return total/endSeconds}
-function runStats(run){return{key:run.model,hours:run.hours,points:run.points}}
+function runStats(run){return{key:run.model,hours:run.displayHours??run.hours,points:run.points}}
 const taskStats=task=>task.models.map(runStats);
 const rewardSplit=key=>key==="bestValidation"?"intermediate":"final";
 
@@ -191,12 +191,12 @@ function fitLogSigmoid(points){
 }
 
 function overviewTrajectories(){
-  const maxHours=Math.ceil(Math.max(1,...DATA.tasks.flatMap(task=>task.models.map(run=>run.hours).filter(Number.isFinite))));
+  const maxHours=Math.ceil(Math.max(1,...DATA.tasks.flatMap(task=>task.models.map(run=>run.displayHours??run.hours).filter(Number.isFinite))));
   const hours=Array.from({length:maxHours+1},(_,hour)=>hour);
   const series=ORDER.map(key=>{
     const runs=DATA.tasks.map(task=>{
       const run=task.models.find(candidate=>candidate.model===key),points=run?difficultyAdjustedTestCurve(task,run):[];
-      return points.length?{points,hours:run.hours,provisional:run.provisional}:null;
+      return points.length?{points,hours:run.displayHours??run.hours,provisional:run.provisional}:null;
     }).filter(Boolean);
     const valueAt=(run,seconds)=>{let value=0;for(const point of run.points){if(point.seconds>seconds)break;value=point.value}return value};
     // Stop at the shared observed horizon rather than extending unfinished runs.
