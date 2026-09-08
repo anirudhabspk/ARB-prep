@@ -111,62 +111,6 @@
           <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
         </div>
       </div>
-      <section class="reward-scaling" id="reward-scaling" aria-labelledby="reward-scaling-title">
-        <div class="prose">
-          <h3 id="reward-scaling-title">Reward scaling</h3>
-          <p>We choose the scaling from the metric's mathematical limits. The sketches show higher scores as better. For a lower-is-better metric, the same idea applies with the horizontal direction reversed.</p>
-        </div>
-        <div class="reward-scaling-grid">
-          <article class="reward-scaling-card">
-            <div class="reward-scaling-card-heading">
-              <h4><code>rational_squash</code></h4>
-              <p class="reward-scaling-map"><span>(&minus;&infin;, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
-            </div>
-            <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Rational squash maps an unbounded raw score to a reward below one.">
-              <defs><marker id="rational-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
-              <line class="reward-scale-asymptote" x1="20" y1="21" x2="258" y2="21"/>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-start="url(#rational-arrow)" marker-end="url(#rational-arrow)"/>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#rational-arrow)"/>
-              <path class="reward-scale-curve" d="M21 108 H83 C104 108 117 105 128 96 C145 82 153 61 174 47 C194 34 220 27 256 23"/>
-              <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
-              <text x="22" y="126">&minus;&infin;</text><text x="254" y="126" text-anchor="end">&infin;</text>
-            </svg>
-            <p>Use this when there is no fixed best possible score. Examples include episode return, log likelihood, and objective values whose useful range is not bounded.</p>
-          </article>
-          <article class="reward-scaling-card">
-            <div class="reward-scaling-card-heading">
-              <h4><code>log_rational</code></h4>
-              <p class="reward-scaling-map"><span>(0, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
-            </div>
-            <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Log rational maps a positive unbounded raw score to a reward below one.">
-              <defs><marker id="log-rational-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
-              <line class="reward-scale-asymptote" x1="20" y1="21" x2="258" y2="21"/>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-end="url(#log-rational-arrow)"/>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#log-rational-arrow)"/>
-              <path class="reward-scale-curve" d="M21 108 C41 102 56 92 73 77 C91 61 109 47 133 37 C160 27 198 23 256 22"/>
-              <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
-              <text x="22" y="126">0</text><text x="254" y="126" text-anchor="end">&infin;</text>
-            </svg>
-            <p>Use this for positive metrics where improvements are meaningful in ratios and may span many orders of magnitude. Examples include throughput, speedup, and inverse error.</p>
-          </article>
-          <article class="reward-scaling-card">
-            <div class="reward-scaling-card-heading">
-              <h4><code>gap_ratio</code></h4>
-              <p class="reward-scaling-map"><span>[m<sub>0</sub>, B]</span><b>&rarr;</b><span>[0, 1]</span></p>
-            </div>
-            <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Gap ratio maps a score with a known best possible value B to a reward from zero to one.">
-              <defs><marker id="gap-ratio-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="258" y2="108" marker-end="url(#gap-ratio-arrow)"/>
-              <line class="reward-scale-axis" x1="20" y1="108" x2="20" y2="15" marker-end="url(#gap-ratio-arrow)"/>
-              <path class="reward-scale-curve" d="M21 108 C42 106 62 101 81 91 C105 79 117 61 140 48 C163 35 197 24 256 20"/>
-              <circle class="reward-scale-endpoint" cx="256" cy="20" r="3.5"/>
-              <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
-              <text x="22" y="126">m<tspan baseline-shift="sub" font-size="8">0</tspan></text><text x="254" y="126" text-anchor="end">B</text>
-            </svg>
-            <p>Use this when the best value is known. Examples include accuracy, F1, and AUC with a best value of 1, plus error, latency, and regret when the best value is 0.</p>
-          </article>
-        </div>
-      </section>
       <h3>Main evaluation metric: hidden-test AUARC</h3>
       <div class="prose">
         <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
