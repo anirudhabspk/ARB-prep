@@ -622,13 +622,14 @@ function taskPairDomain(task){
   return taskDomain(stats,["validation","test"]);
 }
 
-function taskChart(task,title,key,sharedDomain=null){
+function taskChart(task,title,key,sharedDomain=null,{fillAuarc=false}={}){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key)).map(stat=>({...stat,points:stat.points.map(point=>({...point,plot:difficultyAdjustedPoint(task,point,key)}))}));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
   const domain=sharedDomain||taskDomain(stats,"plot"),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel="Reward",formatValue=fmt;
   let body=`<text class="tick" x="${(L+W-R)/2}" y="330" text-anchor="middle">Hours</text><text class="tick" x="13" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+plotB)/2})">${esc(axisLabel)}</text><line class="axis" x1="${L}" x2="${L}" y1="${T}" y2="${plotB}"/>`;
   for(const value of domain.ticks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="tick" x="${L-7}" y="${yy+3}" text-anchor="end">${formatValue(value)}</text>`}
-  if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text><rect x="${L-7}" y="${kinkTop-2}" width="14" height="18" fill="#fff"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`;
+  if(domain.broken)body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/><text class="tick" x="${L-7}" y="${plotB+3}" text-anchor="end">0</text>`;
+  const axisBreak=domain.broken?`<rect class="axis-break-mask" x="${L-7}" y="${kinkTop-2}" width="14" height="18"/><path class="axis-break" d="M${L-6} ${kinkTop-1}L${L+6} ${kinkTop+4}L${L-6} ${kinkTop+9}L${L+6} ${kinkTop+14}"/>`:"";
   const hourStep=maxHours<=6?1:maxHours<=12?2:4;
   for(const value of ticks(0,maxHours,hourStep))body+=`<text class="tick" x="${x(value)}" y="303" text-anchor="middle">${Math.round(value)}</text>`;
   body+=`<line class="axis" x1="${L}" x2="${W-R}" y1="${plotB}" y2="${plotB}"/>`;
@@ -638,9 +639,11 @@ function taskChart(task,title,key,sharedDomain=null){
     let path=`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
     path+=`L${x(stat.hours)} ${y(points.at(-1).plot)}`;
+    if(fillAuarc){let area=`M${x(0)} ${y(0)}L${x(points[0].seconds/3600)} ${y(0)}L${x(points[0].seconds/3600)} ${y(points[0].plot)}`;for(let index=1;index<points.length;index++)area+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;area+=`L${x(stat.hours)} ${y(points.at(-1).plot)}L${x(stat.hours)} ${y(0)}Z`;const auarc=timeAuc(points,"plot",stat.hours*3600),labelX=x(stat.hours*.58),labelY=(y(points.at(-1).plot)+y(0))/2;body+=`<path class="auarc-area" fill="${color}" d="${area}"/><text class="auarc-label" x="${labelX}" y="${labelY}" text-anchor="middle">Hidden test AUARC = ${fmt(auarc)}</text>`}
     body+=`<path class="curve" stroke="${color}" d="${path}"/>`;
     for(const point of points){const hours=point.seconds/3600,xx=x(hours),yy=y(point.plot),modelName=MODEL[stat.key].name,hoursLabel=hours.toFixed(1),rewardLabel=formatValue(point.plot),label=`${modelName}: ${hoursLabel} hours, ${axisLabel.toLowerCase()} ${rewardLabel}`;body+=`<g class="efficiency-point" role="button" tabindex="0" aria-label="Show ${esc(label)}" data-model="${esc(modelName)}" data-resource-label="Time" data-resource-value="${hoursLabel} hours" data-score-label="${esc(axisLabel)}" data-score-value="${rewardLabel}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="10"/><circle class="point" fill="${color}" cx="${xx}" cy="${yy}" r="2.5"/></g>`}
   }
+  body+=axisBreak;
   return`<div class="chart-card"><h4>${esc(title)}</h4><div class="efficiency-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div>`;
 }
 
@@ -650,7 +653,7 @@ function renderTaskScoringExample(){
   const task=DATA.tasks.find(candidate=>candidate.name==="DCTabEval pooled categorical statistics"),run=task?.models.find(candidate=>candidate.model==="vesper-pro");
   if(!task||!run){target.innerHTML='<p class="plot-note">Example data is unavailable.</p>';return}
   const example={...task,models:[run]},sharedDomain=taskPairDomain(example);
-  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain)}</div>`;
+  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain,{fillAuarc:true})}</div>`;
   bindEfficiencyTooltips();
 }
 

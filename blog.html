@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=behavior-story-merged-20260908">
+<link rel="stylesheet" href="site.css?v=scoring-generalization-20260908">
 </head>
 <body>
 <section class="hero">
@@ -65,7 +65,7 @@
     <section class="section" id="setup">
       <h2>Experimental setup</h2>
       <div class="prose">
-        <p>We run AutoResearch with the Terminus 2 harness in a <strong>24-hour benchmark window</strong>. Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. The harness lets each agent submit as many times as it wants. After every submission, the agent receives a validation score and its remaining time in the 24-hour window. It never sees hidden test scores. See the <a href="#harness-ablations">harness comparison</a> for more information about the harness and our comparison with Claude Code and Codex.</p>
+        <p>We run AutoResearch with the standard Terminus 2 harness in a <strong>24-hour benchmark window</strong>. Harnesses can significantly affect performance, so we compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. The harness itself lets each agent submit as many times as it wants. After every submission, the agent receives a validation score and its remaining time in the 24-hour window. It never sees hidden test scores. See the <a href="#harness-ablations">harness comparison</a> for more information about the harness we used, and our comparison with Claude Code and Codex.</p>
         <p>Evaluating agents over extended 24-hour runs lets us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
         <p>Each task uses the Harbor format, with separate work and verifier containers. To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
       </div>
@@ -99,31 +99,46 @@
           </ul>
         </div>
       </figure>
-      <h3>Task scoring and aggregate evaluation metrics</h3>
-      <div class="prose">
-        <p>We score each task from 0 to 1. We map its raw metric, such as accuracy, F1 score, or speedup, onto this common scale. Where possible, the mapping uses a baseline and a strong reference result as anchors. We calculate validation and hidden test rewards separately, but use the same task specific mapping for both. This lets us compare progress without hiding whether validation gains carry over to hidden data.</p>
-        <p>For example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The agent sees its validation score after each submission. It never sees the hidden test score. Hover over, focus, or select a point to see its time and reward.</p>
+      <h3>Task scoring</h3>
+      <div class="prose scoring-prose">
+        <p>Each task starts with its own "raw" score that the agent is tasked with optimizing, such as accuracy, speedup, or F1 score. We convert that raw score to a reward from 0 to 1 before returning the result to the agent. This gives results from different tasks a common scale.</p>
+        <div class="scoring-note-row">
+          <p>When available, we use two guide "anchor scores" to perform the transformation to [0, 1]. These are the baseline and the reference solution. The baseline is the score of a simple method that the agent should beat. The reference is the score of a strong known method applied to the problem. If the agent submits the baseline, it usually receives a reward of 0. If it submits the reference, it receives a reward of 0.5.<sup><a href="#scoring-footnote-1" aria-label="Footnote 1">1</a></sup> Results above the reference continue to earn more reward and approach the maximum score of 1.</p>
+          <aside class="scoring-sidenote" id="scoring-footnote-1" aria-label="Footnote 1"><sup>1</sup> Some tasks reserve rewards from 0 to 0.1 for results below the main baseline. Their reference receives 0.55.</aside>
+        </div>
+        <div class="scoring-note-row">
+          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores.<sup><a href="#scoring-footnote-2" aria-label="Footnote 2">2</a></sup> The agent can then get useful feedback without viewing the validation data directly.</p>
+          <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
+        </div>
       </div>
-      <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
+      <h3>Main evaluation metric: hidden-test AUARC</h3>
       <div class="prose">
-        <ul>
-          <li><strong>Progress over time.</strong> During the run, the agent improves the validation score it can see. We report the area under the Auto Research Curve, or AUARC, to measure both how much it improves and how early those gains arrive.</li>
-          <li><strong>Hidden test generalization.</strong> At each iteration, the validation score alone selects the checkpoint used for the hidden test curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo score. We also report the final hidden test result so a major late gain remains visible.</li>
-        </ul>
+        <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
+      </div>
+      <figure class="task-scoring-figure">
+        <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
+        <figcaption>Claude Fable 5.1 on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
+      </figure>
+      <div class="prose">
+        <p><strong>Choosing the curve.</strong> At each point in time, the validation score selects the best submission so far. The hidden test curve shows the hidden test reward for that same submission. The hidden test result does not help select it.</p>
+        <p><strong>Area under the curve.</strong> We calculate the area under the Auto Research Curve, or AUARC, across the run. This metric is equivalent to the time weighted average hidden test score. A score held for more time contributes more area. An improvement made early therefore adds more than the same improvement made near the end.</p>
+        <p><strong>Combining tasks.</strong> Hidden test AUARC is our main measure of progress on one task. We compare models within each task, then combine those comparisons into a task relative Elo rating. This rating rises when a model has a higher hidden test AUARC than other models across tasks. We also report the final hidden test result so that a large improvement near the end remains visible.</p>
       </div>
       <div class="prose" id="reward-normalization">
-        <p>For metrics with a perfect score, we reward proportional reductions in the remaining error. Improving accuracy from 90% to 95% removes half the remaining error.</p>
+        <p>For the common reporting scale, some raw measures have a clear best possible value. Accuracy has a best value of 100 percent. Error has a best value of zero. In these cases, we measure the distance from that best value.</p>
         <details class="reward-formula">
           <summary>Reward formula</summary>
-          <p>For metrics with a perfect score and a reference result, let <em>d</em> be the distance from perfect performance.</p>
+          <p>Let <em>d</em> be the distance from the best possible result. We compare the agent's reduction in this distance with the reduction achieved by the reference.</p>
           <div class="reward-equation">
             <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Progress u equals the maximum of zero and log of baseline gap divided by agent gap, divided by log of baseline gap divided by reference gap.">
               <mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>agent</mtext></msub><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>reference</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo>
             </math>
             <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Reward equals c plus one minus c times u divided by one plus u."><mtext>Reward</mtext><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
           </div>
-          <p>Here, <em>c</em> is the baseline reward, either 0 or 0.1. This formula applies at or above the baseline. Perfect performance earns 1; results below the baseline earn at most <em>c</em>.</p>
-          <p>For tasks without a fixed limit, we compare the amount of improvement over the baseline with the reference improvement. When no reference exists, <em>u</em> counts halvings of the remaining gap. We then use the same reward formula.</p>
+          <p>The logarithm measures proportional reductions in the distance. Each halving adds the same amount to <em>u</em>. Improving accuracy from 90 percent to 95 percent removes half of the remaining error. Improving from 98 percent to 99 percent also removes half of the remaining error.</p>
+          <p>The value <em>u</em> measures progress in units of the reference improvement. The baseline has <em>u</em> equal to 0. The reference has <em>u</em> equal to 1. The resulting reward is always between 0 and 1, and improvements beyond the reference still receive more reward.</p>
+          <p>The value <em>c</em> is the reward at the baseline. It is either 0 or 0.1. Results below the baseline receive no more than <em>c</em>. A perfect result receives 1.</p>
+          <p>Some tasks do not have a fixed best possible result. For these tasks, <em>u</em> is the improvement beyond the baseline divided by the improvement from the baseline to the reference. When a useful reference does not exist, we count reductions in the remaining error instead. The exact calculation is chosen to match meaningful progress on that task.</p>
         </details>
       </div>
     </section>
@@ -281,6 +296,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=generalization-cleanup-20260908"></script>
+<script src="results.js?v=hpo-generalization-merged-20260908"></script>
 </body>
 </html>

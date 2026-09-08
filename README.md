@@ -31,6 +31,10 @@ Scoring references checked for this refresh:
 
 The newer pipeline-wide baseline reward of 0.1 and the separate three-anchor sigmoid are not applied retrospectively. The retained task baselines agree with the formula described in Experimental setup.
 
+## General analysis plot review
+
+Run `python3 analysis/general_analysis/build.py` after refreshing `site-data.js`. It rebuilds the candidate general analysis plots and `general-analysis-review.html` from the same selected evaluation IDs as the benchmark pages. See [`analysis/general_analysis/README.md`](analysis/general_analysis/README.md) for the source and freshness limits.
+
 ## Publishing task files
 
 The public task file browser lists all files for the 29 catalog tasks from commit `8f9db7e09ac21446f08d3751e08414562efeb32f` in `bespokelabsai/AutoResearchBench-Preview-Tasks`.
