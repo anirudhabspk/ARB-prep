@@ -12,15 +12,16 @@ const MODEL_BRANDS={
   "forge":{company:"Alibaba Cloud",short:"Qwen",logo:"https://cdn.simpleicons.org/alibabacloud/ff6a00"},
   "kittiwake":{company:"Google",short:"Gemini",logo:"assets/google-logo.png"},
   "granola-plus":{company:"Meta",short:"Muse",logo:"https://cdn.simpleicons.org/meta/0866ff"},
-  "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo.png"},
+  "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo.png",scale:.82},
   "meridian":{company:"OpenAI",short:"Astra",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"}
 };
-function modelIdentity(key,{short=false}={}){const model=MODEL[key],brand=MODEL_BRANDS[key],label=short?brand?.short:model?.name||key,title=brand?`${model.name} · ${brand.company}`:model?.name||key;return`${brand?`<img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async">`:""}<i class="model-color-key" style="background:${model?.color||"#4D4D4D"}"></i><span title="${esc(title)}">${esc(label)}</span>`}
+function companyLogoImage(brand){const scale=brand.scale||1,style=scale===1?"":` style="transform:scale(${scale})"`;return`<img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async"${style}>`}
+function modelIdentity(key,{short=false}={}){const model=MODEL[key],brand=MODEL_BRANDS[key],label=short?brand?.short:model?.name||key,title=brand?`${model.name} · ${brand.company}`:model?.name||key;return`${brand?companyLogoImage(brand):""}<i class="model-color-key" style="background:${model?.color||"#4D4D4D"}"></i><span title="${esc(title)}">${esc(label)}</span>`}
 function modelLogoSvg(key,cx,cy,size=12){
   const model=MODEL[key],brand=MODEL_BRANDS[key];
   if(!brand)return`<rect class="point" fill="${model?.color||"#4D4D4D"}" x="${cx-size/2}" y="${cy-size/2}" width="${size}" height="${size}"/>`;
-  const frameSize=(size*1.25).toFixed(2),frameOffset=(size*1.25/2).toFixed(2),logoOffset=(size/2).toFixed(2);
-  return`<rect class="company-logo-backdrop" x="${cx-frameOffset}" y="${cy-frameOffset}" width="${frameSize}" height="${frameSize}" fill="#fff" stroke="${model.color}" stroke-width="1.4"/><image class="company-logo-svg" href="${brand.logo}" x="${cx-logoOffset}" y="${cy-logoOffset}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/>`;
+  const frameSize=(size*1.25).toFixed(2),frameOffset=(size*1.25/2).toFixed(2),logoSize=size*(brand.scale||1),logoOffset=(logoSize/2).toFixed(2);
+  return`<rect class="company-logo-backdrop" x="${cx-frameOffset}" y="${cy-frameOffset}" width="${frameSize}" height="${frameSize}" fill="#fff" stroke="${model.color}" stroke-width="1.4"/><image class="company-logo-svg" href="${brand.logo}" x="${cx-logoOffset}" y="${cy-logoOffset}" width="${logoSize}" height="${logoSize}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/>`;
 }
 // Sync with the "Task areas" block, excluding SCFA while its task error is unresolved.
 const CATEGORIES=[
@@ -226,7 +227,7 @@ function overviewLegend(series){
   return`<div class="overview-legend" aria-label="Model legend">${series.map(item=>{
     const model=MODEL[item.key],brand=MODEL_BRANDS[item.key],label=model?.name||item.key;
     const mark=brand
-      ?`<span class="overview-legend-logo" aria-hidden="true" style="border-color:${model.color}"><img class="company-logo" src="${brand.logo}" alt="" decoding="async"></span>`
+      ?`<span class="overview-legend-logo" aria-hidden="true" style="border-color:${model.color}">${companyLogoImage(brand)}</span>`
       :`<span class="overview-legend-logo overview-legend-fallback" aria-hidden="true" style="border-color:${model?.color||"#4D4D4D"}"></span>`;
     return`<span class="overview-legend-item" title="${esc(label)}">${mark}<span>${esc(label)}</span></span>`;
   }).join("")}</div>`;
@@ -276,7 +277,7 @@ function bindOverviewTooltips(target){
     const brand=MODEL_BRANDS[line.dataset.modelKey],icon=tooltip.querySelector("i");
     icon.style.background=brand?"#fff":line.dataset.color;
     icon.style.backgroundImage=brand?`url("${brand.logo}")`:"none";
-    icon.style.backgroundSize="contain";
+    icon.style.backgroundSize=brand?.scale?`${brand.scale*100}%`:`contain`;
     icon.style.backgroundPosition="center";
     icon.style.backgroundRepeat="no-repeat";
     tooltip.querySelector("strong").textContent=line.dataset.model;
@@ -594,7 +595,7 @@ function decorateModelEffortDots(){
     const key=ORDER.find(candidate=>(marker.getAttribute("aria-label")||"").startsWith(`${MODEL[candidate].name}:`));
     const circle=marker.querySelector("circle"),brand=MODEL_BRANDS[key];
     if(!circle||!brand)return;
-    const cx=Number(circle.getAttribute("cx")),cy=Number(circle.getAttribute("cy")),size=16.5,frameSize=size*1.25;
+    const cx=Number(circle.getAttribute("cx")),cy=Number(circle.getAttribute("cy")),size=16.5,frameSize=size*1.25,logoSize=size*(brand.scale||1);
     const frame=document.createElementNS(ns,"rect");
     frame.setAttribute("class","company-logo-backdrop");
     frame.setAttribute("x",String(cx-frameSize/2));
@@ -608,10 +609,10 @@ function decorateModelEffortDots(){
     const logo=document.createElementNS(ns,"image");
     logo.setAttribute("class","company-logo-svg");
     logo.setAttribute("href",brand.logo);
-    logo.setAttribute("x",String(cx-size/2));
-    logo.setAttribute("y",String(cy-size/2));
-    logo.setAttribute("width",String(size));
-    logo.setAttribute("height",String(size));
+    logo.setAttribute("x",String(cx-logoSize/2));
+    logo.setAttribute("y",String(cy-logoSize/2));
+    logo.setAttribute("width",String(logoSize));
+    logo.setAttribute("height",String(logoSize));
     logo.setAttribute("preserveAspectRatio","xMidYMid meet");
     logo.setAttribute("aria-hidden","true");
     logo.setAttribute("pointer-events","none");
