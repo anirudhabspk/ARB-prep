@@ -189,3 +189,8 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 /* Keep the highlight figure compact without changing the cost scale. */
 .lead-cost-plot{max-width:800px;margin-left:auto;margin-right:auto}
 .lead-cost-plot .overview-legend{flex-wrap:wrap;overflow:visible;gap:8px 14px}
+
+/* Lead with the interactive results, then introduce the benchmark and costs. */
+#benchmark > .time-leaderboard:first-child{margin-top:0}
+#benchmark > #results{margin-bottom:32px}
+#benchmark > .lead-cost-plot:last-child{margin-top:32px;margin-bottom:0}
