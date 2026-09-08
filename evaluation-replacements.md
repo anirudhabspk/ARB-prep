@@ -2,7 +2,7 @@
 
 The September 8 refresh publishes 21 completed reruns. Each used a 23 hour research window plus a 1 hour infrastructure envelope. The task and overview plots hold the final observed score flat through hour 24. AUARC and Elo use the observed 23 hour research window.
 
-Audit time: 2026-09-08 10:35 UTC. Sixteen replacement evaluations were running. Two other replacements had ended without a valid completed result and remain excluded.
+Audit time: 2026-09-08 10:35 UTC. Sixteen replacement evaluations were running. Their prior published results remain in the calculations until the reruns complete. Two other replacements ended without a valid completed result, so their prior results also remain.
 
 | Task | Model | Prior recorded evaluation | Current rerun | Status |
 | --- | --- | --- | --- | --- |
@@ -25,8 +25,8 @@ Audit time: 2026-09-08 10:35 UTC. Sixteen replacement evaluations were running. 
 
 ## Invalid replacements
 
-- FasterGCG with Claude Fable 5.1 evaluation [`7ba9d329`](https://horizon.bespokelabs.ai/evaluations/7ba9d329-f3a4-493b-8aae-bccd03d9e72f) completed without a selected score. It remains excluded.
-- FasterGCG with Muse Spark 1.3 evaluation [`b31d44de`](https://horizon.bespokelabs.ai/evaluations/b31d44de-b355-410e-bbc1-b2b99cd92a03) stopped with an agent error. It remains excluded.
+- FasterGCG with Claude Fable 5.1 evaluation [`7ba9d329`](https://horizon.bespokelabs.ai/evaluations/7ba9d329-f3a4-493b-8aae-bccd03d9e72f) completed without a selected score. The prior published result remains.
+- FasterGCG with Muse Spark 1.3 evaluation [`b31d44de`](https://horizon.bespokelabs.ai/evaluations/b31d44de-b355-410e-bbc1-b2b99cd92a03) stopped with an agent error. The prior published result remains.
 
 ## Fixed selection exceptions
 

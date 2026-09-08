@@ -229,6 +229,7 @@ def main():
     task_lookup = {t['name']: t for t in site['tasks']}
     models = {m['name']: m['codename'] for m in site['models']}
     old_runs = {r['evaluationId']: r for t in site['tasks'] for r in t['models']}
+    old_runs_by_cell = {(t['name'], r['model']): r for t in site['tasks'] for r in t['models']}
     for task in site['tasks']:
         task['models'] = []
     audit = []
@@ -306,12 +307,25 @@ def main():
         if completed_23h_rerun:
             run.update({'displayHours': DISPLAY_WINDOW_HOURS,
                         'benchmarkWindow': '23h research + 1h infrastructure'})
-        task_lookup[names[source['task_slug']]]['models'].append(run)
+        task_name = names[source['task_slug']]
+        replacement_status = None
+        if args.include_current_runs and not eligible:
+            manifest_status = source['manifest_status'].lower()
+            if status == 'running' or manifest_status.startswith(('rerun incomplete', 'rerun failed')):
+                prior = old_runs_by_cell.get((task_name, models[source['model']]))
+                if prior and prior.get('points') and prior.get('evaluationId') != eid:
+                    run = copy.deepcopy(prior)
+                    replacement_status = 'running' if status == 'running' else 'invalid'
+                    run.update({'replacementEvaluationId': eid,
+                                'replacementStatus': replacement_status})
+        task_lookup[task_name]['models'].append(run)
         audit.append({**source, 'included': bool(eligible), 'status': status,
                       'batch_job_status': payload['status']['job_status'],
                       'attempt_status': attempt['status'], 'task_name': names[source['task_slug']],
                       'submissions': count, 'work_hours': hours, 'timing': timing,
                       'active_time': active,
+                      'published_evaluation_id': run['evaluationId'],
+                      'replacement_status': replacement_status,
                       'api_cost_usd': run['apiCost'],
                       'api_cost_fetched_at': run['apiCostFetchedAt'],
                       'score_carried_forward': carried, 'observed_end_hours': end / 3600})
@@ -324,13 +338,13 @@ def main():
                         'completedRerunsCheckedAt': fetched_at,
                         'sourceCommit': manifest['source_commit'],
                         'selectionPolicy': 'current' if args.include_current_runs else 'terminal',
-                        'selectionDetail': 'completed reruns only; running rerun scores excluded' if args.include_current_runs else 'terminal',
+                        'selectionDetail': 'completed reruns with prior results retained for running and invalid replacements' if args.include_current_runs else 'terminal',
                         'provisional': any(r['provisional'] and r['points'] for r in all_runs),
-                        'eligibleRuns': sum(r['included'] for r in audit),
+                        'eligibleRuns': sum(bool(r['points']) for r in all_runs),
                         'includedRuns': sum(bool(r['points']) for r in all_runs),
                         'completedRerunCount': sum(r['evaluationId'] in COMPLETED_23H_RERUN_IDS and bool(r['points']) for r in all_runs),
-                        'runningRerunCount': sum(r['provisional'] for r in all_runs),
-                        'invalidRerunCount': sum(r['sourceStatus'].startswith(('Rerun incomplete', 'Rerun failed')) for r in all_runs)}
+                        'runningRerunCount': sum(r['replacementStatus'] == 'running' for r in all_runs if r.get('replacementStatus')),
+                        'invalidRerunCount': sum(r['replacementStatus'] == 'invalid' for r in all_runs if r.get('replacementStatus'))}
     args.output.write_text('window.ARB_DATA = ' + json.dumps(site, separators=(',', ':')) + ';\n')
     (args.snapshot / 'score-refresh-audit.json').write_text(json.dumps(audit, indent=2) + '\n')
     print(json.dumps(site['snapshot']))
