@@ -1,7 +1,7 @@
 import json
 import unittest
 from pathlib import Path
-from build_harness_data import build, series
+from build_harness_data import build, series, event_points
 ROOT = Path(__file__).resolve().parents[1]
 
 class HarnessAblationDataTest(unittest.TestCase):
@@ -20,6 +20,24 @@ class HarnessAblationDataTest(unittest.TestCase):
         self.assertIsNone(s['test'][2])
         self.assertEqual(s['test'][3],.2)
         self.assertEqual(s['selected_iterations'][12],2)
+
+    def test_exact_events_keep_timing_selection_and_cutoff(self):
+        rows = [dict(iteration=1, public_elapsed_seconds=900, public_score=.4,
+                     private_elapsed_seconds=899, private_score=.7, public_raw_score=4),
+                dict(iteration=2, public_elapsed_seconds=1800, public_score=.5,
+                     private_elapsed_seconds=1801, private_score=.2, public_raw_score=5),
+                dict(iteration=3, public_elapsed_seconds=1900, public_score=.5,
+                     private_elapsed_seconds=1900, private_score=.9),
+                dict(iteration=4, public_elapsed_seconds=43201, public_score=1,
+                     private_elapsed_seconds=43201, private_score=1)]
+        points = {p['seconds']: p for p in event_points(rows)}
+        self.assertIsNone(points[0]['validation'])
+        self.assertEqual(points[900]['raw_validation'], 4)
+        self.assertIsNone(points[1800]['test'])
+        self.assertEqual(points[1801]['test'], .2)
+        self.assertEqual(points[1900]['test'], .2)
+        self.assertEqual(points[43200]['validation'], .5)
+        self.assertNotIn(43201, points)
 
     def test_zero_is_preserved_and_missing_is_not_zero(self):
         self.assertEqual(series([])['validation'],[None]*13)
