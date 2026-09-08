@@ -1,5 +1,6 @@
 import unittest
 from scripts.refresh_score_snapshot import (
+    COMPLETED_23H_RERUN_IDS,
     api_ledger_cost,
     api_ledger_output_tokens,
     curve,
@@ -10,10 +11,15 @@ from scripts.refresh_score_snapshot import (
 
 
 class ApiLedgerCostTest(unittest.TestCase):
-    def test_current_policy_accepts_running_and_rejects_crashes(self):
+    def test_completed_rerun_cohort_has_21_evaluations(self):
+        self.assertEqual(len(COMPLETED_23H_RERUN_IDS), 21)
+
+    def test_current_policy_accepts_only_completed_clean_runs(self):
         source = {'manifest_status': 'Rerun submitted'}
         attempt = {'status': 'running'}
-        self.assertTrue(eligible_current_result(source, 'running', attempt, []))
+        self.assertFalse(eligible_current_result(source, 'running', attempt, []))
+        self.assertTrue(eligible_current_result(source, 'completed',
+                                                {'status': 'completed'}, []))
         self.assertFalse(eligible_current_result(source, 'failed', attempt, []))
         self.assertFalse(eligible_current_result({'manifest_status': 'Crashed'},
                                                  'completed', {'status': 'completed'}, []))

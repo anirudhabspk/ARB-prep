@@ -52,6 +52,14 @@ const reversed=evaluate('adjustedElo([{[ORDER[0]]:{test:.2},[ORDER[1]]:{test:.8}
 close(ratings[order[0]],reversed[order[1]]);
 const result=evaluate('currentResults()'),effort=evaluate('effortModelRows()');
 const currentSnapshot=context.window.ARB_DATA.snapshot.selectionPolicy==='current';
+const completedReruns=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.benchmarkWindow==="23h research + 1h infrastructure")');
+assert.equal(completedReruns.length,21);
+assert.ok(completedReruns.every(run=>run.hours===23&&run.displayHours===24&&!run.provisional));
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional).length'),16);
+assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional&&r.points.length).length'),0);
+evaluate('var completedRerunTask=DATA.tasks.find(t=>t.name==="Label efficient risk estimator");var completedRerun=completedRerunTask.models.find(r=>r.evaluationId==="942c3b95-5c23-4dae-b6ab-a8b0fa6a5ff1")');
+assert.equal(evaluate('taskStats(completedRerunTask).find(r=>r.key===completedRerun.model).hours'),24);
+close(evaluate('difficultyAdjustedRunStats(completedRerunTask,completedRerun).test'),evaluate('timeAuc(completedRerun.points.map(point=>({...point,test:difficultyAdjustedPoint(completedRerunTask,point,"testAtBest")})),"test",23*3600)'));
 for(const row of effort){
   close(row.test,result.rows.find(r=>r.key===row.key).test);
   close(row.test,context.window.ARB_DATA.aggregates.find(r=>r.key===row.key).test);
@@ -62,7 +70,7 @@ for(const row of effort){
   assert.ok(row.elo_ci.every(Number.isFinite));
 }
 assert.equal(evaluate('DATA.tasks.length'),29);
-assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,currentSnapshot?25:29);
+assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,currentSnapshot?13:29);
 assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),context.window.ARB_DATA.snapshot.includedRuns);
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
 assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0,!currentSnapshot);
@@ -71,8 +79,8 @@ const overview=evaluate('overviewTrajectories()');
 const fable=overview.series.find(r=>r.key==='vesper-pro');
 if(currentSnapshot){
   const active=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional&&r.points.length)');
-  assert.ok(active.length>0);
-  close(fable.points.at(-1).hour,Math.min(...active.filter(r=>r.model==='vesper-pro').map(r=>r.hours)));
+  assert.equal(active.length,0);
+  close(fable.points.at(-1).hour,24);
   for(const t of context.window.ARB_DATA.tasks)for(const r of t.models){
     if(r.points.length&&r.evaluationId!=='60a7e9e2-c234-4091-a258-242d0574dc30')assert.ok(['running','completed'].includes(r.status));
   }
