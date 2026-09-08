@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=bespoke-brand-20260907">
+<link rel="stylesheet" href="site.css?v=bespoke-original-cards-20260907">
 </head>
 <body>
 <header class="topbar">
@@ -40,10 +40,10 @@
       </div>
     </section>
     <section class="section" id="measurement">
-      <h2>Progress that generalizes</h2>
-      <div class="evaluation-points">
-        <article><h3>How much better, how soon?</h3><p>AUARC rewards agents for finding stronger solutions earlier in the run.</p></article>
-        <article><h3>Do the gains hold up?</h3><p>Validation selects the checkpoint. Hidden tests measure whether its improvements generalize.</p></article>
+      <div class="prose"><p>Measuring both requires separating the feedback the agent can see from the hidden performance used to rank it. We therefore evaluate each run along two axes:</p></div>
+      <div class="measure-grid">
+        <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
+        <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
       </div>
     </section>
     <section class="section" id="setup">

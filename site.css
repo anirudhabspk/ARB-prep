@@ -116,34 +116,13 @@
 .model-effort .model-dot:focus .company-logo-backdrop,.model-effort .model-dot:hover .company-logo-backdrop{stroke:var(--ink);stroke-width:2}
 @media(max-width:640px){.overview-legend,.cost-legend{gap:8px}.overview-legend .model-identity,.cost-legend .model-identity{font-size:9px}}
 
-/* Bespoke brand palette; darker orange for readable text on cream. */
-:root{--brand-orange:#f44029}
-.topbar{background:var(--paper);backdrop-filter:none;border-bottom:1px solid var(--line)}
-.brand{color:var(--ink)}
-.hero{padding-top:76px;padding-bottom:48px}
-.hero::before{content:none}
-.hero h1{font-family:var(--sans);font-weight:600;font-size:clamp(38px,6.3vw,78px);line-height:1.08;letter-spacing:-.055em}
-.hero .deck{color:var(--muted);max-width:720px}
-.hero-meta{color:var(--ink);justify-content:flex-start;align-items:center;gap:0;border-color:var(--line)}
-.hero-meta::before{content:"";display:inline-block;width:8px;height:8px;background:var(--brand-orange);margin-right:10px}
-.section h2{font-family:var(--sans);font-weight:550;font-size:clamp(29px,3.7vw,42px);line-height:1.15;letter-spacing:-.035em}
-.section h3{letter-spacing:-.02em}
-.contents a:hover,.toplinks a:hover{color:var(--accent)}
-.result-stat{border:0;border-top:1px solid var(--line);padding:18px 0}
-.task-card{background:transparent;border-width:0 0 1px;border-left:0;padding:20px 0;min-height:150px}
-.task-card:hover{background:var(--soft)}
-.task-file-button[aria-current="true"]{background:var(--soft)}
-@media(max-width:640px){.hero{padding-top:48px;padding-bottom:32px}.hero h1{font-size:clamp(30px,8.5vw,48px)}}
-
-/* Typography and colors from Bespoke's Inkling article. */
+/* Bespoke Inkling article: GT Alpina headings, Inter body, teal and cream. */
 @font-face{font-family:"GT Alpina Light";src:url("https://framerusercontent.com/assets/pD4GI4DrpJfgFFLZPgJhL0OAgcY.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:"Inter";src:url("https://framerusercontent.com/assets/GrgcKwrN6d3Uz8EwcLHZxwEfC4.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
-:root{--serif:"GT Alpina Light",Georgia,serif}
-.hero h1{font-family:var(--serif);font-weight:300;letter-spacing:-.035em}
-.section h2{font-family:var(--serif);font-weight:300;letter-spacing:-.025em}
-.hero::before{content:"";background-image:linear-gradient(90deg,#f7f4ed 0%,#f7f4edf5 27%,#f7f4eda8 54%,#f7f4ed24 100%),linear-gradient(0deg,#f7f4ed 0%,#f7f4ed00 35%),url("assets/autoresearch-hero.jpg");opacity:.65}
-.evaluation-points{display:grid;grid-template-columns:1fr 1fr;gap:40px}
-.evaluation-points article{border-top:2px solid var(--brand-orange);padding-top:20px}
-.evaluation-points h3{font:300 clamp(25px,3vw,32px)/1.2 var(--serif);margin:0 0 14px;color:var(--ink)}
-.evaluation-points p{font:400 17px/1.65 var(--sans);margin:0;color:var(--muted);max-width:370px}
-@media(max-width:640px){.evaluation-points{grid-template-columns:1fr;gap:28px}}
+:root{--serif:"GT Alpina Light",Georgia,serif;--brand-orange:#f44029}
+.topbar{background:#f7f4edf5}
+.hero h1,.section h2,.deck{font-weight:300}
+.hero::before{background-image:linear-gradient(90deg,#f7f4ed 0%,#f7f4edf5 27%,#f7f4eda8 54%,#f7f4ed24 100%),linear-gradient(0deg,#f7f4ed 0%,#f7f4ed00 35%),url("assets/autoresearch-hero.jpg")}
+.measure{border-top-color:var(--ink);background:var(--soft)}
+.measure .number{color:var(--accent);font-weight:300}
+.measure h3{font-family:var(--serif);font-size:25px;font-weight:300;line-height:1.2}
