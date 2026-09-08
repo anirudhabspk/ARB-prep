@@ -174,6 +174,11 @@ for(const label of ['60%','70%','80%','90%'])assert.ok(timePanel.includes(`>${la
 assert.ok(!timePanel.includes('>0%</text>'));
 assert.ok(!timePanel.includes('>25%</text>'));
 assert.ok(evaluate('renderTask.toString()').includes('output-token count alone does not determine cost'));
+assert.ok(evaluate('renderTaskScoringExample.toString()').includes('DCTabEval pooled categorical statistics'));
+assert.ok(evaluate('renderTaskScoringExample.toString()').includes('vesper-pro'));
+const interactiveTaskChart=evaluate('taskChart({...DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics"),models:[DATA.tasks.find(task=>task.name==="DCTabEval pooled categorical statistics").models.find(run=>run.model==="vesper-pro")]},"Validation","bestValidation")');
+assert.ok(interactiveTaskChart.includes('class="efficiency-point"'));
+assert.ok(interactiveTaskChart.includes('class="efficiency-tooltip"'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));
 

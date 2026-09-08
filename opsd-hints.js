@@ -40,7 +40,7 @@
       "causalpfn-cate-pehe-ihdp-surfaceb":{text:"CausalPFN",dx:10,dy:-8},
       "grpo-rl-halfcheetah-advantage-estimator":{text:"GRPO",dx:10,dy:15}
     };
-    let body=`<title>Validation-hint improvement over the first no-hint AutoResearch iteration</title><desc>Each point is one task. The horizontal position is MuseSpark 1.3's validation-hint score minus its no-hint first-iteration score. The vertical position is the corresponding change for Claude Opus 5.</desc><rect class="opsd-plot-frame" x="${L}" y="${T}" width="${plotW}" height="${plotH}"/>`;
+    let body=`<desc>Each point is one task. The horizontal position is MuseSpark 1.3's validation-hint score minus its no-hint first-iteration score. The vertical position is the corresponding change for Claude Opus 5.</desc><rect class="opsd-plot-frame" x="${L}" y="${T}" width="${plotW}" height="${plotH}"/>`;
     for(const tick of ticks){
       const xx=x(tick),yy=y(tick),zero=tick===0;
       body+=`<line class="${zero?"opsd-zero-line":"opsd-grid"}" x1="${xx}" x2="${xx}" y1="${T}" y2="${H-B}"/><line class="${zero?"opsd-zero-line":"opsd-grid"}" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="opsd-tick" x="${xx}" y="${H-B+21}" text-anchor="middle">${axisFmt(tick)}</text><text class="opsd-tick" x="${L-10}" y="${yy+3.5}" text-anchor="end">${axisFmt(tick)}</text>`;
@@ -49,7 +49,7 @@
     for(const task of tasks){
       const label=labels[task.key],bothImprove=task.muse>0&&task.opus>0,bothWorsen=task.muse<0&&task.opus<0,fill=bothImprove?"#21636a":bothWorsen?"#999b96":"#c83220",cx=x(task.muse),cy=y(task.opus),tipX=100*cx/W,tipY=100*cy/H;
       const aria=`${task.name}. MuseSpark change ${deltaFmt(task.muse)}; Claude Opus 5 change ${deltaFmt(task.opus)}.`;
-      body+=`<g class="opsd-point${bothImprove?" is-both-improve":""}" data-opsd-point tabindex="0" role="img" aria-label="${esc(aria)}" data-name="${esc(task.name)}" data-muse-no-hint="${fmt(task.museNoHint)}" data-muse-val="${fmt(task.museVal)}" data-muse-delta="${deltaFmt(task.muse)}" data-muse-n="${task.valGranola.length}" data-opus-no-hint="${fmt(task.opusNoHint)}" data-opus-val="${fmt(task.opusVal)}" data-opus-delta="${deltaFmt(task.opus)}" data-opus-n="${task.valLumen.length}" data-tip-x="${tipX}" data-tip-y="${tipY}"><circle class="opsd-hit" cx="${cx}" cy="${cy}" r="13"/><circle class="opsd-dot" cx="${cx}" cy="${cy}" r="5" fill="${fill}"/><title>${esc(aria)}</title></g>`;
+      body+=`<g class="opsd-point${bothImprove?" is-both-improve":""}" data-opsd-point tabindex="0" role="img" aria-label="${esc(aria)}" data-name="${esc(task.name)}" data-muse-no-hint="${fmt(task.museNoHint)}" data-muse-val="${fmt(task.museVal)}" data-muse-delta="${deltaFmt(task.muse)}" data-muse-n="${task.valGranola.length}" data-opus-no-hint="${fmt(task.opusNoHint)}" data-opus-val="${fmt(task.opusVal)}" data-opus-delta="${deltaFmt(task.opus)}" data-opus-n="${task.valLumen.length}" data-tip-x="${tipX}" data-tip-y="${tipY}"><circle class="opsd-hit" cx="${cx}" cy="${cy}" r="13"/><circle class="opsd-dot" cx="${cx}" cy="${cy}" r="5" fill="${fill}"/></g>`;
       if(label)body+=`<text class="opsd-point-label" x="${cx+label.dx}" y="${cy+label.dy}" text-anchor="${label.anchor||"start"}">${label.text}</text>`;
     }
     return`<div class="opsd-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Task-level validation-hint improvement for MuseSpark and Opus">${body}</svg><div class="opsd-tooltip" role="tooltip" hidden></div></div>`;

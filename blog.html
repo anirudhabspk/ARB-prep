@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=opsd-single-plot-taxonomy-20260908">
+<link rel="stylesheet" href="site.css?v=interactive-task-example-opsd-single-plot-20260908">
 </head>
 <body>
 <section class="hero">
@@ -95,14 +95,17 @@
       </figure>
       <h3>Task scoring and aggregate evaluation metrics</h3>
       <div class="prose">
-        <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available. Validation and hidden-test results first recover the raw task metric, then use the same mapping based on the final hidden-test panel's anchors. This keeps their rewards and the reported generalization gap on one common scale.</p>
+        <p>We score each task from 0 to 1. We map its raw metric, such as accuracy, F1 score, or speedup, onto this common scale. Where possible, the mapping uses a baseline and a strong reference result as anchors. We calculate validation and hidden test rewards separately, but use the same task specific mapping for both. This lets us compare progress without hiding whether validation gains carry over to hidden data.</p>
+        <p>For example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The agent sees its validation score after each submission. It never sees the hidden test score. Hover over, focus, or select a point to see its time and reward.</p>
+      </div>
+      <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
+      <div class="prose">
         <ul>
-          <li><strong>Progress over time.</strong> During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</li>
-          <li><strong>Hidden test generalization.</strong> At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</li>
+          <li><strong>Progress over time.</strong> During the run, the agent improves the validation score it can see. We report the area under the Auto Research Curve, or AUARC, to measure both how much it improves and how early those gains arrive.</li>
+          <li><strong>Hidden test generalization.</strong> At each iteration, the validation score alone selects the checkpoint used for the hidden test curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo score. We also report the final hidden test result so a major late gain remains visible.</li>
         </ul>
       </div>
       <div class="prose" id="reward-normalization">
-        <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available. Validation and hidden-test results first recover the raw task metric, then use the same mapping based on the final hidden-test panel's anchors. This keeps their rewards and the reported generalization gap on one common scale.</p>
         <p>For metrics with a perfect score, we reward proportional reductions in the remaining error. Improving accuracy from 90% to 95% removes half the remaining error.</p>
         <details class="reward-formula">
           <summary>Reward formula</summary>
@@ -272,6 +275,6 @@
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="opsd-hints-data.js?v=hint-experiment-20260908"></script>
 <script src="opsd-hints.js?v=validation-hint-deltas-20260908"></script>
-<script src="results.js?v=restored-score-trajectory-20260908"></script>
+<script src="results.js?v=interactive-task-example-restored-score-trajectory-20260908"></script>
 </body>
 </html>

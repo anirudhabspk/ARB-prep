@@ -242,7 +242,7 @@ function overviewLegend(series){
 
 function overviewLine(series,path,detail){
   const label=`${series.name}. ${detail}`;
-  return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/><title>${esc(label)}</title></g>`;
+  return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/></g>`;
 }
 
 function logTimeTestPlot(overview){
@@ -634,9 +634,19 @@ function taskChart(task,title,key,sharedDomain=null){
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
     path+=`L${x(stat.hours)} ${y(points.at(-1).plot)}`;
     body+=`<path class="curve" stroke="${color}" d="${path}"/>`;
-    for(const point of points){const hours=point.seconds/3600;body+=`<circle class="point" fill="${color}" cx="${x(hours)}" cy="${y(point.plot)}" r="2.5"><title>${esc(MODEL[stat.key].name)}, ${hours.toFixed(1)} hours: ${esc(axisLabel)} ${formatValue(point.plot)}</title></circle>`}
+    for(const point of points){const hours=point.seconds/3600,xx=x(hours),yy=y(point.plot),modelName=MODEL[stat.key].name,hoursLabel=hours.toFixed(1),rewardLabel=formatValue(point.plot),label=`${modelName}: ${hoursLabel} hours, ${axisLabel.toLowerCase()} ${rewardLabel}`;body+=`<g class="efficiency-point" role="button" tabindex="0" aria-label="Show ${esc(label)}" data-model="${esc(modelName)}" data-resource-label="Time" data-resource-value="${hoursLabel} hours" data-score-label="${esc(axisLabel)}" data-score-value="${rewardLabel}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="10"/><circle class="point" fill="${color}" cx="${xx}" cy="${yy}" r="2.5"/></g>`}
   }
-  return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
+  return`<div class="chart-card"><h4>${esc(title)}</h4><div class="efficiency-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div>`;
+}
+
+function renderTaskScoringExample(){
+  const target=document.getElementById("task-scoring-example");
+  if(!target)return;
+  const task=DATA.tasks.find(candidate=>candidate.name==="DCTabEval pooled categorical statistics"),run=task?.models.find(candidate=>candidate.model==="vesper-pro");
+  if(!task||!run){target.innerHTML='<p class="plot-note">Example data is unavailable.</p>';return}
+  const example={...task,models:[run]},sharedDomain=taskPairDomain(example);
+  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain)}</div>`;
+  bindEfficiencyTooltips();
 }
 
 function compactNumber(value){
@@ -795,7 +805,7 @@ function decorateHpoChartBars(){
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelEffort();renderAggregates();renderTimeLeaderboard();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateHpoChartBars()}
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelEffort();renderAggregates();renderTimeLeaderboard();renderCategories();renderTaskCatalog();renderHarnessAblations();renderTaskScoringExample();decorateHpoChartBars()}
 
 // Keep the contents marker aligned with the section being read.
 (() => {
