@@ -9,6 +9,7 @@
     return sorted.length%2?sorted[middle]:(sorted[middle-1]+sorted[middle])/2;
   };
   const fmt=value=>Number.isFinite(value)?value.toFixed(3):"n/a";
+  const cursorLogo={opus:"https://cdn.simpleicons.org/anthropic/191919",muse:"https://cdn.simpleicons.org/meta/0866ff"};
   const baseSlug=key=>key.replace(/^p?\d{4}-\d{5}-/,"");
   const catalog=new Map((window.ARB_TASK_CATALOG||[]).map(task=>[task.slug,task]));
   const benchmarkTasks=new Map((window.ARB_DATA?.tasks||[]).map(task=>[task.name,task]));
@@ -41,7 +42,7 @@
         const initial=task[`${lane.key}Initial`],hint=task[`${lane.key}Hint`],final=task[`${lane.key}Final`],y=rowTop+lane.offset,initialX=x(initial),hintX=x(hint),finalX=x(final),tipX=100*hintX/W,tipY=100*y/H;
         const aria=`${task.name}, ${lane.label}. Initial AutoResearch test score ${fmt(initial)}; validation-hinted Terminus score ${fmt(hint)}; final AutoResearch test score ${fmt(final)}.`;
         const diamond=`${hintX},${y-5.5} ${hintX+5.5},${y} ${hintX},${y+5.5} ${hintX-5.5},${y}`;
-        body+=`<g class="opsd-interval-lane" data-opsd-lane tabindex="0" role="img" aria-label="${esc(aria)}" data-name="${esc(task.name)}" data-model="${lane.label}" data-initial="${fmt(initial)}" data-hint="${fmt(hint)}" data-final="${fmt(final)}" data-tip-x="${tipX}" data-tip-y="${tipY}"><line class="opsd-interval-line" x1="${initialX}" x2="${finalX}" y1="${y}" y2="${y}" stroke="${lane.color}"/><circle class="opsd-hit" cx="${hintX}" cy="${y}" r="13"/><circle class="opsd-interval-initial" cx="${initialX}" cy="${y}" r="4.6" fill="#fff" stroke="${lane.color}"/><polygon class="opsd-interval-hint" points="${diamond}" fill="#b57c14"/><rect class="opsd-interval-final" x="${finalX-4.6}" y="${y-4.6}" width="9.2" height="9.2" fill="${lane.color}"/><title>${esc(aria)}</title></g>`;
+        body+=`<g class="opsd-interval-lane" data-opsd-lane tabindex="0" role="img" aria-label="${esc(aria)}" data-name="${esc(task.name)}" data-model="${lane.label}" data-initial="${fmt(initial)}" data-hint="${fmt(hint)}" data-final="${fmt(final)}" data-tip-x="${tipX}" data-tip-y="${tipY}" style="cursor:url('${cursorLogo[lane.key]}') 12 12, pointer"><line class="opsd-interval-line" x1="${initialX}" x2="${finalX}" y1="${y}" y2="${y}" stroke="${lane.color}"/><circle class="opsd-hit" cx="${hintX}" cy="${y}" r="13"/><circle class="opsd-interval-initial" cx="${initialX}" cy="${y}" r="4.6" fill="#fff" stroke="${lane.color}"/><polygon class="opsd-interval-hint" points="${diamond}" fill="#b57c14"/><rect class="opsd-interval-final" x="${finalX-4.6}" y="${y-4.6}" width="9.2" height="9.2" fill="${lane.color}"/><title>${esc(aria)}</title></g>`;
       }
     }
     body+=`<text class="opsd-axis-title" x="${(L+W-R)/2}" y="${H-14}" text-anchor="middle">Hidden-test reward</text>`;
