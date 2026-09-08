@@ -142,7 +142,7 @@
 <p>We compare each model's validation and hidden-test AUARC to measure how well its progress generalizes. At each point in the run, validation selects the best checkpoint so far. We evaluate that same checkpoint on hidden tests, which the agent never sees.</p>
 <p>For each model, we average validation and hidden-test AUARC across its included tasks, then calculate the relative gap as (validation AUARC − hidden-test AUARC) / max(|validation AUARC|, |hidden-test AUARC|). A larger positive gap means less of the validation performance carries over to hidden tests. The lines show 95% intervals from resampling tasks. This measures a generalization gap, not proof of overfitting by itself.</p>
 <div class="aggregate-grid" id="behavior-result-plots"></div>
-<ul class="result-points result-notes" id="behavior-result-notes"></ul>
+<div class="prose result-notes" id="behavior-result-notes"></div>
 <h3 id="analysis-2b">How often did agents only tune parameters?</h3>
 <p>We measured the share of rounds devoted entirely to tuning parameters of an existing method.</p>
 <style>
@@ -275,6 +275,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=behavior-story-merged-20260908"></script>
+<script src="results.js?v=generalization-takeaways-20260908"></script>
 </body>
 </html>
