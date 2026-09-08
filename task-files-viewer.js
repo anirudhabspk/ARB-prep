@@ -415,6 +415,7 @@
     async function loadFile(path) {
       if (!filesByPath.has(path) || !isSafePath(path)) path = defaultPath;
       const file = filesByPath.get(path);
+      const viewer = file.viewer || "text";
       selectedPath = path;
       selectedContent = null;
       requestNumber += 1;
@@ -429,11 +430,21 @@
       expandAncestors(path);
       pathLabel.textContent = path;
       metadata.textContent = `${file.language || "text"} · ${formatBytes(file.size)}`;
-      const rawUrl = sourceUrl(slug, path, file.sha256);
-      sourceLink.href = rawUrl;
       copyButton.disabled = true;
       downloadButton.disabled = true;
       replaceFileQuery(path);
+
+      if (viewer === "unavailable") {
+        sourceLink.removeAttribute("href");
+        sourceLink.setAttribute("aria-disabled", "true");
+        showStatus(`Viewer unavailable for ${path}.`);
+        announce(`Selected ${path}. Viewer unavailable.`);
+        return;
+      }
+
+      const rawUrl = sourceUrl(slug, path, file.sha256);
+      sourceLink.href = rawUrl;
+      sourceLink.removeAttribute("aria-disabled");
 
       const cacheKey = `${slug}\0${path}`;
       const cached = loadedFiles.get(cacheKey);

@@ -1,1 +1,1 @@
-The entries are cross-sectional ranks, and conditioning on them as if they were Gaussian misstates the dependence; mapping ranks to normal scores first, then conditioning, is the step that moves the metric once a basic low-rank fit is in place.
+The values are stated to be cross-sectional ranks rescaled to a fixed interval, so their marginals are uniform by construction and any Gaussian or linear conditional model is misspecified until they are transformed; the statement also says missingness varies enormously between firms, which makes the pattern itself informative.

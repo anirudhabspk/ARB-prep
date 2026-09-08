@@ -1,1 +1,1 @@
-A uniform or alternating skip schedule is close to the worst legal use of the budget: damage from reusing a cached evaluation is steeply front-loaded, so moving the skips into the tail is worth more than any improvement to how the cached value is reconstructed.
+You are compared against the uncached run from the same starting latent, and the steps form one sequential refinement — so an approximation introduced at a step is carried and compounded by every step after it, which makes when you spend the budget matter more than how you fill the gaps.

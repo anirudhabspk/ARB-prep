@@ -5,6 +5,7 @@ import os
 import subprocess
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 from unittest import mock
 
@@ -123,6 +124,67 @@ class BuildTaskFilesTests(unittest.TestCase):
                 task_slugs=(build_task_files.TASK_SLUG,),
             )
 
+    def test_sync_lists_binary_files_as_unavailable_without_copying_them(self):
+        source_files = {
+            "instruction.md": b"task\n",
+            "tests/check.py": b"print('ok')\n",
+            "data/panel.npz": b"binary npz",
+            "data/rows.npy": b"binary npy",
+            "weights/model.safetensors": b"binary weights",
+            "data/archive.gz": b"compressed",
+        }
+        repo, commit = self.make_source_repo(source_files)
+
+        with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+            files = build_task_files.sync(
+                repo,
+                commit,
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )[build_task_files.TASK_SLUG]
+
+        by_path = {item["path"]: item for item in files}
+        self.assertEqual(set(by_path), set(source_files))
+        self.assertEqual(by_path["instruction.md"]["viewer"], "text")
+        self.assertEqual(by_path["tests/check.py"]["viewer"], "text")
+        for path in ("data/panel.npz", "data/rows.npy", "weights/model.safetensors", "data/archive.gz"):
+            self.assertEqual(by_path[path]["viewer"], "unavailable")
+            self.assertNotIn("sha256", by_path[path])
+            self.assertFalse((self.task_files_root / build_task_files.TASK_SLUG / path).exists())
+
+        copied = {
+            path.relative_to(self.task_files_root / build_task_files.TASK_SLUG).as_posix()
+            for path in (self.task_files_root / build_task_files.TASK_SLUG).rglob("*")
+            if path.is_file()
+        }
+        self.assertEqual(copied, {"instruction.md", "tests/check.py"})
+
+        rebuilt = build_task_files.build(
+            self.task_files_root,
+            self.manifest_path,
+            source_commit=commit,
+            task_slugs=(build_task_files.TASK_SLUG,),
+        )[build_task_files.TASK_SLUG]
+        self.assertEqual(rebuilt, files)
+
+    def test_sync_rejects_invalid_utf8_readable_file_before_replacing_destination(self):
+        repo, commit = self.make_source_repo({"instruction.md": b"\xff\xfe"})
+        self.write_task_file("keep.txt", b"existing\n")
+
+        with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+            with self.assertRaisesRegex(build_task_files.BuildError, "UTF-8"):
+                build_task_files.sync(
+                    repo,
+                    commit,
+                    self.task_files_root,
+                    self.manifest_path,
+                    task_slugs=(build_task_files.TASK_SLUG,),
+                )
+
+        destination = self.task_files_root / build_task_files.TASK_SLUG
+        self.assertEqual((destination / "keep.txt").read_bytes(), b"existing\n")
+
     def test_relative_path_validation_rejects_absolute_and_parent_paths(self):
         for path in ("/absolute", "C:\\absolute", "../outside", "dir/../outside", "dir//file", "..\\outside", "dir/file..json"):
             with self.subTest(path=path):
@@ -201,11 +263,15 @@ class BuildTaskFilesTests(unittest.TestCase):
 
         self.assertEqual(
             {item["path"] for item in files_by_task["task-a"]},
-            {"instruction.md"},
+            {"instruction.md", "data.npy"},
         )
         self.assertEqual(
             {item["path"] for item in files_by_task["task-b"]},
-            {"Dockerfile", "rows.csv"},
+            {"Dockerfile", "rows.csv", "archive.gz"},
+        )
+        self.assertEqual(
+            next(item for item in files_by_task["task-a"] if item["path"] == "data.npy")["viewer"],
+            "unavailable",
         )
         self.assertEqual(
             {path.name for path in self.task_files_root.iterdir()},
@@ -303,11 +369,12 @@ class BuildTaskFilesTests(unittest.TestCase):
 
         self.assertEqual(tuple(files_by_task), slugs)
         self.assertEqual({path.name for path in build_task_files.TASK_FILES_ROOT.iterdir()}, set(slugs))
-        self.assertEqual(len(files), 649)
-        self.assertEqual(sum(item["size"] for item in files), 3_802_813)
+        self.assertEqual(len(files), 678)
+        self.assertEqual(sum(item["size"] for item in files), 3_763_974)
         self.assertEqual(sum(item["path"].endswith(".py") for item in files), 225)
         self.assertEqual(sum(Path(item["path"]).name == "Dockerfile" for item in files), 58)
         self.assertTrue(all(build_task_files.is_publishable_path(item["path"]) for item in files))
+        self.assertTrue(all(item["viewer"] == build_task_files.TEXT_VIEWER for item in files))
 
         python_files = build_task_files.TASK_FILES_ROOT.rglob("*.py")
         self.assertTrue(
@@ -318,8 +385,24 @@ class BuildTaskFilesTests(unittest.TestCase):
         manifest = json.loads(manifest_text.removeprefix("window.ARB_TASK_FILES = ").removesuffix(";\n"))
         self.assertEqual(manifest["sourceCommit"], build_task_files.SOURCE_COMMIT)
         self.assertEqual(tuple(manifest["tasks"]), slugs)
+        manifest_files = [item for slug in slugs for item in manifest["tasks"][slug]["files"]]
+        self.assertEqual(len(manifest_files), 1_058)
+        self.assertEqual(sum(item["viewer"] == build_task_files.TEXT_VIEWER for item in manifest_files), 678)
+        self.assertEqual(sum(item["viewer"] == build_task_files.UNAVAILABLE_VIEWER for item in manifest_files), 380)
+        self.assertEqual(
+            Counter(
+                Path(item["path"]).suffix
+                for item in manifest_files
+                if item["viewer"] == build_task_files.UNAVAILABLE_VIEWER
+            ),
+            {".npz": 206, ".npy": 145, ".safetensors": 23, ".gz": 6},
+        )
         for slug in slugs:
-            self.assertEqual(manifest["tasks"][slug]["files"], files_by_task[slug])
+            viewable = [
+                item for item in manifest["tasks"][slug]["files"]
+                if item["viewer"] == build_task_files.TEXT_VIEWER
+            ]
+            self.assertEqual(viewable, files_by_task[slug])
 
     def test_sync_detects_a_staged_path_mismatch_before_replacement(self):
         repo, commit = self.make_source_repo({"instruction.md": b"task\n"})

@@ -1,1 +1,1 @@
-Almost every action's validity decodes exactly from the observation, and the score is then decided by the one that does not: standing in the right place is necessary but not sufficient for it, so the remaining work is inferring the hidden condition rather than polishing what is already certain.
+You are scored on the policy's return, not on how well the mask matches, and the observation encoder is documented — so most of the mask is decodable exactly, and what remains is that an error costs whatever the affected action was worth rather than one unit of accuracy.

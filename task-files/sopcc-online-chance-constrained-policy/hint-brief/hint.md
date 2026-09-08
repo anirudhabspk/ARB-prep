@@ -1,1 +1,1 @@
-Early policies come in far under the permitted failure rate, which is reward given away: the improvement is to treat the allowance as a budget to be consumed by the end of the route, using the closed-form probability of finishing rather than a fixed safety margin.
+The penalty is flat until the failure rate reaches the cap and only then falls, so failures below the cap are free and a policy that stays well inside it is giving away reward for nothing; and with exponential traversal costs the chance of finishing within the remaining budget is available in closed form.
