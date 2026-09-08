@@ -203,3 +203,21 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 .lead-cost-plot .overview-legend{flex-wrap:nowrap;overflow:visible;gap:6px;font-size:9.5px}
 .lead-cost-plot .overview-legend-logo{width:21px;height:21px}
 .lead-cost-plot .overview-legend-logo .company-logo{width:16px;height:16px}
+
+/* Keep explanatory copy aligned with the site's full-width figures. */
+:root{--content-measure:940px}
+main .prose,
+main .results-intro,
+main .result-points,
+main .task-intro,
+main .task-note,
+main .turn-note,
+main .todo-list,
+main .todo-items,
+main .harness-intro,
+main .task-details-pending p,
+main .trajectory-summary>p,
+main .opsd-method-body,
+main .opsd-scatter-note,
+main .readme-prose,
+main .effort-setting-chart{max-width:var(--content-measure)}
