@@ -195,10 +195,10 @@
   ],
   "worker_logs": "Unavailable through Horizon; direct Cloud Logging requires renewed gcloud authentication.",
   "review_refresh_started_at": "2026-09-07T18:51:27.909883+00:00",
-  "replacement_results_checked_at": "2026-09-07T22:03:13.312296+00:00",
+  "replacement_results_checked_at": "2026-09-08T02:09:37.354831+00:00",
   "replacement_results": {
     "9cce644b-508d-49bf-998c-6fa67fdb44e9": "Adopted first 12 hours; latest grade 12.2032 hours",
     "27a6ab97-84b1-436b-b5be-702cdd9bbebd": "Adopted first 12 hours; latest grade 12.2499 hours",
-    "c3d3ee62-2656-410a-be30-811076c68570": "Pending; latest grade 11.6044 hours"
+    "c3d3ee62-2656-410a-be30-811076c68570": "Adopted first 12 hours; latest grade 15.8727 hours"
   }
 }
