@@ -228,6 +228,8 @@ main .opsd-scatter-note,
 main .readme-prose,
 main .effort-setting-chart{max-width:var(--content-measure)}
 
+.opsd-interaction--solo{display:block}
+
 /* Lead with the interactive results, then introduce the benchmark and costs. */
 #benchmark > .time-leaderboard:first-child{margin-top:0}
 #benchmark > #results{margin-bottom:32px}
