@@ -6,11 +6,11 @@ import re
 from pathlib import Path
 
 
-DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoResearchBench-Preview-Tasks"
+DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoresearchBench-Tasks"
 README_PATH = Path("task-readmes.md")
 CATALOG_PATH = Path("task-catalog.js")
 SITE_DATA_PATH = Path("site-data.js")
-GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/8f9db7e09ac21446f08d3751e08414562efeb32f"
+GITHUB_ROOT = "https://github.com/bespokelabsai/AutoresearchBench-Tasks/tree/main"
 
 CATEGORY_ORDER = [
     "Model training",
