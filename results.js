@@ -428,31 +428,48 @@ function costPerformancePlot(rows){
     const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden-test AUARC ${score}`;
     body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
   }
-  const legend=overviewLegend(rows);
-  return`<article class="metric-plot metric-plot-wide">${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
+  const legend=overviewLegend(rows),opus=rows.find(row=>row.key==='lumen'),fable=rows.find(row=>row.key==='vesper-pro');
+  const takeaway=opus&&fable?`<p class="plot-takeaway"><strong>Opus scores close to Fable at a lower cost.</strong> Opus reaches ${fmt(opus.test)} AUARC at $${Math.round(opus.cost)} per task, compared with Fable's ${fmt(fable.test)} at $${Math.round(fable.cost)}.</p>`:'';
+  return`<article class="metric-plot metric-plot-wide"><h3>Test AUARC versus API cost</h3>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div>${takeaway}</article>`;
 }
 
-// Use the same monotone observations and fitted trajectories as the analysis plot.
-function leaderboardAtTime(overview,hour){
-  return overview.series.map(series=>({key:series.key,name:series.name,count:series.count,
-    value:hour<=series.points.at(-1).hour+1e-9?series.fit.predict(hour):null
-  })).sort((a,b)=>(b.value??-Infinity)-(a.value??-Infinity)||ORDER.indexOf(a.key)-ORDER.indexOf(b.key));
+function mainAuarcLeaderboard(rows){
+  const ranked=[...rows].sort((a,b)=>b.test-a.test);
+  return `<h3>Test AUARC leaderboard</h3><p class="plot-note">AUARC (Area Under the AutoResearch Curve) combines the quality of a solution with how quickly the agent finds it.</p><ol class="auarc-ranking">${ranked.map(row=>`<li aria-label="${esc(row.name)}: ${fmt(row.test)}, 95% interval ${fmt(row.test_ci[0])} to ${fmt(row.test_ci[1])}"><span class="model-identity">${modelIdentity(row.key)}</span><span class="auarc-track" aria-hidden="true"><span class="auarc-fill" style="width:${row.test*100}%;background:${MODEL[row.key].color}"></span><span class="auarc-interval" style="left:${row.test_ci[0]*100}%;width:${(row.test_ci[1]-row.test_ci[0])*100}%"></span></span><strong>${fmt(row.test)}</strong></li>`).join('')}</ol><div class="auarc-axis" aria-hidden="true"><span></span><span><i>0</i><i>0.5</i><i>1.0</i></span><span></span></div><p class="plot-note">Mean across 29 tasks over 24 hours. Lines show 95% confidence intervals.</p>`;
+}
+
+// Integrate the same normalized checkpoints as the headline AUARC, up to the chosen time.
+function leaderboardRuns(){
+  return DATA.tasks.flatMap(task=>task.models.flatMap(run=>{
+    if(!difficultyAdjustedRunStats(task,run))return[];
+    return[{key:run.model,end:run.hours*3600,points:run.points.map(point=>({seconds:point.seconds,value:difficultyAdjustedPoint(task,point,"testAtBest")}))}];
+  }));
+}
+function leaderboardAtTime(runs,hour){
+  return ORDER.map(key=>{
+    const values=runs.filter(run=>run.key===key).map(run=>{
+      const end=Math.min(hour*3600,run.end);
+      return timeAuc(run.points.filter(point=>point.seconds<=end),"value",end)??0;
+    });
+    return{key,name:MODEL[key].name,value:mean(values),count:values.length};
+  }).sort((a,b)=>b.value-a.value||ORDER.indexOf(a.key)-ORDER.indexOf(b.key));
 }
 function renderTimeLeaderboard(){
   const target=document.getElementById("time-leaderboard");if(!target)return;
-  const overview=overviewTrajectories(),steps=240,minHour=1,maxHour=overview.maxHours,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
-  const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(overview,hourAt(index)));
+  const runs=leaderboardRuns(),steps=240,minHour=.25,maxHour=24,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
+  const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(runs,hourAt(index)));
   const W=680,H=390,L=48,R=16,T=18,B=48,x=hour=>L+Math.log(hour/minHour)/Math.log(maxHour/minHour)*(W-L-R),y=value=>H-B-value/.8*(H-T-B);
   let svg='';
   for(const value of [0,.2,.4,.6,.8])svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text class="plot-tick" x="${L-10}" y="${y(value)+4}" text-anchor="end">${value.toFixed(1)}</text>`;
-  for(const hour of [1,2,4,8,16,maxHour])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
-  for(const series of overview.series){
-    const path=frames.flatMap((rows,index)=>{const value=rows.find(row=>row.key===series.key).value;return value==null?[]:[`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(value).toFixed(2)}`];}).join(' ');
-    svg+=`<path d="${path}" stroke="${series.color}" fill="none" stroke-width="2.5"><title>${esc(series.name)}</title></path>`;
-    for(const point of series.points.filter(point=>point.hour>=minHour))svg+=`<circle cx="${x(point.hour)}" cy="${y(point.value)}" r="2.8" fill="${series.color}" opacity=".4"/>`;
+  for(const hour of [.25,1,4,12,maxHour])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
+  for(const key of ORDER){
+    const path=frames.map((rows,index)=>`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(rows.find(row=>row.key===key).value).toFixed(2)}`).join(' ');
+    svg+=`<path d="${path}" stroke="${MODEL[key].color}" fill="none" stroke-width="2.5"><title>${esc(MODEL[key].name)}</title></path>`;
   }
-  svg+=`<line class="leaderboard-cursor" y1="${T}" y2="${H-B}"/><g class="leaderboard-dots"></g><text class="plot-tick" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="plot-tick" x="13" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+H-B)/2})">Mean hidden-test reward</text>`;
-  target.innerHTML=`<div class="leaderboard-heading"><h3>Log-time hidden-test trajectories</h3><output id="leaderboard-time" for="leaderboard-slider">24 hours</output></div><p class="plot-note">Dots show measured rewards; lines show fitted trends. Drag or scroll to rank models along the fitted curves.</p><div class="leaderboard-layout"><div class="leaderboard-timeline"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories with leaderboard">${svg}</svg><input id="leaderboard-slider" type="range" min="0" max="${steps}" value="${steps}" aria-label="Research time" aria-describedby="leaderboard-time"></div><div class="leaderboard-ranking" role="list" aria-label="Models ranked by fitted hidden-test reward">${ORDER.map(key=>`<div class="leaderboard-row" role="listitem" data-key="${key}"><span class="leaderboard-rank"></span><span class="model-identity">${modelIdentity(key,{short:true})}</span><strong></strong><span class="leaderboard-bar" style="background:${MODEL[key].color}"></span></div>`).join('')}</div></div>`;
+  svg+=`<line class="leaderboard-cursor" y1="${T}" y2="${H-B}"/><g class="leaderboard-dots"></g><text class="plot-tick" x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="plot-tick" x="13" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 13 ${(T+H-B)/2})">Mean test AUARC</text>`;
+  target.innerHTML=`<div class="leaderboard-heading"><h3>Test AUARC over time</h3><output id="leaderboard-time" for="leaderboard-slider">24 hours</output></div><p class="plot-note">At 24 hours, these scores match the leaderboard above.</p><div class="leaderboard-layout"><div class="leaderboard-timeline"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Test AUARC over logarithmic time with leaderboard">${svg}</svg><input id="leaderboard-slider" type="range" min="0" max="${steps}" value="${steps}" aria-label="Research time" aria-describedby="leaderboard-time"></div><div class="leaderboard-ranking" role="list" aria-label="Models ranked by test AUARC">${ORDER.map(key=>`<div class="leaderboard-row" role="listitem" data-key="${key}"><span class="leaderboard-rank"></span><span class="model-identity">${modelIdentity(key,{short:true})}</span><strong></strong><span class="leaderboard-bar" style="background:${MODEL[key].color}"></span></div>`).join('')}</div></div>`;
+  const early=frames[0][0],late=frames.at(-1)[0];
+  target.insertAdjacentHTML('beforeend',`<p class="plot-takeaway"><strong>Rankings change over longer runs.</strong> ${esc(early.name)} leads early; ${esc(late.name)} narrowly leads at 24 hours.</p>`);
   const slider=target.querySelector('input'),timeline=target.querySelector('.leaderboard-timeline'),chart=target.querySelector('svg'),cursor=target.querySelector('.leaderboard-cursor'),dots=target.querySelector('.leaderboard-dots'),output=target.querySelector('output');
   function update(){
     const index=Number(slider.value),hour=hourAt(index),minutes=Math.round(hour*60),label=minutes<60?`${minutes} minutes`:`${Math.floor(minutes/60)}h${minutes%60?' '+minutes%60+'m':''}`;
@@ -470,12 +487,12 @@ function renderTimeLeaderboard(){
 }
 
 function renderAggregates(){
-  const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
+  const result=currentResults(),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
+  document.getElementById("main-leaderboard").innerHTML=mainAuarcLeaderboard(result.rows);
   document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
   document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent",true);
   bindEfficiencyTooltips();
-  const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1],testLeaders=[...result.rows].sort((a,b)=>b.test-a.test);
-  document.getElementById("result-notes").innerHTML=`<li>${esc(testLeaders[0].name)} leads mean hidden-test AUARC at ${fmt(testLeaders[0].test)}, followed by ${esc(testLeaders[1].name)} at ${fmt(testLeaders[1].test)}.</li><li>${esc(leader.name)} leads task-relative Elo at ${Math.round(leader.elo)}, followed by ${esc(runnerUp.name)} at ${Math.round(runnerUp.elo)}.</li>`;
+  const largestGap=gap[gap.length-1];
   document.getElementById("behavior-result-notes").innerHTML=`<li>Validation and hidden-test ranks broadly agree at ρ = ${result.rho.toFixed(2)}, but ${esc(largestGap.name)} has the largest relative validation-to-test gap at ${pct(largestGap.gap)}.</li>`;
 }
 function renderCategories(){const svg=document.getElementById("taxonomy-wheel-svg"),title=document.getElementById("taxonomy-detail-title"),description=document.getElementById("taxonomy-detail-description"),count=document.getElementById("taxonomy-detail-count"),specimens=document.getElementById("taxonomy-detail-specimens");if(!svg||!title||!description||!count||!specimens)return;const ns="http://www.w3.org/2000/svg",cx=210,cy=210,inner=85,outer=164,point=(angle,radius)=>[cx+Math.cos(angle)*radius,cy+Math.sin(angle)*radius],arc=(start,end)=>{const[x1,y1]=point(start,outer),[x2,y2]=point(end,outer),[x3,y3]=point(end,inner),[x4,y4]=point(start,inner),large=end-start>Math.PI?1:0;return`M ${x1} ${y1} A ${outer} ${outer} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${large} 0 ${x4} ${y4} Z`},labelLines=name=>{if(name==="Algorithms and optimization")return["Algorithms","& optimization"];if(name==="Data engineering and curation")return["Data engineering","& curation"];if(name==="Evaluation, calibration, and robustness")return["Evaluation &","robustness"];if(name==="AI safety and alignment")return["AI safety &","alignment"];if(name==="Systems and efficiency")return["Systems &","efficiency"];return name.split(" ").length>1?[name.split(" ")[0],name.split(" ").slice(1).join(" ")]:[name]},groups=[];function addText(className,x,y,value){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;svg.appendChild(text)}function pick(index){const item=CATEGORIES[index];groups.forEach((group,i)=>{group.classList.toggle("is-active",i===index);group.classList.toggle("is-muted",i!==index);group.setAttribute("aria-pressed",String(i===index))});title.textContent=item.name;description.textContent=item.description;count.textContent=`${item.count} ${item.count===1?"task":"tasks"}`;specimens.replaceChildren(...item.specimens.map(specimen=>{const entry=document.createElement("li");entry.textContent=specimen;return entry}))}CATEGORIES.forEach((item,index)=>{const start=-Math.PI/2+index*(Math.PI*2/CATEGORIES.length)+.018,end=-Math.PI/2+(index+1)*(Math.PI*2/CATEGORIES.length)-.018,mid=(start+end)/2,group=document.createElementNS(ns,"g"),path=document.createElementNS(ns,"path"),label=document.createElementNS(ns,"text"),[tx,ty]=point(mid,124),lines=labelLines(item.name);group.classList.add("wheel-segment");group.setAttribute("role","button");group.setAttribute("tabindex","0");group.setAttribute("aria-label",`${item.name}, ${item.count} ${item.count===1?"task":"tasks"}`);group.setAttribute("aria-pressed","false");path.setAttribute("d",arc(start,end));path.setAttribute("fill",item.color);label.setAttribute("class","wheel-label");label.setAttribute("x",tx);label.setAttribute("y",ty-(lines.length-1)*6);lines.forEach((line,lineIndex)=>{const span=document.createElementNS(ns,"tspan");span.setAttribute("x",tx);span.setAttribute("dy",lineIndex===0?0:12);span.textContent=line;label.appendChild(span)});group.append(path,label);group.addEventListener("mouseenter",()=>pick(index));group.addEventListener("focus",()=>pick(index));group.addEventListener("click",()=>pick(index));group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();pick(index)}});svg.appendChild(group);groups.push(group)});const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-title",cx,cy+10,"Task taxonomy");addText("wheel-center-note",cx,cy+31,"29 tasks");pick(0);svg.addEventListener("mouseleave",()=>pick(0))}

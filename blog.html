@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=content-measure-20260908">
+<link rel="stylesheet" href="site.css?v=auarc-opening-merged-20260908">
 </head>
 <body>
 <section class="hero">
@@ -25,19 +25,18 @@
   </aside>
   <main>
     <section class="section" id="benchmark">
-      <div class="aggregate-grid lead-cost-plot" id="cost-performance-plot"></div>
-      <div class="prose">
-        <p>Progress toward Recursive Self Improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
-        <p>Open-ended research rewards persistent and compounding effort. The predominant paradigm of open-ended task evaluation in ML focuses on attempting these problems in a 1-shot to few-shot setting <a class="cite" href="https://mls-bench.com/">[1]</a>, but these are long-horizon problems, and evals should focus on treating them as such. PostTrainBench studies long horizon agents, but only for LLM post training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. A model that is able to compound its efforts more efficiently, and do so for longer, can significantly outperform one that initially appears stronger. This is often experienced in the real-world in ways that are not captured by benchmarks.</p>
-        <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
-        <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
-      </div>
-      <div id="time-leaderboard" class="time-leaderboard"></div>
+      <div id="main-leaderboard" class="main-leaderboard"></div>
       <div id="results">
-        <p class="results-intro">Across 29 research tasks, the current results show:</p>
-        <ul class="result-points result-notes" id="result-notes"></ul>
         <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Results remain provisional while replacement runs finish.</p>
       </div>
+      <div class="prose">
+        <p>Progress toward recursive self-improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
+        <p>Open-ended ML research often takes many experiments. One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> can miss the gains agents make over longer runs. PostTrainBench studies long-horizon agents, but focuses on LLM post-training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. An agent that starts behind may eventually outperform one that improves more slowly.</p>
+        <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> also need to distinguish progress from overfitting. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
+        <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour AutoResearch runs while still generalizing to hidden test data.</p>
+      </div>
+      <div id="time-leaderboard" class="time-leaderboard"></div>
+      <div class="aggregate-grid lead-cost-plot" id="cost-performance-plot"></div>
     </section>
     <section class="section" id="tasks">
       <h2>Tasks</h2>
@@ -122,9 +121,9 @@
         </details>
       </div>
     </section>
-    <div id="trajectory-overview"></div>
     <section class="section" id="general-analysis">
       <h2>Analyzing agent behavior</h2>
+      <div id="trajectory-overview"></div>
       <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
         <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
@@ -274,6 +273,6 @@
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="opsd-hints-data.js?v=hint-experiment-20260908"></script>
 <script src="opsd-hints.js?v=four-hint-scatters-20260908"></script>
-<script src="results.js?v=taxonomy-no-scroll-gap-labels-20260908"></script>
+<script src="results.js?v=auarc-opening-merged-20260908"></script>
 </body>
 </html>
