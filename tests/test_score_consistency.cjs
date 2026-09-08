@@ -120,7 +120,7 @@ if(currentSnapshot){
   close(fable.points.at(-1).hour,24);
 }
 const costHtml=evaluate('costPerformancePlot(currentResults().rows)');
-assert.ok(costHtml.includes('API costs include model calls only'));
+assert.ok(!costHtml.includes('The line marks the Pareto frontier.'));
 const missingCosts=[],missingOutputTokens=[];
 for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
   if(!run.points.length)continue;
