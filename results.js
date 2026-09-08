@@ -650,10 +650,10 @@ function taskChart(task,title,key,sharedDomain=null,{fillAuarc=false}={}){
 function renderTaskScoringExample(){
   const target=document.getElementById("task-scoring-example");
   if(!target)return;
-  const task=DATA.tasks.find(candidate=>candidate.name==="DCTabEval pooled categorical statistics"),run=task?.models.find(candidate=>candidate.model==="vesper-pro");
+  const task=DATA.tasks.find(candidate=>candidate.name==="CPU LLM decode throughput"),run=task?.models.find(candidate=>candidate.model==="vesper-pro");
   if(!task||!run){target.innerHTML='<p class="plot-note">Example data is unavailable.</p>';return}
   const example={...task,models:[run]},sharedDomain=taskPairDomain(example);
-  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain,{fillAuarc:true})}</div>`;
+  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#cpu-llm-decode-throughput">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain,{fillAuarc:true})}</div>`;
   bindEfficiencyTooltips();
 }
 

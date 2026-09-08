@@ -113,11 +113,11 @@
       </div>
       <h3>Main evaluation metric: hidden-test AUARC</h3>
       <div class="prose">
-        <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
+        <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
       </div>
       <figure class="task-scoring-figure">
         <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
-        <figcaption>Claude Fable 5.1 on <a href="tasks.html#dctabeval-aeac-pooled-cat-statistics">Ranking Employee Access Requests from Categorical IDs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
+        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
       </figure>
       <div class="prose">
         <p><strong>Choosing the curve.</strong> At each point in time, the validation score selects the best submission so far. The hidden test curve shows the hidden test reward for that same submission. The hidden test result does not help select it.</p>
