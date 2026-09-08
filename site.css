@@ -145,4 +145,9 @@
 body:has(.hero) .contents{top:28px}
 body:has(.hero) .section{scroll-margin-top:28px}
 
-.lead-cost-plot{width:100%;margin:24px 0 32px}
+/* Lead figure sits directly between the byline and introduction. */
+body:has(.lead-cost-plot) .hero{padding-bottom:24px}
+#benchmark:has(.lead-cost-plot){padding-top:0}
+.lead-cost-plot{width:100%;margin:0 0 32px}
+.lead-cost-plot>.metric-plot{border-top:0;padding-top:0}
+.lead-cost-plot .cost-legend{flex-wrap:wrap;overflow:visible;gap:10px 16px;margin:0 0 12px}
