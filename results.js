@@ -501,18 +501,19 @@ function taskChart(task,title,key){const stats=taskStats(task).filter(stat=>stat
 function renderTask(index){activeTask=index;const select=document.querySelector("#task-tabs select");if(select)select.value=String(index);const task=DATA.tasks[index],legend=ORDER.map(key=>`<button type="button" class="${hiddenModels.has(key)?"off":""}" data-model="${key}" aria-pressed="${!hiddenModels.has(key)}"><span class="swatch" style="background:${MODEL[key].color}"></span>${esc(MODEL[key].name)}</button>`).join("");document.getElementById("task-view").innerHTML=`<article class="task-view"><span class="task-kicker">${esc(task.compute)}</span><h3>${esc(task.name)}</h3><div class="legend" role="group" aria-label="Models">${legend}</div><section class="scale-block"><div class="charts">${taskChart(task,"Best validation score so far","bestValidation")}${taskChart(task,"Hidden test score at that checkpoint","testAtBest")}</div></section></article>`;document.querySelectorAll(".legend button").forEach(button=>button.addEventListener("click",()=>{const key=button.dataset.model;hiddenModels.has(key)?hiddenModels.delete(key):hiddenModels.add(key);renderTask(activeTask)}))}
 function renderTasks(){const tabs=document.getElementById("task-tabs");tabs.innerHTML=`<select aria-label="Task">${DATA.tasks.map((task,index)=>`<option value="${index}">${esc(task.name)}</option>`).join("")}</select>`;tabs.querySelector("select").addEventListener("change",event=>{hiddenModels.clear();renderTask(Number(event.target.value))});renderTask(0)}
 function renderCategories(){
-  const svg=document.getElementById("taxonomy-wheel-svg"),title=document.getElementById("taxonomy-detail-title"),description=document.getElementById("taxonomy-detail-description"),count=document.getElementById("taxonomy-detail-count"),specimens=document.getElementById("taxonomy-detail-specimens");
-  if(!svg||!title||!description||!count||!specimens)return;
+  const svg=document.getElementById("taxonomy-wheel-svg"),title=document.getElementById("taxonomy-detail-title"),description=document.getElementById("taxonomy-detail-description"),count=document.getElementById("taxonomy-detail-count");
+  if(!svg||!title||!description||!count)return;
   const ns="http://www.w3.org/2000/svg",cx=210,cy=210,inner=85,outer=164,point=(angle,radius)=>[cx+Math.cos(angle)*radius,cy+Math.sin(angle)*radius],arc=(start,end)=>{const startOuter=point(start,outer),endOuter=point(end,outer),endInner=point(end,inner),startInner=point(start,inner),large=end-start>Math.PI?1:0;return "M "+startOuter[0]+" "+startOuter[1]+" A "+outer+" "+outer+" 0 "+large+" 1 "+endOuter[0]+" "+endOuter[1]+" L "+endInner[0]+" "+endInner[1]+" A "+inner+" "+inner+" 0 "+large+" 0 "+startInner[0]+" "+startInner[1]+" Z"},labelLines=name=>{if(name==="Algorithms and optimization")return["Algorithms","& optimization"];if(name==="Data engineering and curation")return["Data engineering","& curation"];if(name==="Evaluation, calibration, and robustness")return["Evaluation &","robustness"];if(name==="AI safety and alignment")return["AI safety &","alignment"];if(name==="Systems and efficiency")return["Systems &","efficiency"];return name.split(" ").length>1?[name.split(" ")[0],name.split(" ").slice(1).join(" ")]:[name]},groups=[],taskLabel=item=>item.count+" "+(item.count===1?"task":"tasks");
-  function addText(className,x,y,value){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;svg.appendChild(text)}
+  let centerGroup=null;
+  function addText(className,x,y,value,parent=svg){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;parent.appendChild(text)}
   function openTaskBrowser(categoryIndex,taskName){document.dispatchEvent(new CustomEvent(taskName?"taxonomy-task-selected":"taxonomy-category-selected",{detail:taskName?{categoryIndex,taskName}:{categoryIndex}}))}
   function pick(index){
     const item=CATEGORIES[index];
     groups.forEach((group,groupIndex)=>{group.classList.toggle("is-active",groupIndex===index);group.classList.toggle("is-muted",groupIndex!==index);group.setAttribute("aria-pressed",String(groupIndex===index))});
+    centerGroup?.classList.remove("is-active");centerGroup?.setAttribute("aria-pressed","false");
     title.textContent=item.name;
     description.textContent=item.description;
     count.textContent=taskLabel(item);
-    specimens.replaceChildren(...item.specimens.map(taskName=>{const entry=document.createElement("li"),button=document.createElement("button");button.type="button";button.textContent=taskName;button.addEventListener("click",()=>openTaskBrowser(index,taskName));entry.appendChild(button);return entry}));
   }
   CATEGORIES.forEach((item,index)=>{
     const start=-Math.PI/2+index*(Math.PI*2/CATEGORIES.length)+.018,end=-Math.PI/2+(index+1)*(Math.PI*2/CATEGORIES.length)-.018,mid=(start+end)/2,group=document.createElementNS(ns,"g"),path=document.createElementNS(ns,"path"),label=document.createElementNS(ns,"text"),labelPoint=point(mid,124),lines=labelLines(item.name);
@@ -520,17 +521,20 @@ function renderCategories(){
     path.setAttribute("d",arc(start,end));path.setAttribute("fill",item.color);
     label.setAttribute("class","wheel-label");label.setAttribute("x",labelPoint[0]);label.setAttribute("y",labelPoint[1]-(lines.length-1)*6);
     lines.forEach((line,lineIndex)=>{const span=document.createElementNS(ns,"tspan");span.setAttribute("x",labelPoint[0]);span.setAttribute("dy",lineIndex===0?0:12);span.textContent=line;label.appendChild(span)});
-    group.append(path,label);group.addEventListener("mouseenter",()=>pick(index));group.addEventListener("focus",()=>pick(index));group.addEventListener("click",()=>{pick(index);openTaskBrowser(index)});group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();pick(index);openTaskBrowser(index)}});
+    group.append(path,label);group.addEventListener("click",()=>{pick(index);openTaskBrowser(index)});group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();pick(index);openTaskBrowser(index)}});
     svg.appendChild(group);groups.push(group);
   });
-  const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);
-  addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-note",cx,cy+31,"29 tasks");
+  function pickAll(){groups.forEach(group=>{group.classList.remove("is-active","is-muted");group.setAttribute("aria-pressed","false")});centerGroup?.classList.add("is-active");centerGroup?.setAttribute("aria-pressed","true");title.textContent="All research areas";description.textContent="Browse every research area represented in the benchmark.";count.textContent="29 tasks"}
+  centerGroup=document.createElementNS(ns,"g");centerGroup.setAttribute("class","wheel-center-control");centerGroup.setAttribute("role","button");centerGroup.setAttribute("tabindex","0");centerGroup.setAttribute("aria-label","All research areas, 29 tasks");centerGroup.setAttribute("aria-pressed","false");
+  const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);centerGroup.appendChild(center);
+  addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH",centerGroup);addText("wheel-center-title",cx,cy+10,"All",centerGroup);addText("wheel-center-note",cx,cy+31,"29 tasks",centerGroup);
+  centerGroup.addEventListener("click",()=>{pickAll();openTaskBrowser(null)});centerGroup.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();pickAll();openTaskBrowser(null)}});svg.appendChild(centerGroup);
   document.addEventListener("task-catalog-category-selected",event=>{
     const index=event.detail?.categoryIndex;
     if(Number.isInteger(index)&&CATEGORIES[index])pick(index);
-    else groups.forEach(group=>{group.classList.remove("is-active","is-muted");group.setAttribute("aria-pressed","false")});
+    else pickAll();
   });
-  pick(0);
+  pickAll();
 }
 
 const TASK_CATALOG=window.ARB_TASK_CATALOG||[];
@@ -538,7 +542,7 @@ const TASK_BY_NAME=new Map(DATA.tasks.map(task=>[task.name,task]));
 
 function renderTaskCatalog(){
   const filters=document.getElementById("task-catalog-filters"),grid=document.getElementById("task-grid");
-  if(!filters||!grid)return;
+  if(!grid)return;
   const categoryOrder=new Map(CATEGORIES.map((category,index)=>[category.name,index]));
   const ordered=[...TASK_CATALOG].sort((left,right)=>(categoryOrder.get(left.category)-categoryOrder.get(right.category))||left.title.localeCompare(right.title));
 
@@ -559,7 +563,7 @@ function renderTaskCatalog(){
     counter.className="catalog-counter";
     counter.setAttribute("aria-live","polite");
     counter.textContent=`${entries.length} of ${TASK_CATALOG.length}`;
-    filters.replaceChildren(...buttons,counter);
+    if(filters)filters.replaceChildren(...buttons,counter);
 
     const cards=entries.map(entry=>{
       const category=CATEGORIES[categoryOrder.get(entry.category)],task=TASK_BY_NAME.get(entry.blogName),card=document.createElement("a");
@@ -571,14 +575,10 @@ function renderTaskCatalog(){
       title.textContent=entry.title;
       const meta=document.createElement("div");
       meta.className="task-card-meta";
-      const categoryLabel=document.createElement("span");
-      categoryLabel.className="category-chip";
-      categoryLabel.style.setProperty("--category-color",category?.color||"var(--ink)");
-      categoryLabel.textContent=entry.category;
       const compute=document.createElement("span");
       compute.className="compute-tag";
       compute.textContent=task?.compute||"";
-      meta.append(categoryLabel,compute);
+      meta.append(compute);
       card.append(title,meta);
       return card;
     });
@@ -586,14 +586,14 @@ function renderTaskCatalog(){
   }
 
   document.addEventListener("taxonomy-category-selected",event=>{
-    const category=CATEGORIES[Number(event.detail?.categoryIndex)];
-    if(category)render(category.name);
+    const index=event.detail?.categoryIndex,category=Number.isInteger(index)?CATEGORIES[index]:null;
+    render(category?.name||null);
   });
   document.addEventListener("taxonomy-task-selected",event=>{
     const entry=TASK_CATALOG.find(task=>task.blogName===event.detail?.taskName);
     if(entry)location.href=`tasks.html#${entry.slug}`;
   });
-  filters.addEventListener("click",event=>{
+  filters?.addEventListener("click",event=>{
     const button=event.target.closest("button[data-category]");
     if(!button)return;
     const categoryIndex=button.dataset.category==="all"?null:CATEGORIES.findIndex(category=>category.name===button.dataset.category);
