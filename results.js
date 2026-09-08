@@ -616,3 +616,23 @@ function decorateHpoChartBars(){
 }
 
 if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateModelEffortDots();decorateHpoChartBars()}
+
+// Keep the contents marker aligned with the section being read.
+(() => {
+  const links = [...document.querySelectorAll('.contents a[href^="#"]')];
+  const items = links.map(link => ({link, section: document.querySelector(link.getAttribute('href'))})).filter(item => item.section);
+  let queued = false;
+  function updateContents() {
+    queued = false;
+    let current = items[0];
+    for (const item of items) if (item.section.getBoundingClientRect().top <= 140) current = item;
+    for (const item of items) {
+      if (item === current) item.link.setAttribute('aria-current', 'location');
+      else item.link.removeAttribute('aria-current');
+    }
+  }
+  window.addEventListener('scroll', () => {
+    if (!queued) { queued = true; requestAnimationFrame(updateContents); }
+  }, {passive: true});
+  updateContents();
+})();
