@@ -245,19 +245,9 @@ function overviewLine(series,path,detail){
   return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/><title>${esc(label)}</title></g>`;
 }
 
-function logTimeTestPlot(overview){
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
-  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
-  for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
-  for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
-  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean hidden-test reward</text>`;
-  for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
-  return`<article class="metric-plot"><h3>Log-time hidden-test trajectories</h3><p>Dots are monotone hourly means of hidden-test reward; solid curves are monotone log-sigmoid fits.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
-}
-
 function performanceProfilePlot(profile){
-  if(!profile.count)return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>No workload reaches the chosen hidden-test threshold.</p></article>`;
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,x=factor=>L+Math.log2(factor)/Math.log2(profile.maxFactor)*(W-L-R),y=fraction=>plotB-fraction*(plotB-T),factors=[];
+  if(!profile.count)return`<article class="metric-plot metric-plot-wide"><h3>Dolan–Moré performance profile</h3><p>No workload reaches the chosen hidden-test threshold.</p></article>`;
+  const W=940,H=430,L=72,R=24,T=20,B=58,plotB=H-B,x=factor=>L+Math.log2(factor)/Math.log2(profile.maxFactor)*(W-L-R),y=fraction=>plotB-fraction*(plotB-T),factors=[];
   for(let factor=1;factor<=profile.maxFactor;factor*=2)factors.push(factor);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const fraction of [0,.25,.5,.75,1]){const yy=y(fraction);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${Math.round(fraction*100)}%</text>`}
@@ -269,7 +259,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot metric-plot-wide"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -302,7 +292,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const testOverview=overviewTrajectories(),threshold=fixedProfileThreshold(),profile=solveProfiles(threshold.value);
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>For each rollout, the test curve is postprocessed by retaining the lowest test score measured from that point onward. This is necessary because the test scores, which are more indicative of downstream performance, are not necessarily monotone in the validation scores that the model is trying to optimize over. The resulting test curve is monotonically increasing, so we refer to this as the monotone test curve. The results are plotted in log-scale.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>For each rollout, the test curve is postprocessed by retaining the lowest test score measured from that point onward. This is necessary because the test scores, which are more indicative of downstream performance, are not necessarily monotone in the validation scores that the model is trying to optimize over. The resulting test curve is monotonically increasing, so we refer to this as the monotone test curve. The results are plotted in log-scale.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${performanceProfilePlot(profile)}</div></section>`;
   bindOverviewTooltips(target);
 }
 
@@ -427,7 +417,7 @@ function wholeDollarCostFrontier(rows){
 
 function costPerformancePlot(rows){
   rows=costPerformanceRows(rows);
-  const W=760,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
+  const W=940,H=430,L=48,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
   const frontier=wholeDollarCostFrontier(rows),frontierKeys=new Set(frontier.map(row=>row.key));
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}
@@ -481,7 +471,7 @@ function renderTimeLeaderboard(){
 function renderAggregates(){
   const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
   document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
-  document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent");
+  document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent",true);
   bindEfficiencyTooltips();
   const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1],testLeaders=[...result.rows].sort((a,b)=>b.test-a.test);
   document.getElementById("result-notes").innerHTML=`<li>${esc(testLeaders[0].name)} leads mean hidden-test AUARC at ${fmt(testLeaders[0].test)}, followed by ${esc(testLeaders[1].name)} at ${fmt(testLeaders[1].test)}.</li><li>${esc(leader.name)} leads task-relative Elo at ${Math.round(leader.elo)}, followed by ${esc(runnerUp.name)} at ${Math.round(runnerUp.elo)}.</li>`;

@@ -198,6 +198,8 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 .compute-tag{text-align:right}
 @media(max-width:640px){.task-card{gap:12px}.task-card-meta{flex-basis:200px;gap:10px;grid-template-columns:minmax(0,1fr) 34px}.task-card-title{font-size:14px}.category-chip{font-size:10px}.compute-tag{font-size:10px}}
 
-/* Keep the highlight figure compact without changing the cost scale. */
-.lead-cost-plot{max-width:800px;margin-left:auto;margin-right:auto}
-.lead-cost-plot .overview-legend{flex-wrap:wrap;overflow:visible;gap:8px 14px}
+/* Keep the opening comparison left-aligned while leaving enough room for its full model legend. */
+.lead-cost-plot{max-width:940px;margin-left:0;margin-right:0}
+.lead-cost-plot .overview-legend{flex-wrap:nowrap;overflow:visible;gap:6px;font-size:9.5px}
+.lead-cost-plot .overview-legend-logo{width:21px;height:21px}
+.lead-cost-plot .overview-legend-logo .company-logo{width:16px;height:16px}
