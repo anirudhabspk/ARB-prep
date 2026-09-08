@@ -20,6 +20,7 @@
     <a href="#results">Main results</a>
     <a href="#tasks">Task areas</a>
     <a href="#examples">Tasks</a>
+    <a href="#setup">Experimental setup</a>
     <a href="#general-analysis">Analyzing agent behavior</a>
     <a href="#opsd-hints">Hints (OPSD)</a>
     <a href="#harness-ablations">Comparing harnesses</a>
@@ -68,7 +69,7 @@
       <div class="task-grid" id="task-grid"></div>
     </section>
     <section class="section" id="setup">
-      <h2>Evaluation setup</h2>
+      <h2>Experimental setup</h2>
       <div class="prose">
         <p>We run AutoResearch with Terminus 2 on each task for <strong>24 hours of total wall-clock time</strong>. These extended runs let us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
         <p>Each task uses the Harbor format, with separate work and verifier containers. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
