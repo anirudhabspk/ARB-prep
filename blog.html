@@ -28,15 +28,13 @@
     <section class="section" id="benchmark">
       <div id="main-leaderboard" class="main-leaderboard"></div>
       <div id="results">
-        <p class="results-intro">Across 29 research tasks, the current results show:</p>
-        <ul class="result-points result-notes" id="result-notes"></ul>
         <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Results remain provisional while replacement runs finish.</p>
       </div>
       <div class="prose">
-        <p>Progress toward Recursive Self Improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
-        <p>Open-ended research rewards persistent and compounding effort. The predominant paradigm of open-ended task evaluation in ML focuses on attempting these problems in a 1-shot to few-shot setting <a class="cite" href="https://mls-bench.com/">[1]</a>, but these are long-horizon problems, and evals should focus on treating them as such. PostTrainBench studies long horizon agents, but only for LLM post training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. A model that is able to compound its efforts more efficiently, and do so for longer, can significantly outperform one that initially appears stronger. This is often experienced in the real-world in ways that are not captured by benchmarks.</p>
-        <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
-        <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
+        <p>Progress toward recursive self-improvement depends on agents that can solve hard, open ended ML research problems quickly while producing solutions that generalize beyond the experiments they can see.</p>
+        <p>Open-ended ML research often takes many experiments. One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> can miss the gains agents make over longer runs. PostTrainBench studies long-horizon agents, but focuses on LLM post-training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. An agent that starts behind may eventually outperform one that improves more slowly.</p>
+        <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> also need to distinguish progress from overfitting. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
+        <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour AutoResearch runs while still generalizing to hidden test data.</p>
       </div>
       <div id="time-leaderboard" class="time-leaderboard"></div>
       <div class="aggregate-grid lead-cost-plot" id="cost-performance-plot"></div>
@@ -70,7 +68,7 @@
         <p>Each task uses the Harbor format, with separate work and verifier containers. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
         <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
         <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">harness comparison</a>.</p>
-        <p>All models used the maximum effort available at the time: max for Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, and GPT-6 Astra; xhigh for Qwen3.8 Max, Muse Spark 1.3, and Grok 4.6; high for Gemini 3.8 Flash.</p>
+        <p>We ran each model at the highest effort level available when its rollouts were generated. Muse Spark's current highest effort level was not yet available.</p>
       </div>
       <div class="prose">
         <p>We measure both progress during the run and performance on hidden tests:</p>
@@ -247,6 +245,6 @@
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="opsd-hints-data.js?v=hint-experiment-20260908"></script>
 <script src="opsd-hints.js?v=hint-experiment-20260908"></script>
-<script src="results.js?v=main-auarc-leaderboard-20260908"></script>
+<script src="results.js?v=clear-auarc-intro-20260908"></script>
 </body>
 </html>
