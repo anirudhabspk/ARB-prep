@@ -82,3 +82,9 @@ Across the five common tasks, mean validation minus hidden test reward is 0.1076
 ## Announced budgets
 
 The plots compare the first 12 hours. The original 12 Terminus runs were told they had 24 hours. All 12 native harness runs were told they had 12 hours. The replacement runs use the same first-12-hour comparison; their prompt budgets were not rechecked in this score-only update. This may affect how agents pace their work, so the comparison does not isolate harness choice from the announced budget.
+
+## AUARC table
+
+The AUARC table uses all three replacement runs and the same difficulty maps and timeAuc function as the main results. Each selected checkpoint is mapped from its raw metric to its task reward before integration. We integrate step curves at actual grading timestamps over 43,200 seconds, with zero before the first grade, then average the same five tasks equally. The table is not an average over submissions or hourly samples. The individual curves now use those same event timestamps.
+
+Run `node analysis/harness/verify-auarc.cjs` from the repository root to independently replay all 40 task, model, and split areas from the pinned source intervals. The current data has no missing selected test grade after the first available result.

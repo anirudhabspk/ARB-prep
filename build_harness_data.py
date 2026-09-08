@@ -24,6 +24,25 @@ def series(iterations):
     return result
 
 
+def event_points(iterations):
+    times = sorted({0, 43200} | {r[k] for r in iterations
+        for k in ('public_elapsed_seconds', 'private_elapsed_seconds')
+        if r.get(k) is not None and 0 <= r[k] <= 43200})
+    points = []
+    for seconds in times:
+        eligible = [r for r in iterations if r.get('public_score') is not None
+                    and r.get('public_elapsed_seconds') is not None
+                    and r['public_elapsed_seconds'] <= seconds]
+        best = max(eligible, key=lambda r: r['public_score']) if eligible else None
+        point = {'seconds': seconds}
+        for split, prefix in [('validation', 'public'), ('test', 'private')]:
+            available = best and best.get(prefix + '_elapsed_seconds') is not None and best[prefix + '_elapsed_seconds'] <= seconds
+            point[split] = best.get(prefix + '_score') if available else None
+            point['raw_' + split] = best.get(prefix + '_raw_score') if available else None
+        points.append(point)
+    return points
+
+
 def build(source):
     tasks = []
     totals = {}
@@ -31,6 +50,7 @@ def build(source):
         arms = {}
         for key, run in task['runs'].items():
             arms[key] = series(run['iterations'])
+            arms[key]['points'] = event_points(run['iterations'])
             arms[key]['evaluation_id'] = run['evaluation_id']
             count = sum(r.get('public_elapsed_seconds') is not None and
                         r['public_elapsed_seconds'] <= 43200 for r in run['iterations'])
