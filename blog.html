@@ -124,8 +124,6 @@
     <div id="trajectory-overview"></div>
     <section class="section" id="general-analysis">
       <h2>Analyzing agent behavior</h2>
-      <div class="aggregate-grid" id="behavior-result-plots"></div>
-      <ul class="result-points result-notes" id="behavior-result-notes"></ul>
       <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
         <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
@@ -134,6 +132,9 @@
         <p><strong>1C)</strong> Relative model failure analysis.</p>
       </div>
 <div id="analysis-2bcd">
+<h3 id="analysis-2a">Which agents are more prone to overfitting?</h3>
+<div class="aggregate-grid" id="behavior-result-plots"></div>
+<ul class="result-points result-notes" id="behavior-result-notes"></ul>
 <h3 id="analysis-2b">How often did agents only tune parameters?</h3>
 <p>We measured the share of rounds devoted entirely to tuning parameters of an existing method.</p>
 <style>
