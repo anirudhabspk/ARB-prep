@@ -231,6 +231,21 @@ main .effort-setting-chart{max-width:var(--content-measure)}
 
 .opsd-interaction--solo{display:block}
 
+.opsd-interval-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 14px;color:var(--muted);font-size:11px}
+.opsd-interval-legend span{display:inline-flex;align-items:center;gap:6px}
+.opsd-interval-legend i,.opsd-interval-legend b{display:inline-block;width:10px;height:10px;box-sizing:border-box}
+.opsd-legend-initial{border:2px solid #686a66;border-radius:50%;background:#fff}
+.opsd-legend-hint{background:#b57c14;transform:rotate(45deg)}
+.opsd-legend-final{background:#686a66}
+.opsd-legend-opus{height:3px!important;background:#c83220}
+.opsd-legend-muse{height:3px!important;background:#21636a}
+.opsd-task-divider{stroke:#f0eee9;stroke-width:1}
+.opsd-task-label{font:10px var(--sans);fill:var(--ink)}
+.opsd-interval-line{stroke-width:3;stroke-linecap:round;opacity:.72}
+.opsd-interval-lane{cursor:help;outline:none}
+.opsd-interval-lane:hover .opsd-interval-line,.opsd-interval-lane:focus .opsd-interval-line{stroke-width:5;opacity:1}
+.opsd-interval-lane:hover .opsd-interval-initial,.opsd-interval-lane:focus .opsd-interval-initial{stroke-width:3}
+
 .posttrainbench-note,.posttrainbench-note .cite{color:#c83220}
 
 /* Lead with the interactive results, then introduce the benchmark and costs. */
