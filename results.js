@@ -439,7 +439,7 @@ function costPerformancePlot(rows){
     body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
   }
   const legend=overviewLegend(rows);
-  return`<article class="metric-plot metric-plot-wide"><h3>Test AUARC versus API cost</h3>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
+  return`<article class="metric-plot metric-plot-wide"><h3>Pareto Frontier of Cost &amp; Performance</h3>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
 }
 
 function mainAuarcLeaderboard(rows){
