@@ -245,19 +245,9 @@ function overviewLine(series,path,detail){
   return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/><title>${esc(label)}</title></g>`;
 }
 
-function logTimeTestPlot(overview){
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
-  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
-  for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
-  for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
-  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean hidden-test reward</text>`;
-  for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
-  return`<article class="metric-plot"><h3>Log-time hidden-test trajectories</h3><p>Dots are monotone hourly means of hidden-test reward; solid curves are monotone log-sigmoid fits.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
-}
-
 function performanceProfilePlot(profile){
-  if(!profile.count)return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>No workload reaches the chosen hidden-test threshold.</p></article>`;
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,x=factor=>L+Math.log2(factor)/Math.log2(profile.maxFactor)*(W-L-R),y=fraction=>plotB-fraction*(plotB-T),factors=[];
+  if(!profile.count)return`<article class="metric-plot metric-plot-wide"><h3>Dolan–Moré performance profile</h3><p>No workload reaches the chosen hidden-test threshold.</p></article>`;
+  const W=940,H=430,L=72,R=24,T=20,B=58,plotB=H-B,x=factor=>L+Math.log2(factor)/Math.log2(profile.maxFactor)*(W-L-R),y=fraction=>plotB-fraction*(plotB-T),factors=[];
   for(let factor=1;factor<=profile.maxFactor;factor*=2)factors.push(factor);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const fraction of [0,.25,.5,.75,1]){const yy=y(fraction);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${Math.round(fraction*100)}%</text>`}
@@ -269,7 +259,7 @@ function performanceProfilePlot(profile){
     path+=`L${x(profile.maxFactor)} ${y(solved/profile.count)}`;
     body+=overviewLine(series,path,`Solves ${solved} of ${profile.count} workloads within ${profile.maxFactor}× the fastest solve time.`);
   }
-  return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
+  return`<article class="metric-plot metric-plot-wide"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
 function bindOverviewTooltips(target){
@@ -302,7 +292,7 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const testOverview=overviewTrajectories(),threshold=fixedProfileThreshold(),profile=solveProfiles(threshold.value);
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>For each rollout, the test curve is postprocessed by retaining the lowest test score measured from that point onward. This is necessary because the test scores, which are more indicative of downstream performance, are not necessarily monotone in the validation scores that the model is trying to optimize over. The resulting test curve is monotonically increasing, so we refer to this as the monotone test curve. The results are plotted in log-scale.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>For each rollout, the test curve is postprocessed by retaining the lowest test score measured from that point onward. This is necessary because the test scores, which are more indicative of downstream performance, are not necessarily monotone in the validation scores that the model is trying to optimize over. The resulting test curve is monotonically increasing, so we refer to this as the monotone test curve. The results are plotted in log-scale.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${performanceProfilePlot(profile)}</div></section>`;
   bindOverviewTooltips(target);
 }
 
@@ -398,13 +388,14 @@ function currentResults(){
 }
 function plotDomain(rows,ciKey,includeZero=false){let values=rows.flatMap(row=>row[ciKey]||[]).filter(Number.isFinite);if(!values.length)values=[0,1];let lo=Math.min(...values),hi=Math.max(...values);if(includeZero){lo=Math.min(lo,0);hi=Math.max(hi,0)}const step=niceStep(Math.max(hi-lo,.01)/5);lo=Math.floor(lo/step)*step;hi=Math.ceil(hi/step)*step;if(lo===hi)hi+=step;return{lo,hi,ticks:ticks(lo,hi,step)}}
 function aggregatePlot(title,subtitle,rows,valueKey,ciKey,format="score",wide=false){
-  const percent=format==="percent",integer=format==="integer",W=wide?940:470,H=358,L=wide?175:145,R=wide?70:60,T=8,B=32,plotB=H-B,rowH=(plotB-T)/rows.length,domain=plotDomain(rows,ciKey,percent),x=value=>L+(value-domain.lo)/(domain.hi-domain.lo)*(W-L-R),label=value=>percent?pct(value):integer?Math.round(value).toString():fmt(value),tickLabel=value=>percent?Math.round(100*value)+"%":integer?Math.round(value).toString():value.toFixed(2);
+  const percent=format==="percent",integer=format==="integer",W=wide?940:470,H=430,L=wide?60:48,R=24,T=20,B=100,plotB=H-B,columnW=(W-L-R)/rows.length,domain=plotDomain(rows,ciKey,percent),x=index=>L+(index+.5)*columnW,y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),label=value=>percent?pct(value):integer?Math.round(value).toString():fmt(value),tickLabel=value=>percent?Math.round(100*value)+"%":integer?Math.round(value).toString():value.toFixed(2);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
-  for(const tick of domain.ticks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${H-9}" text-anchor="middle">${tickLabel(tick)}</text>`}
+  for(const tick of domain.ticks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tickLabel(tick)}</text>`}
   rows.forEach((row,index)=>{
-    const y=T+(index+.5)*rowH,ci=row[ciKey],value=row[valueKey],estimate=`<g class="estimate"><title>${esc(row.name)}: ${label(value)}</title>${modelLogoSvg(row.key,x(value),y,16.5)}</g>`;
-    body+=`${wide?modelLogoSvg(row.key,8,y,12):""}<text class="plot-label" x="${wide?17:8}" y="${y+4}">${esc(row.name)}</text><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[1])}" y1="${y}" y2="${y}"/><line class="whisker" x1="${x(ci[0])}" x2="${x(ci[0])}" y1="${y-4}" y2="${y+4}"/><line class="whisker" x1="${x(ci[1])}" x2="${x(ci[1])}" y1="${y-4}" y2="${y+4}"/>${estimate}<text class="plot-value" x="${W-3}" y="${y+4}" text-anchor="end">${label(value)}</text>`;
+    const xx=x(index),ci=row[ciKey],value=row[valueKey],valueY=y(value),labelOnLeft=xx>W-70,labelX=xx+(labelOnLeft?-14:14),estimate=`<g class="estimate"><title>${esc(row.name)}: ${label(value)}</title>${modelLogoSvg(row.key,xx,valueY,16.5)}</g>`;
+    body+=`<line class="whisker" x1="${xx}" x2="${xx}" y1="${y(ci[0])}" y2="${y(ci[1])}"/><line class="whisker" x1="${xx-4}" x2="${xx+4}" y1="${y(ci[0])}" y2="${y(ci[0])}"/><line class="whisker" x1="${xx-4}" x2="${xx+4}" y1="${y(ci[1])}" y2="${y(ci[1])}"/>${estimate}<text class="plot-value" x="${labelX}" y="${valueY+4}" text-anchor="${labelOnLeft?"end":"start"}">${label(value)}</text><text class="plot-label" x="${xx}" y="${plotB+24}" text-anchor="end" transform="rotate(-35 ${xx} ${plotB+24})">${esc(row.name)}</text>`;
   });
+  body+=`<text class="cost-axis-title" x="16" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 16 ${(T+plotB)/2})">${esc(title)}</text>`;
   return`<article class="metric-plot${wide?" metric-plot-wide":""}"><h3>${esc(title)}</h3><p>${esc(subtitle)}</p><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></article>`;
 }
 function costPerformancePlot(rows){const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;let best=-Infinity;const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}body+=`<text class="cost-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Mean API cost per task (USD)</text><text class="cost-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Hidden test AUARC</text><path class="cost-frontier" d="${frontier.map((row,index)=>`${index?"L":"M"}${x(row.cost)},${y(row.test)}`).join(" ")}"/>`;for(const row of rows){const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden test AUARC ${score}`;body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`}const legend=rows.map(row=>`<span class="model-identity">${modelIdentity(row.key,{short:true})}</span>`).join("");return`<article class="metric-plot metric-plot-wide"><h3>Hidden test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p><div class="cost-legend">${legend}</div><div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`}
@@ -427,7 +418,7 @@ function wholeDollarCostFrontier(rows){
 
 function costPerformancePlot(rows){
   rows=costPerformanceRows(rows);
-  const W=760,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
+  const W=940,H=430,L=48,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
   const frontier=wholeDollarCostFrontier(rows),frontierKeys=new Set(frontier.map(row=>row.key));
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}
@@ -499,7 +490,7 @@ function renderAggregates(){
   const result=currentResults(),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);
   document.getElementById("main-leaderboard").innerHTML=mainAuarcLeaderboard(result.rows);
   document.getElementById("cost-performance-plot").innerHTML=costPerformancePlot(result.rows);
-  document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent");
+  document.getElementById("behavior-result-plots").innerHTML=aggregatePlot("Relative validation-to-test gap","Lower is better",gap,"gap","gap_ci","percent",true);
   bindEfficiencyTooltips();
   const largestGap=gap[gap.length-1];
   document.getElementById("behavior-result-notes").innerHTML=`<li>Validation and hidden-test ranks broadly agree at ρ = ${result.rho.toFixed(2)}, but ${esc(largestGap.name)} has the largest relative validation-to-test gap at ${pct(largestGap.gap)}.</li>`;
@@ -515,7 +506,7 @@ function renderCategories(){
   if(!svg||!title||!description||!count||!specimens)return;
   const ns="http://www.w3.org/2000/svg",cx=210,cy=210,inner=85,outer=164,point=(angle,radius)=>[cx+Math.cos(angle)*radius,cy+Math.sin(angle)*radius],arc=(start,end)=>{const startOuter=point(start,outer),endOuter=point(end,outer),endInner=point(end,inner),startInner=point(start,inner),large=end-start>Math.PI?1:0;return "M "+startOuter[0]+" "+startOuter[1]+" A "+outer+" "+outer+" 0 "+large+" 1 "+endOuter[0]+" "+endOuter[1]+" L "+endInner[0]+" "+endInner[1]+" A "+inner+" "+inner+" 0 "+large+" 0 "+startInner[0]+" "+startInner[1]+" Z"},labelLines=name=>{if(name==="Algorithms and optimization")return["Algorithms","& optimization"];if(name==="Data engineering and curation")return["Data engineering","& curation"];if(name==="Evaluation, calibration, and robustness")return["Evaluation &","robustness"];if(name==="AI safety and alignment")return["AI safety &","alignment"];if(name==="Systems and efficiency")return["Systems &","efficiency"];return name.split(" ").length>1?[name.split(" ")[0],name.split(" ").slice(1).join(" ")]:[name]},groups=[],taskLabel=item=>item.count+" "+(item.count===1?"task":"tasks");
   function addText(className,x,y,value){const text=document.createElementNS(ns,"text");text.setAttribute("class",className);text.setAttribute("x",x);text.setAttribute("y",y);text.textContent=value;svg.appendChild(text)}
-  function openTaskBrowser(categoryIndex,taskName){document.dispatchEvent(new CustomEvent(taskName?"taxonomy-task-selected":"taxonomy-category-selected",{detail:taskName?{categoryIndex,taskName}:{categoryIndex}}));document.getElementById("examples")?.scrollIntoView({behavior:"smooth",block:"start"})}
+  function openTaskBrowser(categoryIndex,taskName){document.dispatchEvent(new CustomEvent(taskName?"taxonomy-task-selected":"taxonomy-category-selected",{detail:taskName?{categoryIndex,taskName}:{categoryIndex}}))}
   function pick(index){
     const item=CATEGORIES[index];
     groups.forEach((group,groupIndex)=>{group.classList.toggle("is-active",groupIndex===index);group.classList.toggle("is-muted",groupIndex!==index);group.setAttribute("aria-pressed",String(groupIndex===index))});
@@ -535,6 +526,11 @@ function renderCategories(){
   });
   const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);
   addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-note",cx,cy+31,"29 tasks");
+  document.addEventListener("task-catalog-category-selected",event=>{
+    const index=event.detail?.categoryIndex;
+    if(Number.isInteger(index)&&CATEGORIES[index])pick(index);
+    else groups.forEach(group=>{group.classList.remove("is-active","is-muted");group.setAttribute("aria-pressed","false")});
+  });
   pick(0);
 }
 
@@ -597,6 +593,12 @@ function renderTaskCatalog(){
   document.addEventListener("taxonomy-task-selected",event=>{
     const entry=TASK_CATALOG.find(task=>task.blogName===event.detail?.taskName);
     if(entry)location.href=`tasks.html#${entry.slug}`;
+  });
+  filters.addEventListener("click",event=>{
+    const button=event.target.closest("button[data-category]");
+    if(!button)return;
+    const categoryIndex=button.dataset.category==="all"?null:CATEGORIES.findIndex(category=>category.name===button.dataset.category);
+    document.dispatchEvent(new CustomEvent("task-catalog-category-selected",{detail:{categoryIndex}}));
   });
   render();
 }
