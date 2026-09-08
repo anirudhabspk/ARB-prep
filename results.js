@@ -116,7 +116,6 @@ function harnessChart(split,title,sharedDomain=null){
     let path=`M${x(points[0].hour)} ${y(points[0].score)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].hour)} ${y(points[index-1].score)}L${x(points[index].hour)} ${y(points[index].score)}`;
     body+=`<path class="curve" stroke="${series.color}" stroke-dasharray="${series.dash}" d="${path}"/>`;
-    for(const point of points)body+=`<circle class="point" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.score)}" r="2.4"><title>${esc(series.name)}, ${point.hour.toFixed(2)} hours: ${point.score.toFixed(3)}</title></circle>`;
   }
   return`<div class="chart-card"><h4>${esc(title)}</h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${body}</svg></div>`;
 }
