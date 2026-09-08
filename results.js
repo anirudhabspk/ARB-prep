@@ -421,7 +421,7 @@ function costPerformanceRows(rows){
 
 function costPerformancePlot(rows){
   rows=costPerformanceRows(rows);
-  const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
+  const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMin=Math.max(0,Math.floor((Math.min(...rows.map(row=>row.cost))-5)/10)*10),xMax=Math.ceil((Math.max(...rows.map(row=>row.cost))+5)/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+(value-xMin)/(xMax-xMin)*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(xMin,xMax,25),yTicks=domain.ticks;
   let best=-Infinity;
   const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
