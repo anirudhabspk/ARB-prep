@@ -39,6 +39,26 @@ def api_ledger_cost(ledger, evaluation_id):
     return sum(values)
 
 
+def api_ledger_output_tokens(ledger, evaluation_id):
+    """Output tokens from the same LLM usage ledger as API cost."""
+    if ledger.get('selector') != {'kind': 'evaluation_id', 'id': evaluation_id}:
+        raise ValueError('API ledger evaluation does not match the selected run')
+    if not ledger.get('workload_ids') or not ledger.get('requests'):
+        return None
+    value = ledger.get('output_tokens')
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError('Missing or invalid API ledger output tokens')
+    return value
+
+
+def validate_selected_evaluation(source_status, horizon_status):
+    """Reject a replacement that is still running."""
+    if source_status.strip().lower() in {'rerun submitted', 'running'}:
+        raise ValueError('Selected evaluation is still marked as running in the evaluation index')
+    if horizon_status.strip().lower() == 'running':
+        raise ValueError('Selected evaluation is still running in Horizon')
+
+
 def active_time_share(messages):
     """Fraction outside grading, from research start through last model response.
 
@@ -161,7 +181,8 @@ def main():
         attempts = result['attempts']
         attempt = next((a for a in attempts if a.get('is_final_attempt')), attempts[-1])
         status = payload['status']['job_status']
-        eligible = (status == 'running' or (status == 'completed' and attempt['status'] == 'completed'))
+        validate_selected_evaluation(source['manifest_status'], status)
+        eligible = status == 'completed' and attempt['status'] == 'completed'
         eligible = eligible and not attempt.get('error') and 'crash' not in source['manifest_status'].lower()
         eligible = eligible and not any(r['status'] == 'errored' for r in payload['status'].get('rollout_statuses', []))
         # Explicit user-approved exception: retain this result and carry iteration 22
@@ -189,12 +210,14 @@ def main():
         old_run = old_runs.get(eid, {})
         ledger = payload.get('api_ledger')
         cost = api_ledger_cost(ledger, eid) if ledger is not None else old_run.get('apiCost')
+        ledger_output_tokens = api_ledger_output_tokens(ledger, eid) if ledger is not None else None
+        output_tokens = ledger_output_tokens if ledger_output_tokens is not None else ro.get('total_output_tokens')
         run = {'model': models[source['model']], 'hours': end / 3600 if eligible else 0,
                # Running and completed results use the same verified ledger source.
                # Never substitute rollout total_cost for missing API ledger data.
-               'apiCost': cost if eligible else None,
+               'apiCost': cost,
                'apiCostFetchedAt': payload.get('api_ledger_fetched_at', old_run.get('apiCostFetchedAt')),
-               'outputTokens': ro.get('total_output_tokens'), 'evaluationId': eid,
+               'outputTokens': output_tokens, 'evaluationId': eid,
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],
                'status': status, 'provisional': eligible and status == 'running', 'extension': False,
                'points': points, 'submissions': count if eligible else None,
@@ -213,7 +236,7 @@ def main():
         task['models'].sort(key=lambda r: list(models.values()).index(r['model']))
         assert len(task['models']) == 9
     site['snapshot'] = {'fetchedAt': max(json.loads(line)['fetched_at'] for line in (args.snapshot / 'download_progress.jsonl').read_text().splitlines()),
-                        'sourceCommit': manifest['source_commit'], 'provisional': True,
+                        'sourceCommit': manifest['source_commit'], 'provisional': False,
                         'includedRuns': sum(r['included'] for r in audit)}
     args.output.write_text('window.ARB_DATA = ' + json.dumps(site, separators=(',', ':')) + ';\n')
     (args.snapshot / 'score-refresh-audit.json').write_text(json.dumps(audit, indent=2) + '\n')
