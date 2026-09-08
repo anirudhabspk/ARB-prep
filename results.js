@@ -57,7 +57,8 @@ function difficultyAdjustedReward(task,reportedReward,split,rawMetric=null){
 }
 
 function difficultyAdjustedPoint(task,point,key){
-  return difficultyAdjustedReward(task,point[key],rewardSplit(key));
+  const raw=point[key==="bestValidation"?"rawValidation":"rawTestAtBest"];
+  return difficultyAdjustedReward(task,point[key],rewardSplit(key),raw);
 }
 
 const HARNESS_ABLATION=window.ARB_HARNESS_ABLATIONS;
@@ -195,10 +196,14 @@ function overviewTrajectories(){
   const series=ORDER.map(key=>{
     const runs=DATA.tasks.map(task=>{
       const run=task.models.find(candidate=>candidate.model===key),points=run?difficultyAdjustedTestCurve(task,run):[];
-      return points.length?{points}:null;
+      return points.length?{points,hours:run.hours,provisional:run.provisional}:null;
     }).filter(Boolean);
     const valueAt=(run,seconds)=>{let value=0;for(const point of run.points){if(point.seconds>seconds)break;value=point.value}return value};
-    const points=hours.map(hour=>({hour,value:mean(runs.map(run=>valueAt(run,hour*3600)))}));
+    // Stop at the shared observed horizon rather than extending unfinished runs.
+    const observedEnd=Math.min(maxHours,...runs.filter(run=>run.provisional).map(run=>run.hours));
+    const observedHours=hours.filter(hour=>hour<=observedEnd);
+    if(observedHours.at(-1)<observedEnd)observedHours.push(observedEnd);
+    const points=observedHours.map(hour=>({hour,value:mean(runs.map(run=>valueAt(run,hour*3600)))}));
     return{key,name:MODEL[key].name,color:MODEL[key].color,count:runs.length,points,fit:fitLogSigmoid(points)};
   });
   return{maxHours,series};
@@ -346,19 +351,16 @@ function difficultyAdjustedRunStats(task,run){
   return{validation:timeAuc(points,"validation",run.hours*3600),test:timeAuc(points,"test",run.hours*3600),final,cost:run.apiCost};
 }
 
-// Keep the aggregate cohort aligned with the existing 28-task comparison set.
-const AGGREGATE_EXCLUDED_TASKS=new Set(["TIES CLIP model merging"]);
 function difficultyAdjustedTaskRows(){
   return DATA.tasks.flatMap(task=>{
-    if(AGGREGATE_EXCLUDED_TASKS.has(task.name))return[];
     const rows=Object.fromEntries(task.models.map(run=>[run.model,difficultyAdjustedRunStats(task,run)]).filter(([,stats])=>stats));
-    return ORDER.every(key=>rows[key]?.validation!=null&&rows[key]?.test!=null)?[rows]:[];
+    return Object.keys(rows).length?[rows]:[];
   });
 }
 
 function adjustedModelValues(taskRows){
   const values=Object.fromEntries(ORDER.map(key=>[key,{validation:[],test:[],final:[],cost:[]}]));
-  for(const task of taskRows)for(const key of ORDER){const row=task[key];for(const field of ["validation","test","final","cost"])if(Number.isFinite(row[field]))values[key][field].push(row[field]);}
+  for(const task of taskRows)for(const key of ORDER){const row=task[key];if(!row)continue;for(const field of ["validation","test","final","cost"])if(Number.isFinite(row[field]))values[key][field].push(row[field]);}
   return values;
 }
 
@@ -385,12 +387,38 @@ function bootstrapAdjustedGaps(taskRows,seed){
 }
 
 let difficultyAdjustedResults=null;
+function adjustedElo(taskRows,steps=700){
+  const pairs=[];
+  for(let i=0;i<ORDER.length;i++)for(let j=i+1;j<ORDER.length;j++){
+    let count=0,wins=0;
+    for(const row of taskRows){const a=row[ORDER[i]]?.test,b=row[ORDER[j]]?.test;if(!Number.isFinite(a)||!Number.isFinite(b))continue;count++;wins+=a===b?.5:a>b?1:0;}
+    if(count)pairs.push({i,j,count,wins});
+  }
+  const ratings=ORDER.map(()=>0),rate=.08/Math.max(1,pairs.reduce((n,p)=>n+p.count,0)/ORDER.length);
+  for(let step=0;step<steps;step++){
+    const gradient=ORDER.map(()=>0);
+    for(const {i,j,count,wins} of pairs){const error=wins-count/(1+Math.exp(-(ratings[i]-ratings[j])));gradient[i]+=error;gradient[j]-=error;}
+    ratings.forEach((_,i)=>ratings[i]+=rate*gradient[i]);
+  }
+  const values=ratings.map(r=>1000+r*400/Math.log(10)),shift=1000-median(values);
+  return Object.fromEntries(ORDER.map((key,i)=>[key,values[i]+shift]));
+}
+function bootstrapAdjustedElo(taskRows,seed=7123){
+  let state=seed>>>0;const values=Object.fromEntries(ORDER.map(key=>[key,[]]));
+  for(let b=0;b<300;b++){
+    const sample=taskRows.map(()=>{state=(1664525*state+1013904223)>>>0;return taskRows[Math.floor(state/4294967296*taskRows.length)];});
+    const result=adjustedElo(sample);
+    for(const key of ORDER)values[key].push(result[key]);
+  }
+  return Object.fromEntries(ORDER.map(key=>[key,[quantile(values[key],.025),quantile(values[key],.975)]]));
+}
 function currentResults(){
   if(difficultyAdjustedResults)return difficultyAdjustedResults;
   const taskRows=difficultyAdjustedTaskRows(),values=adjustedModelValues(taskRows),gaps=bootstrapAdjustedGaps(taskRows,991),sourceByKey=new Map(DATA.aggregates.map(row=>[row.key,row]));
+  const elo=adjustedElo(taskRows),eloIntervals=bootstrapAdjustedElo(taskRows);
   const rows=ORDER.map(key=>{
     const source=sourceByKey.get(key),scores=values[key],validation=mean(scores.validation),test=mean(scores.test),final=mean(scores.final),index=ORDER.indexOf(key);
-    return{...source,validation,validation_ci:bootstrap(scores.validation,100+index),test,test_ci:bootstrap(scores.test,200+index),final,final_ci:bootstrap(scores.final,300+index),gap:relativeGap(validation,test),gap_ci:gaps[key],cost:mean(scores.cost)??source.cost};
+    return{...source,validation,validation_ci:bootstrap(scores.validation,100+index),test,test_ci:bootstrap(scores.test,200+index),final,final_ci:bootstrap(scores.final,300+index),gap:relativeGap(validation,test),gap_ci:gaps[key],cost:mean(scores.cost),elo:elo[key],elo_ci:eloIntervals[key],taskCount:scores.test.length};
   });
   difficultyAdjustedResults={rows,rho:rhoForAdjustedTasks(taskRows),rho_ci:bootstrapAdjustedRho(taskRows,7123),referenceName:DATA.elo_reference};
   return difficultyAdjustedResults;
@@ -409,6 +437,15 @@ function aggregatePlot(title,subtitle,rows,valueKey,ciKey,format="score",wide=fa
 function costPerformancePlot(rows){const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;let best=-Infinity;const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}body+=`<text class="cost-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Mean API cost per task (USD)</text><text class="cost-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Hidden test AUARC</text><path class="cost-frontier" d="${frontier.map((row,index)=>`${index?"L":"M"}${x(row.cost)},${y(row.test)}`).join(" ")}"/>`;for(const row of rows){const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden test AUARC ${score}`;body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`}const legend=rows.map(row=>`<span class="model-identity">${modelIdentity(row.key,{short:true})}</span>`).join("");return`<article class="metric-plot metric-plot-wide"><h3>Hidden test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p><div class="cost-legend">${legend}</div><div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`}
 function renderAggregates(){const result=currentResults(),elo=[...result.rows].sort((a,b)=>b.elo-a.elo),test=[...result.rows].sort((a,b)=>b.test-a.test),final=[...result.rows].sort((a,b)=>b.final-a.final),validation=[...result.rows].sort((a,b)=>b.validation-a.validation),gap=[...result.rows].sort((a,b)=>a.gap-b.gap);document.getElementById("aggregate-plots").innerHTML=aggregatePlot("Task-relative Elo","The midpoint of the model ratings is 1000.",elo,"elo","elo_ci","integer",true)+costPerformancePlot(result.rows)+aggregatePlot("Hidden test AUARC","Raw mean across tasks",test,"test","test_ci")+aggregatePlot("Final hidden test","Checkpoint chosen by validation",final,"final","final_ci")+aggregatePlot("Validation AUARC","Raw mean across tasks",validation,"validation","validation_ci")+aggregatePlot("Relative validation to test gap","Lower is better",gap,"gap","gap_ci","percent");bindEfficiencyTooltips();const leader=elo[0],runnerUp=elo[1],largestGap=gap[gap.length-1];document.getElementById("result-notes").innerHTML=`<li>${esc(leader.name)} leads task-relative Elo at ${Math.round(leader.elo)}. ${esc(runnerUp.name)} follows at ${Math.round(runnerUp.elo)}. The rating midpoint is 1000.</li><li>Validation and hidden test ranks broadly agree at ρ = ${result.rho.toFixed(2)}, but ${esc(largestGap.name)} has the largest relative validation to test gap at ${pct(largestGap.gap)}.</li>`}
 function costPerformancePlot(rows){
+  // Match each cost mean to scores from those same completed, ledger-backed runs.
+  rows=rows.flatMap(row=>{
+    const paired=DATA.tasks.flatMap(task=>task.models.flatMap(run=>{
+      if(run.model!==row.key||!Number.isFinite(run.apiCost))return[];
+      const stats=difficultyAdjustedRunStats(task,run);return stats?[stats]:[];
+    }));
+    return paired.length?[{...row,cost:mean(paired.map(run=>run.cost)),test:mean(paired.map(run=>run.test)),test_ci:bootstrap(paired.map(run=>run.test),200+ORDER.indexOf(row.key))}]:[];
+  });
+
   const W=940,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
   let best=-Infinity;
   const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));
@@ -421,7 +458,7 @@ function costPerformancePlot(rows){
     body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
   }
   const legend=overviewLegend(rows);
-  return`<article class="metric-plot metric-plot-wide"><h3>Hidden-test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
+  return`<article class="metric-plot metric-plot-wide"><h3>Hidden-test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. Uses completed runs with API ledger records. Costs exclude compute and grading.</p>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
 }
 
 function renderAggregates(){
@@ -604,6 +641,42 @@ function renderTask(index){
   bindEfficiencyTooltips();
 }
 
+function effortModelRows(){
+  const scores=new Map(currentResults().rows.map(row=>[row.key,row]));
+  return ORDER.map(key=>{
+    const runs=DATA.tasks.flatMap(task=>task.models.filter(run=>run.model===key&&difficultyAdjustedRunStats(task,run)));
+    return{key,...scores.get(key),submissions:mean(runs.map(run=>run.submissions).filter(Number.isFinite)),hours:mean(runs.map(run=>run.workHours).filter(Number.isFinite))};
+  });
+}
+function renderModelEffort(){
+  const target=document.getElementById('model-effort-plots');if(!target)return;
+  const rows=effortModelRows();
+  const panels=[['submissions','Number of submissions vs. test AUARC','Mean number of submissions per task',60],['hours','Time vs. test AUARC','Mean hours outside grading (estimated)',24]];
+  target.innerHTML='<div class="model-effort-panels">'+panels.map(([field,title,xLabel,minimumMax])=>{
+    const maximum=Math.max(minimumMax,...rows.map(row=>row[field])),xMax=Math.ceil(maximum/6)*6;
+    const x=value=>45+310*value/xMax,y=value=>255-215*value;
+    const occupied=[],dots=rows.map(row=>[x(row[field]),y(row.test)]);
+    let svg=`<div><h4>${title}</h4><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
+    for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}</text>`;
+    for(let i=0;i<=4;i++)svg+=`<text x="${x(xMax*i/4)}" y="276" text-anchor="middle">${xMax*i/4}</text>`;
+    svg+=`<text x="200" y="303" text-anchor="middle">${xLabel}</text>`;
+    for(const row of [...rows].sort((a,b)=>b.test-a.test)){
+      const px=x(row[field]),py=y(row.test),name=MODEL_BRANDS[row.key].short,width=name.length*6.5;
+      const candidates=[];
+      for(const dx of [12,-12])for(const dy of [-10,17,-25,32,-40,47]){
+        const anchor=dx>0?'start':'end',lx=px+dx,ly=py+dy,left=dx>0?lx:lx-width,box=[left,ly-10,left+width,ly+3];
+        let penalty=occupied.filter(b=>!(box[2]<b[0]-3||box[0]>b[2]+3||box[3]<b[1]-2||box[1]>b[3]+2)).length*100;
+        penalty+=dots.filter(([qx,qy])=>box[0]-8<qx&&qx<box[2]+8&&box[1]-8<qy&&qy<box[3]+8).length*50;
+        if(box[0]<40||box[2]>385||box[1]<28||box[3]>265)penalty+=1000;
+        candidates.push({penalty:penalty+Math.abs(dy)*.01,lx,ly,anchor,box});
+      }
+      const label=candidates.sort((a,b)=>a.penalty-b.penalty)[0];occupied.push(label.box);
+      const description=`${MODEL[row.key].name}: ${row.submissions.toFixed(1)} submissions, ${row.hours.toFixed(1)} estimated hours, test AUARC ${(100*row.test).toFixed(1)}; ${row.taskCount} tasks.`;
+      svg+=`<g class="model-dot" tabindex="0" aria-label="${esc(description)}"><title>${esc(description)}</title>${modelLogoSvg(row.key,px,py,12)}<text class="dot-label" x="${label.lx}" y="${label.ly}" text-anchor="${label.anchor}">${name}</text></g>`;
+    }
+    return svg+'</svg></div>';
+  }).join('')+'</div>';
+}
 function decorateModelEffortDots(){
   const ns="http://www.w3.org/2000/svg";
   document.querySelectorAll(".model-effort .model-dot").forEach(marker=>{
@@ -657,7 +730,7 @@ function decorateHpoChartBars(){
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateModelEffortDots();decorateHpoChartBars()}
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();renderModelEffort();decorateHpoChartBars()}
 
 // Keep the contents marker aligned with the section being read.
 (() => {
