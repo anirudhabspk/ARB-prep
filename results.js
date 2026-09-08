@@ -478,7 +478,7 @@ function renderCategories(){
     svg.appendChild(group);groups.push(group);
   });
   const center=document.createElementNS(ns,"circle");center.setAttribute("class","wheel-center");center.setAttribute("cx",cx);center.setAttribute("cy",cy);center.setAttribute("r",inner-7);svg.appendChild(center);
-  addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-title",cx,cy+10,"Task taxonomy");addText("wheel-center-note",cx,cy+31,"29 tasks");
+  addText("wheel-center-kicker",cx,cy-18,"AUTORESEARCHBENCH");addText("wheel-center-note",cx,cy+31,"29 tasks");
   pick(0);
 }
 
