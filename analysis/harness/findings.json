@@ -22,7 +22,7 @@
       "task": "HiCARD latent encoder",
       "scores": {
         "standard_opus": 0.603077609776,
-        "standard_sol": 0.538027656612,
+        "standard_sol": 0.558973713587,
         "codex_sol": 0.520757791835,
         "claude_opus": 0.568165799386
       }
