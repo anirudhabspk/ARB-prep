@@ -15,6 +15,10 @@ const MODEL_BRANDS={
   "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo-contained.png"},
   "meridian":{company:"OpenAI",short:"Astra",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"}
 };
+function modelCursorStyle(key){
+  const logo=MODEL_BRANDS[key]?.logo;
+  return logo?` style="cursor:url('${esc(logo)}') 12 12, pointer"`:" style=\"cursor:pointer\"";
+}
 function companyLogoImage(brand){const scale=brand.scale||1,style=scale===1?"":` style="transform:scale(${scale})"`;return`<img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async"${style}>`}
 function modelIdentity(key,{short=false}={}){const model=MODEL[key],brand=MODEL_BRANDS[key],label=short?brand?.short:model?.name||key,title=brand?`${model.name} · ${brand.company}`:model?.name||key;return`${brand?companyLogoImage(brand):""}<i class="model-color-key" style="background:${model?.color||"#4D4D4D"}"></i><span title="${esc(title)}">${esc(label)}</span>`}
 function modelLogoSvg(key,cx,cy,size=12){
@@ -236,13 +240,13 @@ function overviewLegend(series){
     const mark=brand
       ?`<span class="overview-legend-logo" aria-hidden="true" style="border-color:${model.color}">${companyLogoImage(brand)}</span>`
       :`<span class="overview-legend-logo overview-legend-fallback" aria-hidden="true" style="border-color:${model?.color||"#4D4D4D"}"></span>`;
-    return`<span class="overview-legend-item" title="${esc(label)}">${mark}<span>${esc(label)}</span></span>`;
+    return`<span class="overview-legend-item" title="${esc(label)}"${modelCursorStyle(item.key)}>${mark}<span>${esc(label)}</span></span>`;
   }).join("")}</div>`;
 }
 
 function overviewLine(series,path,detail){
   const label=`${series.name}. ${detail}`;
-  return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/></g>`;
+  return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"${modelCursorStyle(series.key)}><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/></g>`;
 }
 
 function logTimeTestPlot(overview){
