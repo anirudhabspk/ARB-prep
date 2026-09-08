@@ -419,11 +419,16 @@ function costPerformanceRows(rows){
   });
 }
 
+function wholeDollarCostFrontier(rows){
+  const ordered=[...rows].sort((a,b)=>Math.round(a.cost)-Math.round(b.cost)||b.test-a.test||a.cost-b.cost);
+  let best=-Infinity;
+  return ordered.filter(row=>{if(row.test<=best)return false;best=row.test;return true});
+}
+
 function costPerformancePlot(rows){
   rows=costPerformanceRows(rows);
   const W=760,H=430,L=72,R=24,T=20,B=54,plotB=H-B,xMax=Math.ceil(Math.max(...rows.map(row=>row.cost))/10)*10,domain=plotDomain(rows,"test_ci"),x=value=>L+value/xMax*(W-L-R),y=value=>T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),xTicks=ticks(0,xMax,niceStep(xMax/8)),yTicks=domain.ticks;
-  let best=-Infinity;
-  const frontier=[...rows].sort((a,b)=>a.cost-b.cost).filter(row=>{if(row.test<=best)return false;best=row.test;return true}),frontierKeys=new Set(frontier.map(row=>row.key));
+  const frontier=wholeDollarCostFrontier(rows),frontierKeys=new Set(frontier.map(row=>row.key));
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const tick of xTicks){const xx=x(tick);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">$${Math.round(tick)}</text>`}
   for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}
