@@ -653,6 +653,15 @@ function decorateHpoChartBars(){
     marker.setAttribute("aria-hidden","true");
     marker.innerHTML=modelLogoSvg(key,barEnd,16,15);
     svg.appendChild(marker);
+    const keepSquare=()=>{
+      const bounds=svg.getBoundingClientRect(),viewBox=svg.viewBox.baseVal;
+      if(!bounds.width||!bounds.height)return;
+      const scaleX=(bounds.height/viewBox.height)/(bounds.width/viewBox.width);
+      marker.setAttribute("transform",`translate(${barEnd} 16) scale(${scaleX} 1) translate(${-barEnd} -16)`);
+    };
+    keepSquare();
+    row.logoResizeObserver=new ResizeObserver(keepSquare);
+    row.logoResizeObserver.observe(svg);
     row.dataset.companyLogoApplied="true";
   });
 }
