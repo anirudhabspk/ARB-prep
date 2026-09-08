@@ -60,7 +60,9 @@ assert.ok(!costHtml.includes('NaN'));
 // Native SVG rendering shares these exact values and retains the model branding.
 evaluate('var rendered={};');context.document={getElementById:()=>({set innerHTML(value){context.renderedHtml=value;}})};
 evaluate('renderModelEffort()');
-assert.equal((context.renderedHtml.match(/class="model-dot"/g)||[]).length,18);
+assert.equal((context.renderedHtml.match(/class="model-dot efficiency-point"/g)||[]).length,18);
 assert.ok(!context.renderedHtml.includes('NaN'));
+assert.equal((context.renderedHtml.match(/class="efficiency-tooltip"/g)||[]).length,2);
+assert.ok(context.renderedHtml.includes('data-score-value="59.3"'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));

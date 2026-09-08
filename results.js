@@ -655,36 +655,49 @@ function renderModelEffort(){
   target.innerHTML='<div class="model-effort-panels">'+panels.map(([field,title,xLabel,minimumMax])=>{
     const maximum=Math.max(minimumMax,...rows.map(row=>row[field])),xMax=Math.ceil(maximum/6)*6;
     const x=value=>45+310*value/xMax,y=value=>255-215*value;
-    const occupied=[],dots=rows.map(row=>[x(row[field]),y(row.test)]);
-    let svg=`<div><h4>${title}</h4><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
+    let svg=`<div><h4>${title}</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 390 315" role="img" aria-label="${title}"><text x="45" y="17">Mean test AUARC</text>`;
     for(let v=0;v<=100;v+=25)svg+=`<line x1="45" x2="355" y1="${y(v/100)}" y2="${y(v/100)}" stroke="var(--line)"/><text x="35" y="${y(v/100)+4}" text-anchor="end">${v}</text>`;
     for(let i=0;i<=4;i++)svg+=`<text x="${x(xMax*i/4)}" y="276" text-anchor="middle">${xMax*i/4}</text>`;
     svg+=`<text x="200" y="303" text-anchor="middle">${xLabel}</text>`;
     for(const row of [...rows].sort((a,b)=>b.test-a.test)){
-      const px=x(row[field]),py=y(row.test),name=MODEL_BRANDS[row.key].short,width=name.length*6.5;
-      const candidates=[];
-      for(const dx of [12,-12])for(const dy of [-10,17,-25,32,-40,47]){
-        const anchor=dx>0?'start':'end',lx=px+dx,ly=py+dy,left=dx>0?lx:lx-width,box=[left,ly-10,left+width,ly+3];
-        let penalty=occupied.filter(b=>!(box[2]<b[0]-3||box[0]>b[2]+3||box[3]<b[1]-2||box[1]>b[3]+2)).length*100;
-        penalty+=dots.filter(([qx,qy])=>box[0]-8<qx&&qx<box[2]+8&&box[1]-8<qy&&qy<box[3]+8).length*50;
-        if(box[0]<40||box[2]>385||box[1]<28||box[3]>265)penalty+=1000;
-        candidates.push({penalty:penalty+Math.abs(dy)*.01,lx,ly,anchor,box});
-      }
-      const label=candidates.sort((a,b)=>a.penalty-b.penalty)[0];occupied.push(label.box);
-      const description=`${MODEL[row.key].name}: ${row.submissions.toFixed(1)} submissions, ${row.hours.toFixed(1)} estimated hours, test AUARC ${(100*row.test).toFixed(1)}; ${row.taskCount} tasks.`;
-      svg+=`<g class="model-dot" tabindex="0" aria-label="${esc(description)}"><title>${esc(description)}</title>${modelLogoSvg(row.key,px,py,12)}<text class="dot-label" x="${label.lx}" y="${label.ly}" text-anchor="${label.anchor}">${name}</text></g>`;
+      const px=x(row[field]),py=y(row.test),resource=field==='submissions'?row.submissions.toFixed(1):`${row.hours.toFixed(1)} h`,score=(100*row.test).toFixed(1);
+      const description=`${MODEL[row.key].name}: ${row.submissions.toFixed(1)} submissions, ${row.hours.toFixed(1)} estimated hours, test AUARC ${score}; ${row.taskCount} tasks.`;
+      svg+=`<g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="${esc(description)}" data-model="${esc(MODEL[row.key].name)}" data-resource-label="${xLabel}" data-resource-value="${resource}" data-score-label="Mean test AUARC" data-score-value="${score}" data-left="${px/390*100}" data-top="${py/315*100}" data-place-left="${px>300}" data-place-below="${py<80}"><circle class="efficiency-hit" cx="${px}" cy="${py}" r="13"/>${modelLogoSvg(row.key,px,py,16.5)}</g>`;
     }
-    return svg+'</svg></div>';
+    return svg+'</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div>';
   }).join('')+'</div>';
 }
 function decorateModelEffortDots(){
   const ns="http://www.w3.org/2000/svg";
+  document.querySelectorAll(".model-effort svg").forEach(svg=>{
+    const wrap=document.createElement("div"),tooltip=document.createElement("div");
+    wrap.className="efficiency-chart-wrap model-effort-chart";
+    tooltip.className="efficiency-tooltip";
+    tooltip.setAttribute("role","tooltip");
+    tooltip.hidden=true;
+    tooltip.innerHTML="<strong></strong><span data-resource></span><span data-score></span>";
+    svg.replaceWith(wrap);
+    wrap.append(svg,tooltip);
+  });
   document.querySelectorAll(".model-effort .model-dot").forEach(marker=>{
     if(marker.dataset.companyLogoApplied)return;
-    const key=ORDER.find(candidate=>(marker.getAttribute("aria-label")||"").startsWith(`${MODEL[candidate].name}:`));
+    const description=marker.getAttribute("aria-label")||"",details=description.match(/^(.+): mean ([\d.]+) submissions, ([\d.]+) estimated hours, test AUARC ([\d.]+);/),svg=marker.closest("svg"),key=ORDER.find(candidate=>description.startsWith(`${MODEL[candidate].name}:`));
     const circle=marker.querySelector("circle"),brand=MODEL_BRANDS[key];
-    if(!circle||!brand)return;
+    if(!circle||!brand||!details||!svg)return;
     const cx=Number(circle.getAttribute("cx")),cy=Number(circle.getAttribute("cy")),size=16.5,frameSize=size*1.25,logoSize=size*(brand.scale||1);
+    const submissionsChart=svg.getAttribute("aria-label")?.startsWith("Number of submissions");
+    marker.classList.add("efficiency-point");
+    marker.dataset.model=details[1];
+    marker.dataset.resourceLabel=submissionsChart?"Mean submissions per task":"Mean hours outside grading";
+    marker.dataset.resourceValue=submissionsChart?details[2]:`${details[3]} h`;
+    marker.dataset.scoreLabel="Mean test AUARC";
+    marker.dataset.scoreValue=details[4];
+    marker.dataset.left=(cx/390*100).toFixed(2);
+    marker.dataset.top=(cy/315*100).toFixed(2);
+    marker.dataset.placeLeft=String(cx>300);
+    marker.dataset.placeBelow=String(cy<80);
+    marker.querySelector("title")?.remove();
+    marker.querySelector(".dot-label")?.remove();
     const frame=document.createElementNS(ns,"rect");
     frame.setAttribute("class","company-logo-backdrop");
     frame.setAttribute("x",String(cx-frameSize/2));
@@ -726,11 +739,20 @@ function decorateHpoChartBars(){
     marker.setAttribute("aria-hidden","true");
     marker.innerHTML=modelLogoSvg(key,barEnd,16,15);
     svg.appendChild(marker);
+    const keepSquare=()=>{
+      const bounds=svg.getBoundingClientRect(),viewBox=svg.viewBox.baseVal;
+      if(!bounds.width||!bounds.height)return;
+      const scaleX=(bounds.height/viewBox.height)/(bounds.width/viewBox.width);
+      marker.setAttribute("transform",`translate(${barEnd} 16) scale(${scaleX} 1) translate(${-barEnd} -16)`);
+    };
+    keepSquare();
+    row.logoResizeObserver=new ResizeObserver(keepSquare);
+    row.logoResizeObserver.observe(svg);
     row.dataset.companyLogoApplied="true";
   });
 }
 
-if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();renderModelEffort();decorateHpoChartBars()}
+if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelEffort();renderAggregates();renderCategories();renderTaskCatalog();renderHarnessAblations();decorateHpoChartBars()}
 
 // Keep the contents marker aligned with the section being read.
 (() => {
