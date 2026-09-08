@@ -2,6 +2,8 @@ import unittest
 from scripts.refresh_score_snapshot import (
     api_ledger_cost,
     api_ledger_output_tokens,
+    curve,
+    eligible_terminal_result,
     validate_selected_evaluation,
 )
 
@@ -60,6 +62,27 @@ class ApiLedgerCostTest(unittest.TestCase):
 
     def test_stopped_evaluation_is_accepted(self):
         validate_selected_evaluation('Preempted after iteration 18', 'completed')
+
+    def test_cancelled_result_keeps_uploaded_hidden_test_checkpoint(self):
+        iterations = [{'public_score': 0.5, 'private_score': 0.4,
+                       'artifact_uploaded': True}]
+
+        self.assertTrue(eligible_terminal_result('cancelled', iterations))
+        self.assertTrue(eligible_terminal_result('failed', iterations))
+        self.assertFalse(eligible_terminal_result('running', iterations))
+        self.assertFalse(eligible_terminal_result('queued', iterations))
+        self.assertFalse(eligible_terminal_result('unknown', iterations))
+
+    def test_public_only_tail_does_not_erase_last_hidden_test_score(self):
+        points = curve([
+            {'iteration': 1, 'public_score': 0.4, 'private_score': 0.3,
+             'public_elapsed_seconds': 10, 'private_elapsed_seconds': 10},
+            {'iteration': 2, 'public_score': 0.5, 'private_score': None,
+             'public_elapsed_seconds': 20, 'private_elapsed_seconds': 0},
+        ], 20)
+
+        self.assertEqual(points[-1]['bestValidation'], 0.4)
+        self.assertEqual(points[-1]['testAtBest'], 0.3)
 
 
 if __name__ == '__main__':
