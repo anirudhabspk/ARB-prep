@@ -10,7 +10,7 @@ See [`evaluation-replacements.md`](evaluation-replacements.md) for evaluations t
 
 `build_site_data.py` accepts explicit `display_end_seconds`, `truncate_at_seconds`, and `valid_through_iteration` fields in each run. These fields make display and cutoff decisions explicit. Run `python -m unittest discover -s tests` after changing this policy.
 
-The `api_cost_usd` field must come from the API usage ledger. Do not replace missing API costs with rollout or evaluation costs.
+The `api_cost_usd` field must come from the API usage ledger. Do not replace missing API costs with rollout or evaluation costs. The cost plot includes completed and ongoing scored runs. Both axes use the same runs per model. Subscription traffic uses its ledger shadow price (the equivalent API price), not its zero subscription charge. Costs and scores for ongoing runs are provisional.
 
 ## Refresh score comparisons
 
@@ -20,7 +20,7 @@ The September 7 refresh uses one current evaluation per model and task across 29
 
 Submissions count through the last phase with recorded model activity. The time plot averages each run's percentage of active elapsed time spent outside grading. The window starts with the research budget and ends at the last nonempty model response or tool call. Both numerator and denominator exclude the later empty-response tail. Only grading completed before that last response is subtracted. Historical hour estimates remain in the data for reproducibility but are no longer the time plot's x-axis.
 
-`scripts/refresh_score_snapshot.py --help` lists the offline snapshot inputs. After rebuilding `site-data.js`, run `node scripts/build_score_summary.cjs` to update the summary and embedded effort charts. Both use the scoring functions in `results.js`. Run `node tests/test_score_consistency.cjs` and `python3 -m unittest discover -s tests` before review.
+After downloading a fresh score snapshot, run `scripts/fetch_api_costs.py --snapshot PATH` with the Horizon SDK environment to attach API ledger records for every selected evaluation. Then `scripts/refresh_score_snapshot.py --help` lists the offline snapshot inputs. After rebuilding `site-data.js`, run `node scripts/build_score_summary.cjs` to update the summary and embedded effort charts. Both use the scoring functions in `results.js`. Run `node tests/test_score_consistency.cjs` and `python3 -m unittest discover -s tests` before review.
 
 Scoring references checked for this refresh:
 
