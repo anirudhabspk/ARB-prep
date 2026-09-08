@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=time-leaderboard-20260908">
+<link rel="stylesheet" href="site.css?v=scrollable-tasks-20260908">
 </head>
 <body>
 <section class="hero">
@@ -60,7 +60,7 @@
       <h2>Tasks</h2>
       <p class="task-intro">Browse all 29 research tasks. Select a task to read its description and view its results.</p>
       <div class="catalog-filters" id="task-catalog-filters" role="group" aria-label="Filter tasks by research area"></div>
-      <div class="task-grid" id="task-grid"></div>
+      <div class="task-grid" id="task-grid" tabindex="0" role="region" aria-label="Research tasks, scroll to browse"></div>
     </section>
     <section class="section" id="setup">
       <h2>Experimental setup</h2>

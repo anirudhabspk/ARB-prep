@@ -170,3 +170,7 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 .leaderboard-rank{opacity:.6}
 @media(max-width:800px){.leaderboard-layout{grid-template-columns:1fr;gap:8px}.leaderboard-ranking{max-width:500px;width:100%;margin:0 auto}.leaderboard-row{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.leaderboard-row,.leaderboard-bar{transition:none}}
+
+/* Keep the task browser compact while leaving category filters visible. */
+#examples .task-grid{max-height:min(480px,60vh);overflow-y:auto;align-content:start;padding:3px 8px 3px 3px;scrollbar-width:thin;scrollbar-color:#124e54 transparent;scrollbar-gutter:stable}
+#examples .task-grid:focus-visible{outline:2px solid #124e54;outline-offset:4px}
