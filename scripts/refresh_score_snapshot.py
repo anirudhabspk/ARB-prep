@@ -47,6 +47,39 @@ COMPLETED_23H_RERUN_IDS = {
     'a83021eb-ba2b-4640-afab-79427fb4a398',
     '00e0ed45-5c6a-45c4-bd70-fa711c76bd51',
 }
+APPROVED_FLAT_EXTENSION_IDS = {
+    '60a7e9e2-c234-4091-a258-242d0574dc30',
+    '2bad3f7e-20cf-427f-a058-fb01b7f8a8cb',
+    '31790a2a-550e-418a-88c0-50461bda0b27',
+    '9e771f47-2d65-4d04-9450-d8fa0da0853f',
+    '29fce83b-6ca7-4144-b2fc-7ab366be0932',
+    '67011ff8-0d36-4ad4-af24-43f54887b021',
+    '0fa8c3df-0ae4-4e12-9442-108479b886d5',
+    '1651b5ec-a39d-4c1c-aa20-f1e84c3b88eb',
+    '67b4e18b-29ad-43a9-b3de-263953bcaf36',
+    '548d8c41-1ea8-46b7-b4a5-0578c7c8d62f',
+    '4644fdc6-9443-4512-9c0a-a919de8f2dd7',
+    '9c006e63-3989-4de2-8867-b3c4016757ec',
+    '5c130eb6-59c3-476c-853f-bf3d8aa61de1',
+    'ad46f20a-d6ce-42aa-962d-a116be0e3bf4',
+    'a9612c7a-3350-42d5-adc2-d0b4b339bc2b',
+    'fd2b25fb-de59-48c2-a531-5d548838a249',
+    '1009205d-8fdc-4fdd-b5ef-f40be83c8a36',
+    'e383f41a-6da9-4001-9db4-0dd41095d294',
+    'afb0a3de-ba5d-4efd-bd93-463bbd1f76ab',
+    '4fcc8b7d-245b-4a71-9e93-30f87fc231d7',
+    '77084f0e-489c-4e4c-a136-4a2d376df31c',
+    '84adaadd-8388-487d-87c0-631d9ba4f055',
+    'e8153e93-0173-46a4-bbaa-8ffcbdb50323',
+    '12ac7fea-8778-4ccb-a634-059959d6e957',
+    '7db17838-34aa-48b9-b069-6a18cd3d0af7',
+    '1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d',
+    '82ab3427-0cb4-4ce0-8c76-61152e9f12c0',
+    'b001f05e-4162-4168-9304-82e5320b7fe1',
+}
+ACCEPTED_TERMINAL_RESULT_IDS = {
+    '64f07bb3-0573-4287-abcd-bb615ef31cdd',  # TGAT with Kimi K3.
+}
 RESEARCH_WINDOW_SECONDS = 23 * 3600
 DISPLAY_WINDOW_HOURS = 24
 
@@ -113,6 +146,16 @@ def eligible_current_result(source, status, attempt, rollout_statuses):
             and not attempt.get('error')
             and 'crash' not in source['manifest_status'].lower()
             and not any(row['status'] == 'errored' for row in rollout_statuses))
+
+
+def eligible_selected_result(evaluation_id, source, status, attempt, rollout_statuses,
+                             include_current_runs):
+    if not include_current_runs:
+        validate_selected_evaluation(source['manifest_status'], status)
+        return eligible_terminal_result(status, attempt['iterations'])
+    if evaluation_id in APPROVED_FLAT_EXTENSION_IDS | ACCEPTED_TERMINAL_RESULT_IDS:
+        return eligible_terminal_result(status, attempt['iterations'])
+    return eligible_current_result(source, status, attempt, rollout_statuses)
 
 
 def active_time_share(messages):
@@ -244,16 +287,11 @@ def main():
         # evaluation status fetched in this same inventory, never a cached status.
         if args.include_current_runs and status == 'unknown':
             status = source.get('live_status', status)
-        if args.include_current_runs:
-            eligible = eligible_current_result(source, status, attempt,
-                                               payload['status'].get('rollout_statuses', []))
-        else:
-            validate_selected_evaluation(source['manifest_status'], status)
-            eligible = eligible_terminal_result(status, attempt['iterations'])
-        # Explicit user-approved exception: retain this result and carry iteration 22
-        # into its missing iteration 23 test measurement. Never generalize to errors.
-        if eid == '60a7e9e2-c234-4091-a258-242d0574dc30':
-            eligible = True
+        eligible = eligible_selected_result(
+            eid, source, status, attempt,
+            payload['status'].get('rollout_statuses', []), args.include_current_runs)
+        # Explicit user-approved exception: carry iteration 22 into the missing
+        # iteration 23 test measurement. Never generalize this score repair.
         iterations = copy.deepcopy(attempt['iterations'])
         carried = False
         if eid == '60a7e9e2-c234-4091-a258-242d0574dc30':
@@ -272,12 +310,7 @@ def main():
         completed_23h_rerun = eid in COMPLETED_23H_RERUN_IDS and eligible
         if completed_23h_rerun:
             end = RESEARCH_WINDOW_SECONDS
-        extension = 'flat extension' in source['manifest_status'].lower()
-        # The tracker explicitly approved this stopped run as a flat extension.
-        if eid == '1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d':
-            extension = True
-        if args.include_current_runs:
-            extension = False
+        extension = eid in APPROVED_FLAT_EXTENSION_IDS
         if extension:
             end = 86400
         points = curve(iterations, end) if eligible else []
