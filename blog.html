@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=compact-task-cards-20260907">
+<link rel="stylesheet" href="site.css?v=reward-explanation-20260907">
 </head>
 <body>
 <section class="hero">
@@ -17,14 +17,13 @@
   <aside class="contents" aria-label="Contents">
     <strong>Contents</strong>
     <a href="#benchmark">Overview</a>
-    <a href="#measurement">Evaluation</a>
-    <a href="#setup">Experimental setup</a>
-    <a href="#results">Results</a>
+    <a href="#results">Main results</a>
     <a href="#tasks">Task areas</a>
     <a href="#examples">Tasks</a>
-    <a href="#harness-ablations">Comparing harnesses</a>
+    <a href="#setup">Experimental setup</a>
+    <a href="#general-analysis">Analyzing agent behavior</a>
     <a href="#opsd-hints">Hints (OPSD)</a>
-    <a href="#general-analysis">General analysis</a>
+    <a href="#harness-ablations">Comparing harnesses</a>
   </aside>
   <main>
     <section class="section" id="benchmark">
@@ -35,29 +34,12 @@
         <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
       </div>
     </section>
-    <section class="section" id="measurement">
-      <div class="prose"><p>Measuring both requires separating the feedback the agent can see from the hidden performance used to rank it. We therefore evaluate each run along two axes:</p></div>
-      <div class="measure-grid">
-        <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
-        <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
-      </div>
-    </section>
-    <section class="section" id="setup">
-      <h2>Experimental setup</h2>
-      <div class="prose">
-        <p>We run AutoResearch with Terminus 2 on each task for <strong>24 hours of total wall-clock time</strong>. These extended runs let us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
-        <p>Each task uses the Harbor format, with separate work and verifier containers. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
-        <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
-        <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">harness comparison</a>.</p>
-        <p>All models used the maximum effort available at the time: max for Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, and GPT-6 Astra; xhigh for Qwen3.8 Max, Muse Spark 1.3, and Grok 4.6; high for Gemini 3.8 Flash.</p>
-      </div>
-    </section>
     <section class="section" id="results">
-      <h2>Results</h2>
+      <h2>Main results</h2>
       <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Fable 5.1 scores are provisional and will be recalculated, including Elo and hidden test AUARC.</p>
-      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it by averaging the best difficulty-adjusted reward reached at each iteration. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration.</p>
+      <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it as the time-average of the best reward reached during the run. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration.</p>
       <div id="trajectory-overview"></div>
-      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show means on the task-specific difficulty-adjusted reward scale. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
+      <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show means on the task-specific reward scale. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
       <div class="aggregate-grid" id="aggregate-plots"></div>
       <ul class="result-points result-notes" id="result-notes"></ul>
     </section>
@@ -86,20 +68,39 @@
       <div class="catalog-filters" id="task-catalog-filters" role="group" aria-label="Filter tasks by research area"></div>
       <div class="task-grid" id="task-grid"></div>
     </section>
-    <section class="section" id="harness-ablations">
-      <h2>Comparing harnesses</h2>
-      <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
-      <div id="harness-summary"></div>
-      <p id="harness-findings">Average difficulty-adjusted rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2, but we see no clear increase in overfitting in these runs.</p>
-      <div id="harness-ablation-plot"></div>
-      <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
-    </section>
-    <section class="section" id="opsd-hints">
-      <span class="pending-label">Pending</span>
-      <h2>Improving model performances by using hints (OPSD)</h2>
+    <section class="section" id="setup">
+      <h2>Experimental setup</h2>
+      <div class="prose">
+        <p>We run AutoResearch with Terminus 2 on each task for <strong>24 hours of total wall-clock time</strong>. These extended runs let us measure whether models sustain progress and whether repeated optimization of validation scores leads to overfitting, with gains that fail to generalize to hidden test data.</p>
+        <p>Each task uses the Harbor format, with separate work and verifier containers. At the start of each iteration, the model receives the current workspace and the validation scores from earlier iterations. The model has up to 32,000 output tokens per turn. The model then submits one version for validation scoring, and its workspace carries into the next iteration. The model never sees hidden test scores.</p>
+        <p>To guard against reward hacking, our adversarial quality control and reward hacking agent inspects task environments and completed model rollouts. We have already used this agent to find issues in several widely used benchmarks and are working with the community to address them (blog coming soon). Models also have no internet access.</p>
+        <p>Harnesses can significantly affect performance. We compare all models using the same Terminus 2 harness to isolate model performance and evaluate them fairly. We also run experiments with Claude Code and Codex to investigate behavioral differences in the <a href="#harness-ablations">harness comparison</a>.</p>
+        <p>All models used the maximum effort available at the time: max for Claude Fable 5.1, Claude Opus 5, GPT-5.6 Sol, Kimi K3, and GPT-6 Astra; xhigh for Qwen3.8 Max, Muse Spark 1.3, and Grok 4.6; high for Gemini 3.8 Flash.</p>
+      </div>
+      <div class="prose"><p>We measure both progress during the run and performance on hidden tests:</p></div>
+      <div class="measure-grid">
+        <article class="measure"><span class="number">1</span><h3>Progress over time.</h3><p>During the run, the agent optimizes the validation score it can see. We report the Area under the Auto Research Curve (AUARC) to measure how much it improves and how early those improvements arrive.</p></article>
+        <article class="measure"><span class="number">2</span><h3>Hidden test generalization.</h3><p>At each iteration, validation alone selects the checkpoint whose hidden test score enters the curve. We use hidden test AUARC to compare models within each task, then combine those comparisons into a task relative Elo. We also report final hidden test performance so major breakthroughs that happen late remain visible.</p></article>
+      </div>
+      <div class="prose" id="reward-normalization">
+        <p>We score each task from 0 to 1. We compare the agent's improvement over a simple baseline with a strong reference result, where available.</p>
+        <p>For metrics with a perfect score, we reward proportional reductions in the remaining error. Improving accuracy from 90% to 95% removes half the remaining error.</p>
+        <details class="reward-formula">
+          <summary>Reward formula</summary>
+          <p>For metrics with a perfect score and a reference result, let <em>d</em> be the distance from perfect performance.</p>
+          <div class="reward-equation">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Progress u equals the maximum of zero and log of baseline gap divided by agent gap, divided by log of baseline gap divided by reference gap.">
+              <mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>agent</mtext></msub><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>reference</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo>
+            </math>
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Reward equals c plus one minus c times u divided by one plus u."><mtext>Reward</mtext><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+          </div>
+          <p>Here, <em>c</em> is the baseline reward, either 0 or 0.1. This formula applies at or above the baseline. Perfect performance earns 1; results below the baseline earn at most <em>c</em>.</p>
+          <p>For tasks without a fixed limit, we compare the amount of improvement over the baseline with the reference improvement. When no reference exists, <em>u</em> counts halvings of the remaining gap. We then use the same reward formula.</p>
+        </details>
+      </div>
     </section>
     <section class="section" id="general-analysis">
-      <h2>General analysis</h2>
+      <h2>Analyzing agent behavior</h2>
       <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
         <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
@@ -214,6 +215,7 @@
 <figcaption>200 randomly sampled rounds per model. Lines show 95% confidence intervals.</figcaption>
 </figure>
 <h3 id="analysis-2d">Do models that work more perform better?</h3>
+<p id="scoring-refresh-todo" style="color:#B2182B;font-weight:600">TODO: Once the new Fable scores are ready, recalculate these two plots and task-relative Elo using the same reward normalization as the other results.</p>
 <p>Models that made more submissions or spent longer working did not consistently achieve higher test AUARC.</p>
 <style>
 .model-effort{margin:24px 0;color:var(--ink);font-family:var(--sans)}.model-effort-panels{display:grid;grid-template-columns:1fr 1fr;gap:24px}.model-effort h4{font-size:15px;margin:0 0 12px;font-weight:600}.model-effort svg{display:block;width:100%;height:auto;overflow:visible}.model-effort text{font-family:var(--sans);fill:var(--muted);font-size:11px}.model-effort .dot-label{fill:var(--ink);font-size:11px;font-weight:500}.model-effort .model-dot:focus circle,.model-effort .model-dot:hover circle{stroke:var(--ink);stroke-width:2}.model-effort figcaption{font-size:13px;color:var(--muted);line-height:1.6;margin-top:16px}@media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
@@ -265,6 +267,18 @@
 </svg></div>
 </div></figure></div>
     </section>
+    <section class="section" id="opsd-hints">
+      <span class="pending-label">Pending</span>
+      <h2>Improving model performances by using hints (OPSD)</h2>
+    </section>
+    <section class="section" id="harness-ablations">
+      <h2>Comparing harnesses</h2>
+      <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
+      <div id="harness-summary"></div>
+      <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2, but we see no clear increase in overfitting in these runs.</p>
+      <div id="harness-ablation-plot"></div>
+      <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
+    </section>
     <footer class="references">
       <strong>References</strong>
       <ol><li><a href="https://mls-bench.com/">MLSBench</a></li><li><a href="https://arxiv.org/abs/2603.08640">PostTrainBench</a></li><li><a href="https://github.com/karpathy/autoresearch">autoresearch</a></li><li><a href="https://edge-bench.org/">EdgeBench</a></li></ol>
@@ -276,6 +290,6 @@
 <script src="task-catalog.js?v=clean-task-names-20260907"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=shared-score-axes-20260907"></script>
+<script src="results.js?v=normalized-reward-labels-20260907"></script>
 </body>
 </html>
