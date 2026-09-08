@@ -172,3 +172,11 @@ assert.ok(!timePanel.includes('>25%</text>'));
 assert.ok(evaluate('renderTask.toString()').includes('output-token count alone does not determine cost'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));
+
+// Sub-dollar cost differences must not add a lower-scoring model to the frontier.
+const bucketFrontier=evaluate('wholeDollarCostFrontier([{key:"sol",cost:134.10,test:.52},{key:"opus",cost:134.27,test:.58},{key:"astra",cost:195.47,test:.60}]).map(r=>r.key)');
+assert.deepEqual(Array.from(bucketFrontier),['opus','astra']);
+const actualFrontier=evaluate('wholeDollarCostFrontier(costPerformanceRows(currentResults().rows)).map(r=>r.key)');
+assert.ok(actualFrontier.includes('lumen'));
+assert.ok(!actualFrontier.includes('skylark'));
+assert.ok(actualFrontier.includes('meridian'));
