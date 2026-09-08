@@ -55,7 +55,22 @@ const observedEnd=evaluate('Math.min(...DATA.tasks.flatMap(t=>t.models.filter(r=
 close(fable.points.at(-1).hour,observedEnd);
 assert.ok(observedEnd<24);
 const costHtml=evaluate('costPerformancePlot(currentResults().rows)');
-assert.ok(costHtml.includes('completed runs with API ledger records'));
+assert.ok(costHtml.includes('Includes ongoing runs with provisional scores and costs'));
+const missingCosts=[];
+for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
+  if(!run.points.length)continue;
+  if(!Number.isFinite(run.apiCost))missingCosts.push(run.evaluationId);
+  if(run.provisional)assert.ok(Number.isFinite(run.apiCost));
+  assert.ok(run.apiCostFetchedAt);
+}
+assert.deepEqual(missingCosts,['002958c6-cb2f-46e3-8536-ba8d421083af']); // Existing completed Sol run has an empty ledger.
+const costRows=evaluate('costPerformanceRows(currentResults().rows)');
+assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,25);
+for(const row of costRows){
+  if(row.key!=='skylark')close(row.test,result.rows.find(r=>r.key===row.key).test);
+  assert.ok(costHtml.includes('data-resource-value="$'+row.cost.toFixed(2)+'"'));
+  assert.ok(costHtml.includes('data-score-value="'+evaluate('fmt('+row.test+')')+'"'));
+}
 assert.ok(!costHtml.includes('NaN'));
 
 // Native SVG rendering shares these exact values and retains the model branding.
@@ -64,8 +79,8 @@ evaluate('renderModelEffort()');
 assert.equal((context.renderedHtml.match(/class="model-dot efficiency-point"/g)||[]).length,18);
 assert.ok(!context.renderedHtml.includes('NaN'));
 assert.equal((context.renderedHtml.match(/class="efficiency-tooltip"/g)||[]).length,2);
-assert.ok(context.renderedHtml.includes('data-score-value="59.3"'));
-assert.ok(context.renderedHtml.includes('data-resource-value="84.3%"'));
+assert.ok(context.renderedHtml.includes('data-score-value="'+(effort.find(r=>r.key==='vesper-pro').test*100).toFixed(1)+'"'));
+assert.ok(context.renderedHtml.includes('data-resource-value="'+effort.find(r=>r.key==='vesper-pro').activeTimePercent.toFixed(1)+'%"'));
 assert.ok(!context.renderedHtml.includes('data-score-value="59.3%"'));
 console.log('Scoring, Elo, cohort and effort-chart checks passed.');
 console.log(JSON.stringify(effort.map(({name,taskCount,test,elo,submissions,hours})=>({name,taskCount,test,elo,submissions,hours})),null,2));

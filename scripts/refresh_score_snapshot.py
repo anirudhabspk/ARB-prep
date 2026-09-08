@@ -7,6 +7,7 @@ import argparse
 import copy
 import gzip
 import json
+import math
 import re
 import statistics
 from datetime import datetime
@@ -19,6 +20,23 @@ def read_site(path):
 
 def elapsed(row):
     return max(row.get('public_elapsed_seconds') or 0, row.get('private_elapsed_seconds') or 0)
+
+
+def api_ledger_cost(ledger, evaluation_id):
+    """API-priced usage, including shadow pricing for subscription traffic."""
+    if ledger.get('selector') != {'kind': 'evaluation_id', 'id': evaluation_id}:
+        raise ValueError('API ledger evaluation does not match the selected run')
+    if not ledger.get('workload_ids') or not ledger.get('requests'):
+        return None
+    routes = ledger.get('by_route') or []
+    if routes:
+        values = [r.get('shadow_cost_usd') if r.get('route_channel') == 'subscription'
+                  else r.get('cost_usd') for r in routes]
+    else:
+        values = [ledger.get('cost_usd')]
+    if any(not isinstance(v, (int, float)) or not math.isfinite(v) or v < 0 for v in values):
+        raise ValueError('Missing or invalid API ledger cost')
+    return sum(values)
 
 
 def active_time_share(messages):
@@ -169,10 +187,13 @@ def main():
         count, hours, timing = activity_and_time(payload['rollouts'][0]['messages'], iterations)
         active = active_time_share(payload['rollouts'][0]['messages'])
         old_run = old_runs.get(eid, {})
+        ledger = payload.get('api_ledger')
+        cost = api_ledger_cost(ledger, eid) if ledger is not None else old_run.get('apiCost')
         run = {'model': models[source['model']], 'hours': end / 3600 if eligible else 0,
-               # Only preserve the existing ledger value for this exact completed ID.
-               # Runner total_cost is a different source and is not an API ledger.
-               'apiCost': old_run.get('apiCost') if status == 'completed' else None,
+               # Running and completed results use the same verified ledger source.
+               # Never substitute rollout total_cost for missing API ledger data.
+               'apiCost': cost if eligible else None,
+               'apiCostFetchedAt': payload.get('api_ledger_fetched_at', old_run.get('apiCostFetchedAt')),
                'outputTokens': ro.get('total_output_tokens'), 'evaluationId': eid,
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],
                'status': status, 'provisional': eligible and status == 'running', 'extension': False,
@@ -185,6 +206,8 @@ def main():
                       'attempt_status': attempt['status'], 'task_name': names[source['task_slug']],
                       'submissions': count, 'work_hours': hours, 'timing': timing,
                       'active_time': active,
+                      'api_cost_usd': run['apiCost'],
+                      'api_cost_fetched_at': run['apiCostFetchedAt'],
                       'score_carried_forward': carried, 'observed_end_hours': end / 3600})
     for task in site['tasks']:
         task['models'].sort(key=lambda r: list(models.values()).index(r['model']))
