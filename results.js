@@ -10,9 +10,9 @@ const MODEL_BRANDS={
   "skylark":{company:"OpenAI",short:"Sol",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"},
   "vega":{company:"Moonshot AI",short:"Kimi",logo:"https://cdn.simpleicons.org/moonshotai/191919"},
   "forge":{company:"Alibaba Cloud",short:"Qwen",logo:"https://cdn.simpleicons.org/alibabacloud/ff6a00"},
-  "kittiwake":{company:"Google",short:"Gemini",logo:"https://cdn.simpleicons.org/google/4285F4"},
+  "kittiwake":{company:"Google",short:"Gemini",logo:"assets/google-logo.png"},
   "granola-plus":{company:"Meta",short:"Muse",logo:"https://cdn.simpleicons.org/meta/0866ff"},
-  "sable-plus":{company:"xAI",short:"Grok",logo:"https://cdn.simpleicons.org/x/191919"},
+  "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo.png"},
   "meridian":{company:"OpenAI",short:"Astra",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"}
 };
 function modelIdentity(key,{short=false}={}){const model=MODEL[key],brand=MODEL_BRANDS[key],label=short?brand?.short:model?.name||key,title=brand?`${model.name} · ${brand.company}`:model?.name||key;return`${brand?`<img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async">`:""}<i class="model-color-key" style="background:${model?.color||"#4D4D4D"}"></i><span title="${esc(title)}">${esc(label)}</span>`}
