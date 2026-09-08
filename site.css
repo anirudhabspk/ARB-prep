@@ -137,3 +137,9 @@
 /* No fixed header on the blog; keep anchor targets and contents aligned. */
 body:has(.hero) .contents{top:28px}
 body:has(.hero) .section{scroll-margin-top:28px}
+
+.reward-formula{margin:20px 0 0;border-top:1px solid var(--line);padding-top:12px;font-size:15px}
+.reward-formula summary{cursor:pointer;color:var(--ink);font-weight:500}
+.reward-formula[open] summary{margin-bottom:18px}
+.reward-formula .reward-equation{overflow-x:auto;padding:10px 0;margin:14px 0;color:var(--ink)}
+.reward-formula math{font-size:1.12em;margin:16px 0}
