@@ -1,11 +1,14 @@
 import unittest
 from scripts.refresh_score_snapshot import (
+    ACCEPTED_TERMINAL_RESULT_IDS,
+    APPROVED_FLAT_EXTENSION_IDS,
     COMPLETED_23H_RERUN_IDS,
     api_ledger_cost,
     api_ledger_output_tokens,
     curve,
     eligible_terminal_result,
     eligible_current_result,
+    eligible_selected_result,
     validate_selected_evaluation,
 )
 
@@ -25,6 +28,25 @@ class ApiLedgerCostTest(unittest.TestCase):
                                                  'completed', {'status': 'completed'}, []))
         self.assertFalse(eligible_current_result(source, 'completed',
                                                  {'status': 'completed'}, [{'status': 'errored'}]))
+
+    def test_current_policy_keeps_only_explicitly_approved_terminal_results(self):
+        iteration = {'public_score': 0.5, 'private_score': 0.4,
+                     'artifact_uploaded': True}
+        attempt = {'status': 'incomplete', 'iterations': [iteration]}
+        source = {'manifest_status': 'Flat extension (failed)'}
+        extension_id = '9c006e63-3989-4de2-8867-b3c4016757ec'
+        accepted_failure_id = '64f07bb3-0573-4287-abcd-bb615ef31cdd'
+
+        self.assertIn(extension_id, APPROVED_FLAT_EXTENSION_IDS)
+        self.assertIn(accepted_failure_id, ACCEPTED_TERMINAL_RESULT_IDS)
+        self.assertTrue(eligible_selected_result(
+            extension_id, source, 'failed', attempt, [{'status': 'errored'}], True))
+        self.assertTrue(eligible_selected_result(
+            accepted_failure_id, source, 'completed', attempt, [], True))
+        self.assertFalse(eligible_selected_result(
+            'unapproved', source, 'failed', attempt, [{'status': 'errored'}], True))
+        self.assertFalse(eligible_selected_result(
+            extension_id, source, 'running', attempt, [], True))
 
     def ledger(self, **fields):
         return {'selector': {'kind': 'evaluation_id', 'id': 'selected'},

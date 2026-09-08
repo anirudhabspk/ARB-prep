@@ -75,11 +75,24 @@ for(const row of effort){
   assert.ok(row.elo_ci.every(Number.isFinite));
 }
 assert.equal(evaluate('DATA.tasks.length'),29);
-assert.equal(effort.find(row=>row.key==='vesper-pro').taskCount,currentSnapshot?28:29);
+assert.ok(effort.every(row=>row.taskCount===29));
 assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length).length'),context.window.ARB_DATA.snapshot.includedRuns);
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
-assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0,!currentSnapshot);
+const allRuns=context.window.ARB_DATA.tasks.flatMap(task=>task.models);
+assert.equal(allRuns.filter(run=>run.points.some(point=>Number.isFinite(point.testAtBest))).length,261);
+assert.equal(allRuns.filter(run=>run.extension).length,24);
+assert.ok(allRuns.filter(run=>run.extension).every(run=>run.hours===24));
+assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0);
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="60a7e9e2-c234-4091-a258-242d0574dc30").points.length')>0);
+evaluate('var faster=DATA.tasks.find(t=>t.name==="FasterGCG candidate token ranking");var fasterOpus=faster.models.find(r=>r.evaluationId==="9c006e63-3989-4de2-8867-b3c4016757ec");var fasterQwen=faster.models.find(r=>r.evaluationId==="1651b5ec-a39d-4c1c-aa20-f1e84c3b88eb")');
+close(evaluate('fasterOpus.points.at(-1).bestValidation'),.653187441732);
+close(evaluate('fasterOpus.points.at(-1).testAtBest'),.654427897902);
+close(evaluate('fasterQwen.points.at(-1).bestValidation'),.620250324226);
+close(evaluate('fasterQwen.points.at(-1).testAtBest'),.627876388498);
+assert.ok(evaluate('fasterOpus.extension&&fasterQwen.extension&&fasterOpus.hours===24&&fasterQwen.hours===24'));
+evaluate('var less=DATA.tasks.find(t=>t.name==="Less Is More token budget selection");var lessFinalStats=taskStats(less).map(stat=>({points:[{testAtBest:difficultyAdjustedPoint(less,stat.points.at(-1),"testAtBest")}]}));var lessFinalDomain=taskDomain(lessFinalStats,"testAtBest")');
+assert.ok(evaluate('lessFinalDomain.ticks.at(-1)>=lessFinalDomain.hi-1e-12'));
+assert.ok(evaluate('lessFinalDomain.ticks.length<=8'));
 const overview=evaluate('overviewTrajectories()');
 const fable=overview.series.find(r=>r.key==='vesper-pro');
 if(currentSnapshot){
@@ -87,7 +100,7 @@ if(currentSnapshot){
   assert.equal(active.length,0);
   close(fable.points.at(-1).hour,24);
   for(const t of context.window.ARB_DATA.tasks)for(const r of t.models){
-    if(r.points.length&&r.evaluationId!=='60a7e9e2-c234-4091-a258-242d0574dc30')assert.ok(r.replacementStatus||['running','completed'].includes(r.status));
+    if(r.points.length&&r.evaluationId!=='60a7e9e2-c234-4091-a258-242d0574dc30')assert.ok(r.extension||r.sourceStatus==='Accepted model failure'||r.replacementStatus||['running','completed'].includes(r.status));
   }
 }else{
   assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.provisional).length'),0);
@@ -122,7 +135,13 @@ assert.ok(!costHtml.includes('NaN'));
 const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');
 assert.ok(!tokenHtml.includes('Source data unavailable'));
 assert.ok(!tokenHtml.includes('Output tokens unavailable from Horizon'));
-if(!currentSnapshot)assert.ok(!tokenHtml.includes('Final hidden-test reward unavailable'));
+assert.ok(!fs.readFileSync(path.join(root,'results.js'),'utf8').includes(['Final hidden-test','reward unavailable'].join(' ')));
+for(let index=0;index<context.window.ARB_DATA.tasks.length;index++){
+  const apiHtml=evaluate(`efficiencyPlot(DATA.tasks[${index}],"Performance vs. API cost","apiCost","API cost (USD)",value=>\`$\${value.toFixed(value<10?2:0)}\`)`);
+  const outputHtml=evaluate(`efficiencyPlot(DATA.tasks[${index}],"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)`);
+  assert.ok(!apiHtml.includes('Selected score unavailable'));
+  assert.ok(!outputHtml.includes('Selected score unavailable'));
+}
 
 // Native SVG rendering shares these exact values and retains the model branding.
 evaluate('var rendered={};');context.document={getElementById:()=>({set innerHTML(value){context.renderedHtml=value;}})};
