@@ -10,7 +10,7 @@ DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoResearchBench
 README_PATH = Path("task-readmes.md")
 CATALOG_PATH = Path("task-catalog.js")
 SITE_DATA_PATH = Path("site-data.js")
-GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/f0cfffb69c854c4b2b05f97a2b22dd38525fb55e"
+GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/tree/8f9db7e09ac21446f08d3751e08414562efeb32f"
 
 CATEGORY_ORDER = [
     "Model training",

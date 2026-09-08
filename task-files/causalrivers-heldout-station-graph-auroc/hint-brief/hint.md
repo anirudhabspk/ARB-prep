@@ -1,1 +1,1 @@
-Hand-weighted combinations of lag features look strong locally and transfer poorly; the improvement is to learn the combiner from the regions you are given, and to add a term for whether a link survives conditioning on the other stations.
+Scores are ranked within each five-node sample, so only relative order inside a sample matters and calibration across samples is irrelevant; and the sample is a connected directed flow network, so the twenty pair scores are constrained by each other in a way independent pairwise scoring cannot express.

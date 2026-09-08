@@ -1,1 +1,1 @@
-A first policy typically buys the same features every time and lets rare classes go unlabelled; the improvement is to drive acquisition by which classes are still missing and to train on examples masked the way your own purchasing will leave the graded rows.
+The metric is balanced accuracy, so a class weighs the same however rare it is and one class you never label costs a full share; and since you choose which features to buy, the rows you are graded on are missing exactly the features your own policy declined.

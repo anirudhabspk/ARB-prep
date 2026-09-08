@@ -1,1 +1,1 @@
-Cheap single-step adversarial training improves steadily and then collapses against a strong attack, with nothing in the training loss to warn you; finding where that turn happens and stopping or strengthening the attack before it is the single largest gain available.
+The grader rescales your logits before attacking precisely to stop scaling from weakening the attack, so nothing that merely obscures gradients will survive; with a fixed three-minute budget the only real choice is how to divide it between more training and a stronger inner attack.

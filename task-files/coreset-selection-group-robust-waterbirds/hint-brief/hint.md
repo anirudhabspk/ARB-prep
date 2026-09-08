@@ -1,1 +1,1 @@
-Selecting by class alone cannot see the hidden attribute, but the attribute is a dominant direction of variation and clustering the embeddings exposes it; the gain is then in allocating the budget across class-by-attribute cells with the rare cell deliberately over-represented.
+The score is the weakest of four cells formed by the label crossed with an attribute you are never shown, and the contract already forces an even split across labels — so the only choice left to you is composition within each class, and it has to stand in for the attribute you cannot see.

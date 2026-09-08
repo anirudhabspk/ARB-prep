@@ -1,1 +1,1 @@
-The gradient score alone plateaus because a large part of a substitution's true benefit depends on the incoming token rather than the context it enters — a component invisible to any first-order quantity evaluated at the current point.
+The statement says that ranking by the gradient row earns only a small reward, which is the clue: the gradient is a first-order quantity evaluated before the substitution, so what it cannot see is how much the loss actually moves when a particular token is put in place.

@@ -1,1 +1,1 @@
-How much coverage margin is going spare differs sharply between sample sizes and ranks, so after the estimator is debiased the remaining length is bought by spending that margin where it exists rather than by tightening everywhere at once — and the score is a cliff, so a regime that runs out of margin loses everything.
+Score is conditional on coverage clearing a fixed level, so it is a cliff and not a trade-off: length only counts once validity holds, which makes the unused coverage margin the thing being spent, and it is not the same size in every regime the panel contains.

@@ -18,11 +18,13 @@ MANIFEST_PATH = ROOT / "task-files-manifest.js"
 TASK_CATALOG_PATH = ROOT / "task-catalog.js"
 TASK_SLUG = "cpu-llm-decode-throughput"
 SOURCE_REPOSITORY = "bespokelabsai/AutoResearchBench-Preview-Tasks"
-SOURCE_COMMIT = "f0cfffb69c854c4b2b05f97a2b22dd38525fb55e"
+SOURCE_COMMIT = "8f9db7e09ac21446f08d3751e08414562efeb32f"
 EXACT_COMMIT_RE = re.compile(r"[0-9a-fA-F]{40}")
 TASK_SLUG_RE = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._-]*")
 PUBLISHABLE_FILENAMES = {"Dockerfile"}
 PUBLISHABLE_SUFFIXES = {".csv", ".json", ".jsonl", ".md", ".py", ".sh", ".toml", ".txt"}
+TEXT_VIEWER = "text"
+UNAVAILABLE_VIEWER = "unavailable"
 
 
 class BuildError(Exception):
@@ -42,6 +44,11 @@ def language_for(path):
         ".json": "json",
         ".jsonl": "json",
     }.get(suffix, "text")
+
+
+def file_type_for(path):
+    suffix = PurePosixPath(path).suffix.lower()
+    return suffix.removeprefix(".") or "binary"
 
 
 def is_publishable_path(path):
@@ -120,12 +127,17 @@ def scan_task_tree(task_root):
                     if not is_publishable_path(relative):
                         continue
                     data = (Path(directory) / entry.name).read_bytes()
+                    try:
+                        data.decode("utf-8")
+                    except UnicodeDecodeError as error:
+                        raise BuildError(f"readable file is not valid UTF-8: {relative}") from error
                     files.append(
                         {
                             "path": relative,
                             "size": len(data),
                             "sha256": hashlib.sha256(data).hexdigest(),
                             "language": language_for(relative),
+                            "viewer": TEXT_VIEWER,
                         }
                     )
                 else:
@@ -142,7 +154,10 @@ def manifest_data(files_by_task, source_commit=SOURCE_COMMIT):
     tasks = {}
     for slug, files in files_by_task.items():
         paths = {item["path"] for item in files}
-        default_file = "instruction.md" if "instruction.md" in paths else files[0]["path"]
+        viewable_paths = [item["path"] for item in files if item.get("viewer", TEXT_VIEWER) == TEXT_VIEWER]
+        if not viewable_paths:
+            raise BuildError(f"task has no viewable files: {slug}")
+        default_file = "instruction.md" if "instruction.md" in paths else viewable_paths[0]
         tasks[slug] = {"defaultFile": default_file, "files": files}
     return {
         "sourceRepository": SOURCE_REPOSITORY,
@@ -164,9 +179,52 @@ def build(
     task_slugs=None,
 ):
     slugs = _task_slugs(task_slugs)
-    files_by_task = {slug: scan_task_tree(Path(task_files_root) / slug) for slug in slugs}
+    unavailable = load_unavailable_files(manifest_path)
+    files_by_task = {}
+    for slug in slugs:
+        files = scan_task_tree(Path(task_files_root) / slug)
+        files.extend(unavailable.get(slug, ()))
+        files.sort(key=lambda item: _bytewise_path_key(item["path"]))
+        if len({item["path"] for item in files}) != len(files):
+            raise BuildError(f"manifest contains duplicate paths for task: {slug}")
+        files_by_task[slug] = files
     write_manifest(files_by_task, manifest_path, source_commit)
     return files_by_task
+
+
+def load_unavailable_files(manifest_path):
+    manifest_path = Path(manifest_path)
+    if not manifest_path.exists():
+        return {}
+    try:
+        assignment = manifest_path.read_text(encoding="utf-8")
+        name, separator, payload = assignment.partition("=")
+        if not separator or name.strip() != "window.ARB_TASK_FILES":
+            raise ValueError("unexpected assignment")
+        manifest = json.loads(payload.strip().removesuffix(";"))
+        result = {}
+        for slug, task in manifest.get("tasks", {}).items():
+            validate_task_slug(slug)
+            unavailable = []
+            for item in task.get("files", ()):
+                if item.get("viewer") != UNAVAILABLE_VIEWER:
+                    continue
+                path = validate_relative_path(item["path"])
+                size = item["size"]
+                if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+                    raise ValueError("invalid size")
+                unavailable.append(
+                    {
+                        "path": path,
+                        "size": size,
+                        "language": file_type_for(path),
+                        "viewer": UNAVAILABLE_VIEWER,
+                    }
+                )
+            result[slug] = unavailable
+        return result
+    except (BuildError, KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:
+        raise BuildError(f"invalid task files manifest: {manifest_path}") from error
 
 
 def _run_git(source_repo, *args):
@@ -196,7 +254,7 @@ def resolve_exact_commit(source_repo, source_ref):
 
 def list_source_blobs(source_repo, commit, task_slug):
     task_slug = validate_task_slug(task_slug)
-    output = _run_git(source_repo, "ls-tree", "-rz", "--full-tree", commit, "--", task_slug)
+    output = _run_git(source_repo, "ls-tree", "-rlz", "--full-tree", commit, "--", task_slug)
     blobs = []
     prefix = task_slug + "/"
     for raw_record in output.split(b"\0"):
@@ -206,7 +264,8 @@ def list_source_blobs(source_repo, commit, task_slug):
         if not separator:
             raise BuildError("unexpected git ls-tree output")
         try:
-            mode, object_type, object_id = header.decode("ascii").split(" ")
+            mode, object_type, object_id, raw_size = header.decode("ascii").split()
+            size = int(raw_size)
             full_path = raw_path.decode("utf-8")
         except (UnicodeDecodeError, ValueError) as error:
             raise BuildError("source tree contains an unsupported filename") from error
@@ -217,14 +276,13 @@ def list_source_blobs(source_repo, commit, task_slug):
             raise BuildError(f"symlink is not allowed: {relative}")
         if object_type != "blob" or mode not in ("100644", "100755"):
             raise BuildError(f"unsupported git entry {mode} {object_type}: {relative}")
-        if not is_publishable_path(relative):
-            continue
-        blobs.append((relative, object_id))
+        viewer = TEXT_VIEWER if is_publishable_path(relative) else UNAVAILABLE_VIEWER
+        blobs.append((relative, object_id, size, viewer))
 
     blobs.sort(key=lambda item: _bytewise_path_key(item[0]))
-    paths = [path for path, _ in blobs]
+    paths = [path for path, *_ in blobs]
     if not paths:
-        raise BuildError(f"task has no publishable files at commit {commit}: {task_slug}")
+        raise BuildError(f"task has no files at commit {commit}: {task_slug}")
     if len(paths) != len(set(paths)):
         raise BuildError("source tree contains duplicate paths")
     return blobs
@@ -232,8 +290,14 @@ def list_source_blobs(source_repo, commit, task_slug):
 
 def read_source_blobs(source_repo, blobs):
     result = []
-    for path, object_id in blobs:
+    for path, object_id, _size, viewer in blobs:
+        if viewer != TEXT_VIEWER:
+            continue
         data = _run_git(source_repo, "cat-file", "blob", object_id)
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise BuildError(f"readable file is not valid UTF-8: {path}") from error
         result.append((path, data))
     return result
 
@@ -245,8 +309,24 @@ def _expected_metadata(source_files):
             "size": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
             "language": language_for(path),
+            "viewer": TEXT_VIEWER,
         }
         for path, data in source_files
+    ]
+
+
+def _source_metadata(blobs, source_files):
+    readable = {item["path"]: item for item in _expected_metadata(source_files)}
+    return [
+        readable[path]
+        if viewer == TEXT_VIEWER
+        else {
+            "path": path,
+            "size": size,
+            "language": file_type_for(path),
+            "viewer": UNAVAILABLE_VIEWER,
+        }
+        for path, _object_id, size, viewer in blobs
     ]
 
 
@@ -296,11 +376,14 @@ def sync(
         raise BuildError(f"--source-ref must match the approved source commit {SOURCE_COMMIT}")
     commit = resolve_exact_commit(source_repo, source_ref)
     slugs = _task_slugs(task_slugs)
+    source_blobs_by_task = {slug: list_source_blobs(source_repo, commit, slug) for slug in slugs}
     source_files_by_task = {
-        slug: read_source_blobs(source_repo, list_source_blobs(source_repo, commit, slug))
-        for slug in slugs
+        slug: read_source_blobs(source_repo, source_blobs_by_task[slug]) for slug in slugs
     }
-    expected = {slug: _expected_metadata(files) for slug, files in source_files_by_task.items()}
+    expected_readable = {slug: _expected_metadata(files) for slug, files in source_files_by_task.items()}
+    expected = {
+        slug: _source_metadata(source_blobs_by_task[slug], source_files_by_task[slug]) for slug in slugs
+    }
 
     task_files_root = Path(task_files_root)
     task_files_root.parent.mkdir(parents=True, exist_ok=True)
@@ -312,9 +395,9 @@ def sync(
             task_staging_root = staging_root / slug
             task_staging_root.mkdir()
             _write_staged_tree(task_staging_root, source_files)
-            if scan_task_tree(task_staging_root) != expected[slug]:
+            if scan_task_tree(task_staging_root) != expected_readable[slug]:
                 raise BuildError("staged task files differ from the source commit")
-        _install_staged_tree(staging_root, task_files_root, expected)
+        _install_staged_tree(staging_root, task_files_root, expected_readable)
         write_manifest(expected, manifest_path, commit)
     finally:
         shutil.rmtree(temp_root, ignore_errors=True)

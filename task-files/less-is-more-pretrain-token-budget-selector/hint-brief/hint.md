@@ -1,1 +1,1 @@
-Lexical quality heuristics saturate and then mislead: clean, well-formed commercial prose ranks highly on all of them while teaching a language model almost nothing, so the improvement requires a criterion that scores informativeness rather than form.
+You are measured against training on the entire pool while spending half of it, so discarded data has real value and a selector only wins if what it removes is actively harmful — which makes the question what hurts a language model rather than what looks well written.

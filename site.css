@@ -49,6 +49,7 @@
 .task-file-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto;margin-left:auto}
 .task-file-actions button,.task-file-actions a,.task-files-retry{display:inline-flex;align-items:center;justify-content:center;min-height:32px;padding:5px 9px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:11px;line-height:1.2;text-decoration:none;cursor:pointer}
 .task-file-actions button:hover,.task-file-actions a:hover,.task-files-retry:hover{border-color:var(--accent);color:var(--accent)}
+.task-file-actions button:disabled,.task-file-actions a[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
 .task-file-content{display:flex;min-width:0;min-height:0;flex:1 1 auto;flex-direction:column;overflow:hidden}
 .task-file-code{min-width:0;min-height:0;flex:1 1 auto;overflow:auto;margin:0;padding:0;background:#fff;color:var(--ink);font:12px/1.6 var(--task-files-mono);tab-size:2}
 .task-file-line{display:flex;width:max-content;min-width:100%}

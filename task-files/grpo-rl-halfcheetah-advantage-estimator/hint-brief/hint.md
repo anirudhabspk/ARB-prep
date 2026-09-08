@@ -1,1 +1,1 @@
-Tuning the discount and trace changes little; the advantage is limited by a value baseline fitted on one small on-policy batch and by seeds settling into a poor gait, so the gains come from reducing that estimator's variance and from keeping exploration alive early.
+The harness is stated not to normalise, clip or rescale what you return, so the scale of your array is not a free choice — it sets the size of the policy update directly, and its behaviour over the run interacts with whatever schedule the fixed trainer already applies.

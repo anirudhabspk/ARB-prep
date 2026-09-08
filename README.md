@@ -31,14 +31,14 @@ The newer pipeline-wide baseline reward of 0.1 and the separate three-anchor sig
 
 ## Publishing task files
 
-The public task file browser publishes readable files for all 29 catalog tasks from commit `f0cfffb69c854c4b2b05f97a2b22dd38525fb55e` in `bespokelabsai/AutoResearchBench-Preview-Tasks`.
+The public task file browser lists all files for the 29 catalog tasks from commit `8f9db7e09ac21446f08d3751e08414562efeb32f` in `bespokelabsai/AutoResearchBench-Preview-Tasks`.
 
-Get explicit public release approval before copying task files. The published copy includes hidden workloads and grader code. Binary arrays, checkpoints, and compressed assets are excluded because the source viewer cannot render them. A different source commit requires a fresh file review, public release approval, and secret and personal information scan.
+Get explicit public release approval before copying task files. The published copy includes hidden workloads and grader code. Binary arrays, checkpoints, and compressed assets are listed in the browser as unavailable, but their payloads are not copied. A different source commit requires a fresh file review, public release approval, and secret and personal information scan.
 
 Sync from the committed tree, not the source repository working tree:
 
 ```sh
-python build_task_files.py --sync --source-repo /path/to/AutoResearchBench-Preview-Tasks --source-ref f0cfffb69c854c4b2b05f97a2b22dd38525fb55e
+python build_task_files.py --sync --source-repo /path/to/AutoResearchBench-Preview-Tasks --source-ref 8f9db7e09ac21446f08d3751e08414562efeb32f
 ```
 
 Rebuild the metadata manifest after changing the tracked copy:

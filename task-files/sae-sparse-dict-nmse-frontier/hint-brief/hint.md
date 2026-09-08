@@ -1,1 +1,1 @@
-Once the coefficients are solved exactly on a fixed support, further work on them returns almost nothing — the remaining error is entirely in which atoms were chosen, so the improvement comes from iterating the support against the current residual.
+You return both the indices and the values, and the sparsity limit is stated as an average rather than a per-activation cap — so for any support you choose the values have a closed-form optimum, and the budget can be spent unevenly across activations.

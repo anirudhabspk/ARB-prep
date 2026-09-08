@@ -1,1 +1,1 @@
-Model choice saturates early; the improvement comes from features counted over the unlabelled rows as well as the labelled ones — occurrence and co-occurrence of the identifier values, which carry more than any single value's identity.
+The statement says the identifiers are opaque and that a ranking read off any single column earns nothing, which leaves combinations as the only place signal can be: how values in different columns occur together, counted over every row you are given rather than only the labelled ones.

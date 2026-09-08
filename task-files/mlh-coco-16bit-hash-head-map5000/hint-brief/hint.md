@@ -1,1 +1,1 @@
-A pairwise similarity objective plateaus well below what the code can do; the improvement is to optimise the ranking that Hamming distance induces, over the same truncated window the metric uses, and to stop the bits from duplicating each other.
+Sixteen bits give far fewer distinct codes than there are database images, so collisions are unavoidable and the statement resolves them by database row index — an arbitrary order that decides much of the ranking, which means how the codes spread images matters as much as which images they place together.

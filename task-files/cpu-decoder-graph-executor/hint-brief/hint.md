@@ -1,1 +1,1 @@
-Measure where each regime actually sits: single-token execution runs at the machine's memory-bandwidth ceiling while multi-token execution does not, so past that point the single-token path improves only by moving fewer bytes and issuing fewer calls, not by faster arithmetic.
+Instance time is the fastest of fifteen repetitions and the score is a geometric mean over instances, so caches are warm when it counts and one slow instance costs more than one fast instance gains — uniformity across the shapes in the family matters more than a best case on any of them.
