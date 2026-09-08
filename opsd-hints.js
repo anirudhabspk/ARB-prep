@@ -14,6 +14,7 @@
   const axisFmt=value=>Math.abs(value)<1e-9?"0":`${value<0?"−":""}${Math.abs(value).toFixed(1)}`;
   const baseSlug=key=>key.replace(/^p?\d{4}-\d{5}-/,"");
   const catalog=new Map((window.ARB_TASK_CATALOG||[]).map(task=>[task.slug,task]));
+  const benchmarkTasks=new Map((window.ARB_DATA?.tasks||[]).map(task=>[task.name,task]));
   const displayName=task=>catalog.get(baseSlug(task.key))?.blogName||task.key.replace(/^p?\d{4}-\d{5}-/,"").replace(/-/g," ");
   const shortName=task=>{
     const key=task.key;
@@ -25,9 +26,11 @@
   };
   const stats=data.tasks.map(task=>{
     const museFair=median(task.fairGranola),museVal=median(task.valGranola),opusFair=median(task.fairLumen),opusVal=median(task.valLumen);
-    return{...task,name:displayName(task),short:shortName(task),museFair,museVal,opusFair,opusVal,muse:delta(museFair,museVal),opus:delta(opusFair,opusVal)};
+    const name=displayName(task),baselineRun=benchmarkTasks.get(name)?.models?.find(run=>run.model==="lumen"),opusNoHint=baselineRun?.points?.at(-1)?.testAtBest;
+    return{...task,name,short:shortName(task),museFair,museVal,opusFair,opusVal,opusNoHint,muse:delta(museFair,museVal),opus:delta(opusFair,opusVal)};
   });
   const paired=stats.filter(task=>Number.isFinite(task.muse)&&Number.isFinite(task.opus));
+  const opusScatterRows=stats.filter(task=>Number.isFinite(task.opusNoHint));
 
   function chart(){
     const W=680,H=448,L=76,R=22,T=24,B=64,domain=.35,plotW=W-L-R,plotH=H-T-B;
@@ -53,6 +56,34 @@
       if(label)body+=`<text class="opsd-point-label" x="${cx+label.dx}" y="${cy+label.dy}">${label.text}</text>`;
     }
     return`<div class="opsd-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Task-level interaction between model and hint type">${body}</svg><div class="opsd-tooltip" role="tooltip" hidden></div></div>`;
+  }
+
+  function opusScatter(){
+    const W=680,H=430,L=68,R=20,T=20,B=60,plotW=W-L-R,plotH=H-T-B;
+    const x=value=>L+value*plotW;
+    const y=value=>H-B-value*plotH;
+    const ticks=[0,.2,.4,.6,.8,1];
+    const series=[
+      {arm:"Fair hint",key:"fair",color:"#21636a",value:task=>task.opusFair,count:task=>task.fairLumen.length},
+      {arm:"Validation hint",key:"val",color:"#c83220",value:task=>task.opusVal,count:task=>task.valLumen.length}
+    ];
+    let body=`<title>Claude Opus 5 hinted score compared with standard unhinted Terminus score</title><desc>Each marker represents one task and hint arm. The horizontal position is the score in the standard unhinted Terminus benchmark. The vertical position is the score with a fair or validation hint.</desc><rect class="opsd-plot-frame" x="${L}" y="${T}" width="${plotW}" height="${plotH}"/>`;
+    for(const tick of ticks){
+      const xx=x(tick),yy=y(tick);
+      body+=`<line class="opsd-grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${H-B}"/><line class="opsd-grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="opsd-tick" x="${xx}" y="${H-B+20}" text-anchor="middle">${axisFmt(tick)}</text><text class="opsd-tick" x="${L-9}" y="${yy+3.5}" text-anchor="end">${axisFmt(tick)}</text>`;
+    }
+    body+=`<line class="opsd-diagonal" x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}"/><text class="opsd-diagonal-label" x="${x(.73)}" y="${y(.77)}">same score</text><text class="opsd-axis-title" x="${(L+W-R)/2}" y="${H-12}" text-anchor="middle">Standard unhinted Terminus score</text><text class="opsd-axis-title" x="16" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 16 ${(T+H-B)/2})">Hinted Terminus score</text>`;
+    for(const spec of series){
+      for(const task of opusScatterRows){
+        const hinted=spec.value(task);
+        if(!Number.isFinite(hinted))continue;
+        const cx=x(task.opusNoHint),cy=y(hinted),tipX=100*cx/W,tipY=100*cy/H;
+        const aria=`${task.name}, ${spec.arm}. Standard unhinted Terminus score ${fmt(task.opusNoHint)}; hinted Terminus score ${fmt(hinted)}.`;
+        const marker=spec.key==="fair"?`<rect class="opsd-scatter-dot" x="${cx-4.25}" y="${cy-4.25}" width="8.5" height="8.5" fill="#fff" stroke="${spec.color}" stroke-width="2"/>`:`<circle class="opsd-scatter-dot" cx="${cx}" cy="${cy}" r="4.7" fill="${spec.color}" stroke="#fff" stroke-width="1.4"/>`;
+        body+=`<g class="opsd-scatter-point opsd-scatter-${spec.key}" data-opus-scatter-point tabindex="0" role="img" aria-label="${esc(aria)}" data-name="${esc(task.name)}" data-arm="${spec.arm}" data-unhinted="${fmt(task.opusNoHint)}" data-hinted="${fmt(hinted)}" data-n="${spec.count(task)}" data-tip-x="${tipX}" data-tip-y="${tipY}"><circle class="opsd-hit" cx="${cx}" cy="${cy}" r="12"/>${marker}<title>${esc(aria)}</title></g>`;
+      }
+    }
+    return`<div class="opsd-chart-wrap opsd-opus-scatter-chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Claude Opus 5 hinted versus unhinted Terminus task scores">${body}</svg><div class="opsd-tooltip" role="tooltip" hidden></div></div>`;
   }
 
   function modelCard({name,fair,val,count,color,note}){
@@ -86,13 +117,19 @@
         <dl><div><dt>MuseSpark</dt><dd>11 val better · 4 fair better · 7 ties</dd></div><div><dt>Opus 5</dt><dd>8 val better · 2 fair better · 10 ties</dd></div><div><dt>Sign tests</dt><dd>p=0.059 for MuseSpark and p=0.17 for Opus 5, with ties dropped. Neither is decisive.</dd></div><div><dt>Interpretation</dt><dd>Hints expose task-specific opportunities; exploiting them is still a capability test.</dd></div></dl>
       </aside>
     </section>
+    <section class="opsd-opus-scatter" aria-labelledby="opsd-opus-scatter-title">
+      <div class="opsd-figure-head"><div><p class="opsd-kicker">Opus-only comparison</p><h3 id="opsd-opus-scatter-title">Claude Opus 5: hinted versus unhinted Terminus</h3></div><p>Hover or focus a marker for its task-level scores.</p></div>
+      <div class="opsd-scatter-key" aria-label="Hint types"><span><i class="opsd-scatter-fair"></i>Fair hint · 20 tasks</span><span><i class="opsd-scatter-val"></i>Validation hint · 22 tasks</span></div>
+      ${opusScatter()}
+      <p class="opsd-scatter-note">The diagonal is unchanged performance. The no-hint coordinate is the existing 24-hour Opus Terminus benchmark result, not a concurrent no-hint arm. CPU decoder graph executor and MLH COCO have no fair-hint score.</p>
+    </section>
     <details class="opsd-method" open>
       <summary>Study design and caveats</summary>
       <div class="opsd-method-body">
         <p>22 CPU tasks were run with Terminus 2, 200 maximum turns, backend batch, and 32,000 maximum tokens for every hinted arm. MuseSpark has 78 rollouts ($257.70); Opus 5 has 39 ($378.31). The cards compare the mean of per-task rollout medians, not a pooled rollout average.</p>
         <ul>
           <li><strong>The un-hinted arm is not a real fifth column.</strong> It exists for only 6 of 22 tasks, for MuseSpark only, and 5 of those 6 used 8,000 rather than 32,000 maximum tokens. On that non-cap-matched overlap: no hint ${fmt(overlap.none)}, fair ${fmt(overlap.fair)}, val ${fmt(overlap.val)}.</li>
-          <li><strong>Sample counts are small and uneven.</strong> MuseSpark has n=2 in every cell. Opus 5 is n=1 except five tasks carried at n=2; there is no un-hinted Opus 5 arm.</li>
+          <li><strong>Sample counts are small and uneven.</strong> MuseSpark has n=2 in every cell. Opus 5 is n=1 except five tasks carried at n=2; the hint experiment has no concurrent un-hinted Opus 5 arm.</li>
           <li><strong>GRPO makes the Opus headline fragile.</strong> Its fair median of 0.325 is the midpoint of [0.651, 0.000]. That zero inflates the +0.053 average: dropping it gives +0.037; using best-of gives +0.036; excluding GRPO gives +0.040.</li>
           <li><strong>Two Opus fair tasks are missing.</strong> CPU decoder graph executor and MLH COCO returned no score, leaving 20 comparable Opus tasks.</li>
           <li><strong>Do not overread small deltas.</strong> MuseSpark's within-task rollout spread is 0.013 for fair hints and 0.037 for validation hints. Deltas below about 0.04 are inside noise.</li>
@@ -117,5 +154,23 @@
     point.addEventListener("pointerleave",hideTooltip);
     point.addEventListener("focus",()=>showTooltip(point));
     point.addEventListener("blur",hideTooltip);
+  });
+
+  const opusTooltip=target.querySelector(".opsd-opus-scatter-chart .opsd-tooltip");
+  const showOpusTooltip=point=>{
+    const dataset=point.dataset;
+    opusTooltip.innerHTML=`<strong>${dataset.name}</strong><span>${dataset.arm}: ${dataset.hinted} (n=${dataset.n})</span><span>Standard unhinted Terminus: ${dataset.unhinted}</span>`;
+    opusTooltip.style.left=`${dataset.tipX}%`;
+    opusTooltip.style.top=`${dataset.tipY}%`;
+    opusTooltip.classList.toggle("is-left",Number(dataset.tipX)>.68);
+    opusTooltip.classList.toggle("is-below",Number(dataset.tipY)<.25);
+    opusTooltip.hidden=false;
+  };
+  const hideOpusTooltip=()=>{opusTooltip.hidden=true};
+  target.querySelectorAll("[data-opus-scatter-point]").forEach(point=>{
+    point.addEventListener("pointerenter",()=>showOpusTooltip(point));
+    point.addEventListener("pointerleave",hideOpusTooltip);
+    point.addEventListener("focus",()=>showOpusTooltip(point));
+    point.addEventListener("blur",hideOpusTooltip);
   });
 })();
