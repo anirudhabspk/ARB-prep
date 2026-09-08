@@ -12,7 +12,7 @@ const MODEL_BRANDS={
   "forge":{company:"Alibaba Cloud",short:"Qwen",logo:"https://cdn.simpleicons.org/alibabacloud/ff6a00"},
   "kittiwake":{company:"Google",short:"Gemini",logo:"assets/google-logo.png"},
   "granola-plus":{company:"Meta",short:"Muse",logo:"https://cdn.simpleicons.org/meta/0866ff"},
-  "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo.png",scale:.82},
+  "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo-contained.png"},
   "meridian":{company:"OpenAI",short:"Astra",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"}
 };
 function companyLogoImage(brand){const scale=brand.scale||1,style=scale===1?"":` style="transform:scale(${scale})"`;return`<img class="company-logo" src="${brand.logo}" alt="" aria-hidden="true" decoding="async"${style}>`}
