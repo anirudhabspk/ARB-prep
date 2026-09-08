@@ -1,6 +1,6 @@
 # Evaluation replacements still running
 
-The September 8 refresh publishes 21 completed reruns. Each used a 23 hour research window plus a 1 hour infrastructure envelope. The task and overview plots hold the final observed score flat through hour 24. AUARC and Elo use the observed 23 hour research window.
+The September 8 refresh publishes 21 completed reruns. Each used a 23 hour research window plus a 1 hour infrastructure envelope. The task and overview plots, AUARC, and Elo hold the final observed score flat through hour 24.
 
 Audit time: 2026-09-08 10:35 UTC. Sixteen replacement evaluations were running. Their prior published results remain in the calculations until the reruns complete. Two other replacements ended without a valid completed result, so their prior results also remain.
 
