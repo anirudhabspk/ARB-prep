@@ -420,8 +420,8 @@ function costPerformancePlot(rows){
     const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden-test AUARC ${score}`;
     body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
   }
-  const legend=rows.map(row=>`<span class="model-identity">${modelIdentity(row.key,{short:true})}</span>`).join("");
-  return`<article class="metric-plot metric-plot-wide"><h3>Hidden-test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p><div class="cost-legend">${legend}</div><div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
+  const legend=overviewLegend(rows);
+  return`<article class="metric-plot metric-plot-wide"><h3>Hidden-test AUARC versus API cost</h3><p>The line marks the Pareto frontier. Faded models cost more without scoring higher. API costs exclude compute and grading.</p>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></article>`;
 }
 
 function renderAggregates(){
