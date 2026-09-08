@@ -212,3 +212,6 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 .auarc-axis>span:nth-child(2){display:flex;justify-content:space-between}
 .auarc-axis i{font-style:normal}
 @media(max-width:640px){.auarc-ranking li,.auarc-axis{grid-template-columns:140px minmax(0,1fr) 40px;gap:8px;font-size:11px}.auarc-ranking .model-identity{gap:4px}.auarc-ranking .model-identity img{width:16px;height:16px}}
+
+.plot-takeaway{margin:18px 0 0;font-size:15px;line-height:1.6;color:var(--ink)}
+.plot-takeaway strong{font-weight:600}
