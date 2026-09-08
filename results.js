@@ -204,9 +204,24 @@ function overviewTrajectories(){
   return{maxHours,series};
 }
 
-function profileScoreRange(){
-  const values=DATA.tasks.flatMap(task=>task.models.flatMap(run=>run.points.flatMap(point=>[difficultyAdjustedPoint(task,point,"bestValidation"),difficultyAdjustedPoint(task,point,"testAtBest")]))).filter(Number.isFinite);
-  return{min:Math.min(...values),max:Math.max(...values)};
+function profileThresholds(){
+  const observed=DATA.tasks.flatMap(task=>task.models.flatMap(run=>run.points.flatMap(point=>[difficultyAdjustedPoint(task,point,"bestValidation"),difficultyAdjustedPoint(task,point,"testAtBest")]))).filter(Number.isFinite);
+  const taskPeaks=DATA.tasks.map(task=>Math.max(...task.models.flatMap(run=>run.points.map(point=>difficultyAdjustedPoint(task,point,"bestValidation"))).filter(Number.isFinite))).filter(Number.isFinite).sort((a,b)=>a-b);
+  const firstIteration=DATA.tasks.flatMap(task=>task.models.filter(run=>run.points.length).map(run=>difficultyAdjustedPoint(task,run.points.find(point=>point.iteration===1)||run.points[0],"bestValidation"))).filter(Number.isFinite);
+  const candidates=[
+    {label:"Lowest recorded score",value:Math.min(...observed)},
+    {label:"Lowest task peak validation score",value:taskPeaks[0]},
+    {label:"Second-lowest task peak validation score",value:taskPeaks[1]??taskPeaks[0]},
+    {label:"Median task peak validation score",value:quantile(taskPeaks,.5)},
+    {label:"Highest iteration-1 validation score",value:Math.max(...firstIteration)},
+    {label:"Highest task peak validation score",value:taskPeaks.at(-1)}
+  ];
+  return candidates.sort((a,b)=>a.value-b.value).reduce((thresholds,candidate)=>{
+    const prior=thresholds.at(-1);
+    if(prior&&Math.abs(prior.value-candidate.value)<1e-10)prior.label+=` / ${candidate.label}`;
+    else thresholds.push(candidate);
+    return thresholds;
+  },[]);
 }
 
 function solveProfiles(threshold){
@@ -265,9 +280,11 @@ function performanceProfilePlot(profile){
   return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
-function profileThresholdControl(range,threshold,profile){
-  const step=(range.max-range.min)>=.1?.001:.0001,status=profile.count?`${profile.count} workloads have at least one solver at this threshold.`:"No workload has a hidden-test curve at or above this threshold.";
-  return`<section class="profile-threshold-control" aria-label="Dolan-Moré threshold"><div class="profile-threshold-heading"><label for="profile-threshold">Common solve threshold <output id="profile-threshold-value" aria-live="polite">${threshold.toFixed(3)}</output></label><span id="profile-threshold-status">${esc(status)}</span></div><input id="profile-threshold" type="range" min="${range.min}" max="${range.max}" step="${step}" value="${threshold}" aria-valuemin="${range.min}" aria-valuemax="${range.max}" aria-valuenow="${threshold}" aria-valuetext="${threshold.toFixed(3)}"><div class="profile-threshold-bounds"><span>Lowest observed score: ${range.min.toFixed(3)}</span><span>Highest observed score: ${range.max.toFixed(3)}</span></div></section>`;
+function thresholdDisplay(threshold){return`${threshold.value.toFixed(3)} · ${threshold.label}`}
+
+function profileThresholdControl(thresholds,index,profile){
+  const threshold=thresholds[index],status=profile.count?`${profile.count} workloads have at least one solver at this threshold.`:"No workload has a hidden-test curve at or above this threshold.";
+  return`<section class="profile-threshold-control" aria-label="Dolan-Moré threshold"><div class="profile-threshold-heading"><label for="profile-threshold">Common solve threshold <output id="profile-threshold-value" aria-live="polite">${esc(thresholdDisplay(threshold))}</output></label><span id="profile-threshold-status">${esc(status)}</span></div><input id="profile-threshold" type="range" min="0" max="${thresholds.length-1}" step="1" value="${index}" list="profile-threshold-stops" aria-valuemin="0" aria-valuemax="${thresholds.length-1}" aria-valuenow="${index}" aria-valuetext="${esc(thresholdDisplay(threshold))}"><datalist id="profile-threshold-stops">${thresholds.map((item,itemIndex)=>`<option value="${itemIndex}" label="${esc(item.label)}"></option>`).join("")}</datalist><div class="profile-threshold-bounds"><span>${esc(thresholdDisplay(thresholds[0]))}</span><span>${esc(thresholdDisplay(thresholds.at(-1)))}</span></div></section>`;
 }
 
 function bindOverviewTooltips(target){
@@ -299,14 +316,16 @@ function bindOverviewTooltips(target){
 function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
-  const testOverview=overviewTrajectories(),range=profileScoreRange();
-  let threshold=Math.max(range.min,Math.min(range.max,.5)),profile=solveProfiles(threshold);
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}<div id="performance-profile-panel">${profileThresholdControl(range,threshold,profile)}<div id="performance-profile-plot">${performanceProfilePlot(profile)}</div></div></div><p class="trajectory-footnote">Move the threshold to choose the common reward that counts as solved. Its bounds include every observed validation and hidden-test score across models and tasks.</p></section>`;
+  const testOverview=overviewTrajectories(),thresholds=profileThresholds();
+  let thresholdIndex=thresholds.findIndex(item=>item.label.includes("Lowest task peak validation score"));
+  if(thresholdIndex<0)thresholdIndex=Math.floor((thresholds.length-1)/2);
+  let threshold=thresholds[thresholdIndex],profile=solveProfiles(threshold.value);
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}<div id="performance-profile-panel">${profileThresholdControl(thresholds,thresholdIndex,profile)}<div id="performance-profile-plot">${performanceProfilePlot(profile)}</div></div></div><p class="trajectory-footnote">The slider snaps to a few data-derived score landmarks. A task counts as solved when its monotone hidden-test curve reaches the selected common reward.</p></section>`;
   bindOverviewTooltips(target);
   target.querySelector("#profile-threshold")?.addEventListener("input",event=>{
-    threshold=Number(event.currentTarget.value);event.currentTarget.setAttribute("aria-valuenow",String(threshold));event.currentTarget.setAttribute("aria-valuetext",threshold.toFixed(3));profile=solveProfiles(threshold);
+    thresholdIndex=Number(event.currentTarget.value);threshold=thresholds[thresholdIndex];event.currentTarget.setAttribute("aria-valuenow",String(thresholdIndex));event.currentTarget.setAttribute("aria-valuetext",thresholdDisplay(threshold));profile=solveProfiles(threshold.value);
     const value=target.querySelector("#profile-threshold-value"),status=target.querySelector("#profile-threshold-status"),plot=target.querySelector("#performance-profile-plot");
-    if(value)value.textContent=threshold.toFixed(3);
+    if(value)value.textContent=thresholdDisplay(threshold);
     if(status)status.textContent=profile.count?`${profile.count} workloads have at least one solver at this threshold.`:"No workload has a hidden-test curve at or above this threshold.";
     if(plot){plot.innerHTML=performanceProfilePlot(profile);bindOverviewTooltips(plot);}
   });
