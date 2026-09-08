@@ -53,10 +53,6 @@
       <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Fable 5.1 scores are provisional and will be recalculated, including Elo and hidden test AUARC.</p>
       <p class="results-intro">AUARC is the normalized Area under the Auto Research Curve. We compute it by averaging the best difficulty-adjusted reward reached at each iteration. Models score higher when they find better solutions earlier. For hidden test AUARC, we use the hidden test reward of the checkpoint selected by validation at each iteration.</p>
       <div id="trajectory-overview"></div>
-      <div class="result-lead">
-        <article class="result-stat"><span>Highest task-relative Elo</span><strong id="leader-score"></strong><p id="leader-name"></p></article>
-        <article class="result-stat"><span>Spearman rank correlation</span><strong id="rho-score"></strong><p id="rho-range"></p></article>
-      </div>
       <p class="plot-note">Task relative Elo compares models using hidden test AUARC within each task. We combine these task level comparisons into one rating and set the middle model to 1000. Higher Elo means a model ranks above other models on more tasks. The other plots show means on the task-specific difficulty-adjusted reward scale. Lines show 95% bootstrap intervals from repeatedly sampling the task set.</p>
       <div class="aggregate-grid" id="aggregate-plots"></div>
       <ul class="result-points result-notes" id="result-notes"></ul>
