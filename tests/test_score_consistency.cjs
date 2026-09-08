@@ -54,7 +54,7 @@ const result=evaluate('currentResults()'),effort=evaluate('effortModelRows()');
 const currentSnapshot=context.window.ARB_DATA.snapshot.selectionPolicy==='current';
 const completedReruns=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.benchmarkWindow==="23h research + 1h infrastructure")');
 assert.equal(completedReruns.length,21);
-assert.ok(completedReruns.every(run=>run.hours===23&&run.displayHours===24&&!run.provisional));
+assert.ok(completedReruns.every(run=>run.hours===24&&run.displayHours===24&&run.extension&&!run.provisional));
 const retainedRunning=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="running")');
 const retainedInvalid=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="invalid")');
 assert.equal(retainedRunning.length,16);
@@ -64,7 +64,7 @@ assert.equal(context.window.ARB_DATA.snapshot.runningRerunCount,16);
 assert.equal(context.window.ARB_DATA.snapshot.invalidRerunCount,2);
 evaluate('var completedRerunTask=DATA.tasks.find(t=>t.name==="Label efficient risk estimator");var completedRerun=completedRerunTask.models.find(r=>r.evaluationId==="942c3b95-5c23-4dae-b6ab-a8b0fa6a5ff1")');
 assert.equal(evaluate('taskStats(completedRerunTask).find(r=>r.key===completedRerun.model).hours'),24);
-close(evaluate('difficultyAdjustedRunStats(completedRerunTask,completedRerun).test'),evaluate('timeAuc(completedRerun.points.map(point=>({...point,test:difficultyAdjustedPoint(completedRerunTask,point,"testAtBest")})),"test",23*3600)'));
+close(evaluate('difficultyAdjustedRunStats(completedRerunTask,completedRerun).test'),evaluate('timeAuc(completedRerun.points.map(point=>({...point,test:difficultyAdjustedPoint(completedRerunTask,point,"testAtBest")})),"test",24*3600)'));
 for(const row of effort){
   close(row.test,result.rows.find(r=>r.key===row.key).test);
   close(row.test,context.window.ARB_DATA.aggregates.find(r=>r.key===row.key).test);
@@ -80,8 +80,21 @@ assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
 const allRuns=context.window.ARB_DATA.tasks.flatMap(task=>task.models);
 assert.equal(allRuns.filter(run=>run.points.some(point=>Number.isFinite(point.testAtBest))).length,261);
-assert.equal(allRuns.filter(run=>run.extension).length,24);
+assert.equal(allRuns.filter(run=>run.extension).length,52);
 assert.ok(allRuns.filter(run=>run.extension).every(run=>run.hours===24));
+assert.ok(allRuns.filter(run=>run.points.length).every(run=>run.hours===24));
+const newlyFlattenedIds=new Set([
+  '64f07bb3-0573-4287-abcd-bb615ef31cdd',
+  'd52b8c71-bf11-4f24-97f0-3ea02cfd9585',
+  '017f8831-67b5-4966-a18a-87b7feca9d2f',
+  '2e7af4a3-bb00-47fe-a600-451dccc6cea9',
+  '322e5f13-314f-436f-9705-cd1e07fa9f51',
+  '6ddbc139-353f-46f8-9254-331649aa91ee',
+  '651fe36c-e75f-4607-ac75-d9c9cb13b5b0',
+]);
+const newlyFlattened=allRuns.filter(run=>newlyFlattenedIds.has(run.evaluationId));
+assert.equal(newlyFlattened.length,newlyFlattenedIds.size);
+assert.ok(newlyFlattened.every(run=>run.hours===24&&run.extension));
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="1a5ba0eb-d667-40f2-bfde-20cb1ce4b46d").points.length')>0);
 assert.ok(evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="60a7e9e2-c234-4091-a258-242d0574dc30").points.length')>0);
 evaluate('var faster=DATA.tasks.find(t=>t.name==="FasterGCG candidate token ranking");var fasterOpus=faster.models.find(r=>r.evaluationId==="9c006e63-3989-4de2-8867-b3c4016757ec");var fasterQwen=faster.models.find(r=>r.evaluationId==="1651b5ec-a39d-4c1c-aa20-f1e84c3b88eb")');

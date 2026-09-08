@@ -246,7 +246,7 @@ function overviewLine(series,path,detail){
 }
 
 function logTimeTestPlot(overview){
-  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=1,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
+  const W=470,H=342,L=56,R=16,T=18,B=48,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
@@ -446,9 +446,9 @@ function renderTimeLeaderboard(){
   const target=document.getElementById("time-leaderboard");if(!target)return;
   const overview=overviewTrajectories(),steps=240,minHour=1,maxHour=overview.maxHours,hourAt=index=>minHour*Math.pow(maxHour/minHour,index/steps);
   const frames=Array.from({length:steps+1},(_,index)=>leaderboardAtTime(overview,hourAt(index)));
-  const W=680,H=390,L=48,R=16,T=18,B=48,x=hour=>L+Math.log(hour/minHour)/Math.log(maxHour/minHour)*(W-L-R),y=value=>H-B-value*(H-T-B);
+  const W=680,H=390,L=48,R=16,T=18,B=48,x=hour=>L+Math.log(hour/minHour)/Math.log(maxHour/minHour)*(W-L-R),y=value=>H-B-value/.8*(H-T-B);
   let svg='';
-  for(const value of [0,.2,.4,.6,.8,1])svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text class="plot-tick" x="${L-10}" y="${y(value)+4}" text-anchor="end">${value.toFixed(1)}</text>`;
+  for(const value of [0,.2,.4,.6,.8])svg+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text class="plot-tick" x="${L-10}" y="${y(value)+4}" text-anchor="end">${value.toFixed(1)}</text>`;
   for(const hour of [1,2,4,8,16,maxHour])svg+=`<text class="plot-tick" x="${x(hour)}" y="${H-B+24}" text-anchor="middle">${hour<1?'15m':hour+'h'}</text>`;
   for(const series of overview.series){
     const path=frames.flatMap((rows,index)=>{const value=rows.find(row=>row.key===series.key).value;return value==null?[]:[`${index?'L':'M'}${x(hourAt(index)).toFixed(2)},${y(value).toFixed(2)}`];}).join(' ');

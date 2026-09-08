@@ -5,6 +5,7 @@ from scripts.refresh_score_snapshot import (
     COMPLETED_23H_RERUN_IDS,
     api_ledger_cost,
     api_ledger_output_tokens,
+    apply_published_window,
     curve,
     eligible_terminal_result,
     eligible_current_result,
@@ -16,6 +17,24 @@ from scripts.refresh_score_snapshot import (
 class ApiLedgerCostTest(unittest.TestCase):
     def test_completed_rerun_cohort_has_21_evaluations(self):
         self.assertEqual(len(COMPLETED_23H_RERUN_IDS), 21)
+
+    def test_short_published_results_are_flattened_to_24_hours(self):
+        short = {'hours': 13.2, 'points': [{'seconds': 100, 'testAtBest': 0.5}],
+                 'extension': False}
+        completed_rerun = {'hours': 23, 'displayHours': 24,
+                           'points': [{'seconds': 100, 'testAtBest': 0.5}],
+                           'extension': False}
+        unavailable = {'hours': 0, 'points': [], 'extension': False}
+
+        apply_published_window(short)
+        apply_published_window(completed_rerun)
+        apply_published_window(unavailable)
+
+        self.assertEqual(short['hours'], 24)
+        self.assertTrue(short['extension'])
+        self.assertEqual(completed_rerun['hours'], 24)
+        self.assertTrue(completed_rerun['extension'])
+        self.assertEqual(unavailable['hours'], 0)
 
     def test_current_policy_accepts_only_completed_clean_runs(self):
         source = {'manifest_status': 'Rerun submitted'}
