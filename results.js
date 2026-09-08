@@ -209,21 +209,11 @@ function overviewTrajectories(){
   return{maxHours,series};
 }
 
-function profileThresholds(){
-  const observed=DATA.tasks.flatMap(task=>task.models.flatMap(run=>run.points.flatMap(point=>[difficultyAdjustedPoint(task,point,"bestValidation"),difficultyAdjustedPoint(task,point,"testAtBest")]))).filter(Number.isFinite);
+const DOLAN_MORE_TASK_PEAK_RANK=15;
+function fixedProfileThreshold(){
   const taskPeaks=DATA.tasks.map(task=>({task:task.name,value:Math.max(...task.models.flatMap(run=>run.points.map(point=>difficultyAdjustedPoint(task,point,"bestValidation"))).filter(Number.isFinite))})).filter(item=>Number.isFinite(item.value)).sort((a,b)=>a.value-b.value);
-  const firstIteration=DATA.tasks.flatMap(task=>task.models.filter(run=>run.points.length).map(run=>difficultyAdjustedPoint(task,run.points.find(point=>point.iteration===1)||run.points[0],"bestValidation"))).filter(Number.isFinite);
-  const candidates=[
-    {label:"Lowest recorded score",value:Math.min(...observed)},
-    ...taskPeaks.map((item,index)=>({label:`Task peak validation rank ${index+1} of ${taskPeaks.length} · ${item.task}`,value:item.value})),
-    {label:"Highest iteration-1 validation score",value:Math.max(...firstIteration)},
-  ];
-  return candidates.sort((a,b)=>a.value-b.value).reduce((thresholds,candidate)=>{
-    const prior=thresholds.at(-1);
-    if(prior&&Math.abs(prior.value-candidate.value)<1e-10)prior.label+=` / ${candidate.label}`;
-    else thresholds.push(candidate);
-    return thresholds;
-  },[]);
+  const index=Math.min(DOLAN_MORE_TASK_PEAK_RANK-1,taskPeaks.length-1),item=taskPeaks[index];
+  return{...item,label:`Task peak validation rank ${index+1} of ${taskPeaks.length} · ${item.task}`};
 }
 
 function solveProfiles(threshold){
@@ -282,13 +272,6 @@ function performanceProfilePlot(profile){
   return`<article class="metric-plot"><h3>Dolan–Moré performance profile</h3><p>A task is solved when its monotone hidden-test curve reaches the shared threshold. Times are relative to the fastest solver on that task. Higher is better; a curve farther left reaches the threshold faster.</p><div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dolan-More performance profile by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div></article>`;
 }
 
-function thresholdDisplay(threshold){return`${threshold.value.toFixed(3)} · ${threshold.label}`}
-
-function profileThresholdControl(thresholds,index,profile){
-  const threshold=thresholds[index],status=profile.count?`${profile.count} workloads have at least one solver at this threshold.`:"No workload has a hidden-test curve at or above this threshold.";
-  return`<section class="profile-threshold-control" aria-label="Dolan-Moré threshold"><div class="profile-threshold-heading"><label for="profile-threshold">Common solve threshold <output id="profile-threshold-value" aria-live="polite">${esc(thresholdDisplay(threshold))}</output></label><span id="profile-threshold-status">${esc(status)}</span></div><input id="profile-threshold" type="range" min="0" max="${thresholds.length-1}" step="1" value="${index}" list="profile-threshold-stops" aria-valuemin="0" aria-valuemax="${thresholds.length-1}" aria-valuenow="${index}" aria-valuetext="${esc(thresholdDisplay(threshold))}"><datalist id="profile-threshold-stops">${thresholds.map((item,itemIndex)=>`<option value="${itemIndex}" label="${esc(item.label)}"></option>`).join("")}</datalist><div class="profile-threshold-bounds"><span>${esc(thresholdDisplay(thresholds[0]))}</span><span>${esc(thresholdDisplay(thresholds.at(-1)))}</span></div></section>`;
-}
-
 function bindOverviewTooltips(target){
   const show=(line,event)=>{
     const wrap=line.closest(".overview-chart-wrap"),tooltip=wrap?.querySelector(".overview-tooltip");
@@ -318,19 +301,9 @@ function bindOverviewTooltips(target){
 function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
-  const testOverview=overviewTrajectories(),thresholds=profileThresholds();
-  let thresholdIndex=thresholds.findIndex(item=>item.label.includes("Task peak validation rank 1"));
-  if(thresholdIndex<0)thresholdIndex=Math.floor((thresholds.length-1)/2);
-  let threshold=thresholds[thresholdIndex],profile=solveProfiles(threshold.value);
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}<div id="performance-profile-panel">${profileThresholdControl(thresholds,thresholdIndex,profile)}<div id="performance-profile-plot">${performanceProfilePlot(profile)}</div></div></div><p class="trajectory-footnote">The slider snaps to the ranked task-level validation peaks, plus the global lowest score. A task counts as solved when its monotone hidden-test curve reaches the selected common reward.</p></section>`;
+  const testOverview=overviewTrajectories(),threshold=fixedProfileThreshold(),profile=solveProfiles(threshold.value);
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}${performanceProfilePlot(profile)}</div><p class="trajectory-footnote">The solve threshold is fixed at ${threshold.value.toFixed(3)}: ${esc(threshold.label)}. A task counts as solved when its monotone hidden-test curve reaches this reward.</p></section>`;
   bindOverviewTooltips(target);
-  target.querySelector("#profile-threshold")?.addEventListener("input",event=>{
-    thresholdIndex=Number(event.currentTarget.value);threshold=thresholds[thresholdIndex];event.currentTarget.setAttribute("aria-valuenow",String(thresholdIndex));event.currentTarget.setAttribute("aria-valuetext",thresholdDisplay(threshold));profile=solveProfiles(threshold.value);
-    const value=target.querySelector("#profile-threshold-value"),status=target.querySelector("#profile-threshold-status"),plot=target.querySelector("#performance-profile-plot");
-    if(value)value.textContent=thresholdDisplay(threshold);
-    if(status)status.textContent=profile.count?`${profile.count} workloads have at least one solver at this threshold.`:"No workload has a hidden-test curve at or above this threshold.";
-    if(plot){plot.innerHTML=performanceProfilePlot(profile);bindOverviewTooltips(plot);}
-  });
 }
 
 function ranks(values){const order=values.map((value,index)=>({value,index})).sort((a,b)=>a.value-b.value),out=Array(values.length);for(let i=0;i<order.length;){let j=i+1;while(j<order.length&&order[j].value===order[i].value)j++;const rank=(i+j-1)/2+1;for(let k=i;k<j;k++)out[order[k].index]=rank;i=j}return out}
