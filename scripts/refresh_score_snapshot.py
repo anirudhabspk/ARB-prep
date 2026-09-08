@@ -84,6 +84,13 @@ RESEARCH_WINDOW_SECONDS = 23 * 3600
 DISPLAY_WINDOW_HOURS = 24
 
 
+def apply_published_window(run):
+    """Carry a short published result flat through the 24-hour score window."""
+    if run.get('points') and run.get('hours', 0) < DISPLAY_WINDOW_HOURS:
+        run['hours'] = DISPLAY_WINDOW_HOURS
+        run['extension'] = True
+
+
 def read_site(path):
     return json.loads(path.read_text().split('=', 1)[1].rstrip(';\n'))
 
@@ -351,6 +358,7 @@ def main():
                     replacement_status = 'running' if status == 'running' else 'invalid'
                     run.update({'replacementEvaluationId': eid,
                                 'replacementStatus': replacement_status})
+        apply_published_window(run)
         task_lookup[task_name]['models'].append(run)
         audit.append({**source, 'included': bool(eligible), 'status': status,
                       'batch_job_status': payload['status']['job_status'],
