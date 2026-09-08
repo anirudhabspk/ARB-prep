@@ -206,15 +206,12 @@ function overviewTrajectories(){
 
 function profileThresholds(){
   const observed=DATA.tasks.flatMap(task=>task.models.flatMap(run=>run.points.flatMap(point=>[difficultyAdjustedPoint(task,point,"bestValidation"),difficultyAdjustedPoint(task,point,"testAtBest")]))).filter(Number.isFinite);
-  const taskPeaks=DATA.tasks.map(task=>Math.max(...task.models.flatMap(run=>run.points.map(point=>difficultyAdjustedPoint(task,point,"bestValidation"))).filter(Number.isFinite))).filter(Number.isFinite).sort((a,b)=>a-b);
+  const taskPeaks=DATA.tasks.map(task=>({task:task.name,value:Math.max(...task.models.flatMap(run=>run.points.map(point=>difficultyAdjustedPoint(task,point,"bestValidation"))).filter(Number.isFinite))})).filter(item=>Number.isFinite(item.value)).sort((a,b)=>a.value-b.value);
   const firstIteration=DATA.tasks.flatMap(task=>task.models.filter(run=>run.points.length).map(run=>difficultyAdjustedPoint(task,run.points.find(point=>point.iteration===1)||run.points[0],"bestValidation"))).filter(Number.isFinite);
   const candidates=[
     {label:"Lowest recorded score",value:Math.min(...observed)},
-    {label:"Lowest task peak validation score",value:taskPeaks[0]},
-    {label:"Second-lowest task peak validation score",value:taskPeaks[1]??taskPeaks[0]},
-    {label:"Median task peak validation score",value:quantile(taskPeaks,.5)},
+    ...taskPeaks.map((item,index)=>({label:`Task peak validation rank ${index+1} of ${taskPeaks.length} · ${item.task}`,value:item.value})),
     {label:"Highest iteration-1 validation score",value:Math.max(...firstIteration)},
-    {label:"Highest task peak validation score",value:taskPeaks.at(-1)}
   ];
   return candidates.sort((a,b)=>a.value-b.value).reduce((thresholds,candidate)=>{
     const prior=thresholds.at(-1);
@@ -317,10 +314,10 @@ function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
   const testOverview=overviewTrajectories(),thresholds=profileThresholds();
-  let thresholdIndex=thresholds.findIndex(item=>item.label.includes("Lowest task peak validation score"));
+  let thresholdIndex=thresholds.findIndex(item=>item.label.includes("Task peak validation rank 1"));
   if(thresholdIndex<0)thresholdIndex=Math.floor((thresholds.length-1)/2);
   let threshold=thresholds[thresholdIndex],profile=solveProfiles(threshold.value);
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}<div id="performance-profile-panel">${profileThresholdControl(thresholds,thresholdIndex,profile)}<div id="performance-profile-plot">${performanceProfilePlot(profile)}</div></div></div><p class="trajectory-footnote">The slider snaps to a few data-derived score landmarks. A task counts as solved when its monotone hidden-test curve reaches the selected common reward.</p></section>`;
+  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Aggregate research trajectories</h3><p>Both plots use rewards on a shared 0–1 scale. For each rollout, the hidden-test curve is postprocessed by sweeping backward in time and retaining the lowest score measured from that point onward. The resulting test curve is monotone moving forward in time. The fitted trajectories use the same log-sigmoid form as <a href="https://edge-bench.org/" target="_blank" rel="noreferrer">EdgeBench</a>; hover or focus a line to identify its model.</p>${overviewLegend(testOverview.series)}<div class="trajectory-overview-grid">${logTimeTestPlot(testOverview)}<div id="performance-profile-panel">${profileThresholdControl(thresholds,thresholdIndex,profile)}<div id="performance-profile-plot">${performanceProfilePlot(profile)}</div></div></div><p class="trajectory-footnote">The slider snaps to the ranked task-level validation peaks, plus the global lowest score. A task counts as solved when its monotone hidden-test curve reaches the selected common reward.</p></section>`;
   bindOverviewTooltips(target);
   target.querySelector("#profile-threshold")?.addEventListener("input",event=>{
     thresholdIndex=Number(event.currentTarget.value);threshold=thresholds[thresholdIndex];event.currentTarget.setAttribute("aria-valuenow",String(thresholdIndex));event.currentTarget.setAttribute("aria-valuetext",thresholdDisplay(threshold));profile=solveProfiles(threshold.value);
