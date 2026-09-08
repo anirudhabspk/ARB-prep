@@ -144,3 +144,5 @@
 /* The blog uses its contents sidebar instead of a fixed header. */
 body:has(.hero) .contents{top:28px}
 body:has(.hero) .section{scroll-margin-top:28px}
+
+.lead-cost-plot{width:min(1000px,calc(100% - 36px));margin:24px auto 0}
