@@ -16,6 +16,7 @@
   const catalog=new Map((window.ARB_TASK_CATALOG||[]).map(task=>[task.slug,task]));
   const benchmarkTasks=new Map((window.ARB_DATA?.tasks||[]).map(task=>[task.name,task]));
   const displayName=task=>catalog.get(baseSlug(task.key))?.blogName||task.key.replace(/^p?\d{4}-\d{5}-/,"").replace(/-/g," ");
+  const firstIterationScore=(name,model)=>benchmarkTasks.get(name)?.models?.find(run=>run.model===model)?.points?.find(point=>point.iteration===1)?.testAtBest;
   const shortName=task=>{
     const key=task.key;
     if(key.includes("grpo"))return"GRPO";
@@ -26,16 +27,15 @@
   };
   const stats=data.tasks.map(task=>{
     const museFair=median(task.fairGranola),museVal=median(task.valGranola),opusFair=median(task.fairLumen),opusVal=median(task.valLumen);
-    const museNone=task.noneGranola?.scores||[];
-    const name=displayName(task),baselineRun=benchmarkTasks.get(name)?.models?.find(run=>run.model==="lumen"),opusNoHint=baselineRun?.points?.at(-1)?.testAtBest,museNoHint=median(museNone);
-    return{...task,name,short:shortName(task),museNone,museFair,museVal,opusFair,opusVal,opusNoHint,museNoHint,muse:delta(museFair,museVal),opus:delta(opusFair,opusVal)};
+    const name=displayName(task),opusNoHint=firstIterationScore(name,"lumen"),museNoHint=firstIterationScore(name,"granola-plus");
+    return{...task,name,short:shortName(task),museFair,museVal,opusFair,opusVal,opusNoHint,museNoHint,muse:delta(museFair,museVal),opus:delta(opusFair,opusVal)};
   });
   const paired=stats.filter(task=>Number.isFinite(task.muse)&&Number.isFinite(task.opus));
   const scatterConfigs=[
-    {id:"opus-fair",model:"Claude Opus 5",hint:"Fair hint",color:"#21636a",shape:"square",rows:stats.filter(task=>Number.isFinite(task.opusNoHint)&&Number.isFinite(task.opusFair)),baseline:task=>task.opusNoHint,hinted:task=>task.opusFair,count:task=>task.fairLumen.length,baselineLabel:"Standard 24-hour unhinted Terminus"},
-    {id:"opus-val",model:"Claude Opus 5",hint:"Validation hint",color:"#c83220",shape:"circle",rows:stats.filter(task=>Number.isFinite(task.opusNoHint)&&Number.isFinite(task.opusVal)),baseline:task=>task.opusNoHint,hinted:task=>task.opusVal,count:task=>task.valLumen.length,baselineLabel:"Standard 24-hour unhinted Terminus"},
-    {id:"muse-fair",model:"MuseSpark 1.3",hint:"Fair hint",color:"#21636a",shape:"square",rows:stats.filter(task=>Number.isFinite(task.museNoHint)&&Number.isFinite(task.museFair)),baseline:task=>task.museNoHint,hinted:task=>task.museFair,count:task=>task.fairGranola.length,baselineLabel:"Unhinted Terminus"},
-    {id:"muse-val",model:"MuseSpark 1.3",hint:"Validation hint",color:"#c83220",shape:"circle",rows:stats.filter(task=>Number.isFinite(task.museNoHint)&&Number.isFinite(task.museVal)),baseline:task=>task.museNoHint,hinted:task=>task.museVal,count:task=>task.valGranola.length,baselineLabel:"Unhinted Terminus"}
+    {id:"opus-fair",model:"Claude Opus 5",hint:"Fair hint",color:"#21636a",shape:"square",rows:stats.filter(task=>Number.isFinite(task.opusNoHint)&&Number.isFinite(task.opusFair)),baseline:task=>task.opusNoHint,hinted:task=>task.opusFair,count:task=>task.fairLumen.length,baselineLabel:"No-hint first 200-turn iteration"},
+    {id:"opus-val",model:"Claude Opus 5",hint:"Validation hint",color:"#c83220",shape:"circle",rows:stats.filter(task=>Number.isFinite(task.opusNoHint)&&Number.isFinite(task.opusVal)),baseline:task=>task.opusNoHint,hinted:task=>task.opusVal,count:task=>task.valLumen.length,baselineLabel:"No-hint first 200-turn iteration"},
+    {id:"muse-fair",model:"MuseSpark 1.3",hint:"Fair hint",color:"#21636a",shape:"square",rows:stats.filter(task=>Number.isFinite(task.museNoHint)&&Number.isFinite(task.museFair)),baseline:task=>task.museNoHint,hinted:task=>task.museFair,count:task=>task.fairGranola.length,baselineLabel:"No-hint first 200-turn iteration"},
+    {id:"muse-val",model:"MuseSpark 1.3",hint:"Validation hint",color:"#c83220",shape:"circle",rows:stats.filter(task=>Number.isFinite(task.museNoHint)&&Number.isFinite(task.museVal)),baseline:task=>task.museNoHint,hinted:task=>task.museVal,count:task=>task.valGranola.length,baselineLabel:"No-hint first 200-turn iteration"}
   ];
 
   function chart(){
@@ -69,19 +69,19 @@
     const x=value=>L+value*plotW;
     const y=value=>H-B-value*plotH;
     const ticks=[0,.2,.4,.6,.8,1];
-    let body=`<title>${esc(config.model)} ${esc(config.hint)} score compared with unhinted Terminus score</title><desc>Each marker represents one task. The horizontal position is the unhinted Terminus score. The vertical position is the score with a ${config.hint.toLowerCase()}.</desc><rect class="opsd-plot-frame" x="${L}" y="${T}" width="${plotW}" height="${plotH}"/>`;
+    let body=`<title>${esc(config.model)} ${esc(config.hint)} score compared with the first no-hint Terminus iteration</title><desc>Each marker represents one task. The horizontal position is the score after the first 200-turn no-hint Terminus iteration. The vertical position is the score from a 200-turn Terminus run with a ${config.hint.toLowerCase()}.</desc><rect class="opsd-plot-frame" x="${L}" y="${T}" width="${plotW}" height="${plotH}"/>`;
     for(const tick of ticks){
       const xx=x(tick),yy=y(tick);
       body+=`<line class="opsd-grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${H-B}"/><line class="opsd-grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="opsd-tick" x="${xx}" y="${H-B+20}" text-anchor="middle">${axisFmt(tick)}</text><text class="opsd-tick" x="${L-9}" y="${yy+3.5}" text-anchor="end">${axisFmt(tick)}</text>`;
     }
-    body+=`<line class="opsd-diagonal" x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}"/><text class="opsd-diagonal-label" x="${x(.73)}" y="${y(.77)}">same score</text><text class="opsd-axis-title" x="${(L+W-R)/2}" y="${H-12}" text-anchor="middle">Unhinted Terminus score</text><text class="opsd-axis-title" x="16" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 16 ${(T+H-B)/2})">Hinted Terminus score</text>`;
+    body+=`<line class="opsd-diagonal" x1="${x(0)}" y1="${y(0)}" x2="${x(1)}" y2="${y(1)}"/><text class="opsd-diagonal-label" x="${x(.73)}" y="${y(.77)}">same score</text><text class="opsd-axis-title" x="${(L+W-R)/2}" y="${H-12}" text-anchor="middle">No-hint, first 200-turn iteration</text><text class="opsd-axis-title" x="16" y="${(T+H-B)/2}" text-anchor="middle" transform="rotate(-90 16 ${(T+H-B)/2})">Hinted 200-turn run</text>`;
     for(const task of config.rows){
       const baseline=config.baseline(task),hinted=config.hinted(task),cx=x(baseline),cy=y(hinted),tipX=100*cx/W,tipY=100*cy/H;
       const aria=`${task.name}, ${config.model}, ${config.hint}. Unhinted Terminus score ${fmt(baseline)}; hinted Terminus score ${fmt(hinted)}.`;
       const marker=config.shape==="square"?`<rect class="opsd-scatter-dot" x="${cx-4.25}" y="${cy-4.25}" width="8.5" height="8.5" fill="#fff" stroke="${config.color}" stroke-width="2"/>`:`<circle class="opsd-scatter-dot" cx="${cx}" cy="${cy}" r="4.7" fill="${config.color}" stroke="#fff" stroke-width="1.4"/>`;
       body+=`<g class="opsd-scatter-point" data-hint-scatter-point tabindex="0" role="img" aria-label="${esc(aria)}" data-scatter-id="${config.id}" data-name="${esc(task.name)}" data-model="${config.model}" data-arm="${config.hint}" data-baseline-label="${config.baselineLabel}" data-unhinted="${fmt(baseline)}" data-hinted="${fmt(hinted)}" data-n="${config.count(task)}" data-tip-x="${tipX}" data-tip-y="${tipY}"><circle class="opsd-hit" cx="${cx}" cy="${cy}" r="12"/>${marker}<title>${esc(aria)}</title></g>`;
     }
-    return`<div class="opsd-chart-wrap opsd-hint-scatter-chart" data-hint-scatter-tooltip="${config.id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(config.model)} ${esc(config.hint)} versus unhinted Terminus task scores">${body}</svg><div class="opsd-tooltip" role="tooltip" hidden></div></div>`;
+    return`<div class="opsd-chart-wrap opsd-hint-scatter-chart" data-hint-scatter-tooltip="${config.id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(config.model)} ${esc(config.hint)} versus first no-hint Terminus iteration task scores">${body}</svg><div class="opsd-tooltip" role="tooltip" hidden></div></div>`;
   }
 
   function scatterPanel(config){
@@ -93,7 +93,7 @@
     return`<article class="opsd-model-card" style="--opsd-model-color:${color}"><p class="opsd-model-name">${esc(name)}</p><div class="opsd-score-flow"><span><small>Fair hint</small><strong>${fmt(fair)}</strong></span><b aria-hidden="true">→</b><span><small>Val hint</small><strong>${fmt(val)}</strong></span></div><p class="opsd-delta">${deltaFmt(change)} <span>mean task-median score · ${count} tasks</span></p><p class="opsd-card-note">${esc(note)}</p></article>`;
   }
 
-  const granola=data.summary["granola-plus"],lumen=data.summary.lumen,overlap=data.summary.unhinted_overlap_granola;
+  const granola=data.summary["granola-plus"],lumen=data.summary.lumen;
   target.innerHTML=`
     <div class="opsd-intro prose">
       <p>We use hints to ask whether these tasks reward the ability to <em>execute</em> a useful research idea, rather than merely discovering the right words. A <a href="https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/commit/e0e520e">fair hint</a> gives only an insight that can be inferred from the task statement. A <a href="https://github.com/bespokelabsai/AutoResearchBench-Preview-Tasks/commit/d0d1eea">validation hint</a> can additionally name grader nuances or an exploit. Both are short blocks appended to the end of the task instruction.</p>
@@ -120,17 +120,17 @@
       </aside>
     </section>
     <section class="opsd-hint-scatters" aria-labelledby="opsd-hint-scatters-title">
-      <div class="opsd-figure-head"><div><p class="opsd-kicker">Hinted versus unhinted</p><h3 id="opsd-hint-scatters-title">Task-level hint comparisons</h3></div><p>Hover or focus a marker for its task-level scores.</p></div>
+      <div class="opsd-figure-head"><div><p class="opsd-kicker">Hinted versus first iteration</p><h3 id="opsd-hint-scatters-title">Matched 200-turn task comparisons</h3></div><p>Hover or focus a marker for its task-level scores.</p></div>
       <div class="opsd-scatter-grid">${scatterConfigs.map(scatterPanel).join("")}</div>
-      <p class="opsd-scatter-note">The diagonal is unchanged performance. Opus uses the existing 24-hour benchmark result as its no-hint coordinate, not a concurrent no-hint arm. MuseSpark has only six unhinted tasks; five used 8,000 maximum tokens, versus 32,000 for every hinted run.</p>
+      <p class="opsd-scatter-note">The diagonal is unchanged performance. Each no-hint coordinate is the hidden-test score after the first 200-turn iteration of the standard AutoResearch rollout for the same model and task. Each hinted coordinate is a 200-turn Terminus run, so the axes compare equal turn budgets across all 22 CPU tasks.</p>
     </section>
     <details class="opsd-method" open>
       <summary>Study design and caveats</summary>
       <div class="opsd-method-body">
         <p>22 CPU tasks were run with Terminus 2, 200 maximum turns, backend batch, and 32,000 maximum tokens for every hinted arm. MuseSpark has 78 rollouts ($257.70); Opus 5 has 39 ($378.31). The cards compare the mean of per-task rollout medians, not a pooled rollout average.</p>
         <ul>
-          <li><strong>The un-hinted arm is not a real fifth column.</strong> It exists for only 6 of 22 tasks, for MuseSpark only, and 5 of those 6 used 8,000 rather than 32,000 maximum tokens. On that non-cap-matched overlap: no hint ${fmt(overlap.none)}, fair ${fmt(overlap.fair)}, val ${fmt(overlap.val)}.</li>
-          <li><strong>Sample counts are small and uneven.</strong> MuseSpark has n=2 in every cell. Opus 5 is n=1 except five tasks carried at n=2; the hint experiment has no concurrent un-hinted Opus 5 arm.</li>
+          <li><strong>The no-hint baseline is the first standard AutoResearch iteration.</strong> It has the same 200-turn Terminus budget as a hinted run, so the scatter plots compare equal effort across all 22 CPU tasks. It is not a separately randomized no-hint arm: the first-iteration and hinted runs are distinct evaluations.</li>
+          <li><strong>Sample counts are small and uneven.</strong> MuseSpark has n=2 in every hinted cell. Opus 5 is n=1 except five tasks carried at n=2.</li>
           <li><strong>GRPO makes the Opus headline fragile.</strong> Its fair median of 0.325 is the midpoint of [0.651, 0.000]. That zero inflates the +0.053 average: dropping it gives +0.037; using best-of gives +0.036; excluding GRPO gives +0.040.</li>
           <li><strong>Two Opus fair tasks are missing.</strong> CPU decoder graph executor and MLH COCO returned no score, leaving 20 comparable Opus tasks.</li>
           <li><strong>Do not overread small deltas.</strong> MuseSpark's within-task rollout spread is 0.013 for fair hints and 0.037 for validation hints. Deltas below about 0.04 are inside noise.</li>
