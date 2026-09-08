@@ -21,6 +21,7 @@
   <aside class="contents" aria-label="Contents">
     <strong>Contents</strong>
     <a href="#benchmark">Overview</a>
+    <a href="#measurement">Evaluation</a>
     <a href="#setup">Experimental setup</a>
     <a href="#results">Results</a>
     <a href="#tasks">Task areas</a>
@@ -36,6 +37,13 @@
         <p>Open-ended research rewards persistent and compounding effort. The predominant paradigm of open-ended task evaluation in ML focuses on attempting these problems in a 1-shot to few-shot setting <a class="cite" href="https://mls-bench.com/">[1]</a>, but these are long-horizon problems, and evals should focus on treating them as such. PostTrainBench studies long horizon agents, but only for LLM post training <a class="cite" href="https://arxiv.org/abs/2603.08640">[2]</a>. A model that is able to compound its efforts more efficiently, and do so for longer, can significantly outperform one that initially appears stronger. This is often experienced in the real-world in ways that are not captured by benchmarks.</p>
         <p>Vanilla auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> do not fully capture this either. They reward improvements on feedback available during the run, without separately measuring whether those improvements generalize to held-out data. Long runs can therefore reward solutions that overfit the feedback.</p>
         <p>To address these gaps, we introduce AutoResearchBench, a benchmark of open ended ML research tasks designed to measure how quickly agents improve over 24-hour long AutoResearch runs while still generalizing to hidden test data.</p>
+      </div>
+    </section>
+    <section class="section" id="measurement">
+      <h2>Progress that generalizes</h2>
+      <div class="evaluation-points">
+        <article><h3>How much better, how soon?</h3><p>AUARC rewards agents for finding stronger solutions earlier in the run.</p></article>
+        <article><h3>Do the gains hold up?</h3><p>Validation selects the checkpoint. Hidden tests measure whether its improvements generalize.</p></article>
       </div>
     </section>
     <section class="section" id="setup">
