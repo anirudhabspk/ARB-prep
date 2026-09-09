@@ -317,7 +317,7 @@ main .scoring-prose{max-width:var(--content-measure)}
 .reward-scaling-plot marker path{fill:currentColor}
 .reward-scale-axis{stroke:currentColor;stroke-width:1.2;vector-effect:non-scaling-stroke}
 .reward-scale-asymptote{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
-.reward-scale-curve{fill:none;stroke:var(--accent);stroke-width:3.25;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.reward-scale-curve{fill:none;stroke:var(--accent);stroke-width:3.25;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .reward-scale-endpoint{fill:var(--accent)}
 .reward-scaling-formula{margin:10px 0 0;color:var(--ink);font-size:12px;line-height:1.4}
 .reward-scaling-formula summary{cursor:pointer;font-weight:500}
