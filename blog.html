@@ -87,34 +87,8 @@
       </div>
       <h3 id="effort-setting-title">Effort levels for model evaluations</h3>
       <div class="prose effort-setting-discussion">
-        <p>We ran each model at the highest effort level available, except Muse Spark. Its current highest effort level was not available when we generated its rollouts. Each model can produce at most 32,000 output tokens per turn.</p>
+        <p>We ran each model at the highest effort level available when we generated its rollouts. For Muse Spark 1.3, this was xhigh; its current highest level, Max, was not yet available. Each model can produce at most 32,000 output tokens per turn.</p>
       </div>
-      <figure class="effort-setting-chart" aria-labelledby="effort-setting-title">
-        <div class="effort-setting-row">
-          <div class="effort-setting-level">Max</div>
-          <ul class="effort-setting-models">
-            <li>Claude Fable 5.1</li>
-            <li>Claude Opus 5</li>
-            <li>GPT-5.6 Sol</li>
-            <li>Kimi K3</li>
-            <li>GPT-6 Astra</li>
-          </ul>
-        </div>
-        <div class="effort-setting-row">
-          <div class="effort-setting-level">Xhigh</div>
-          <ul class="effort-setting-models">
-            <li>Qwen3.8 Max</li>
-            <li>Muse Spark 1.3*</li>
-            <li>Grok 4.6</li>
-          </ul>
-        </div>
-        <div class="effort-setting-row">
-          <div class="effort-setting-level">High</div>
-          <ul class="effort-setting-models">
-            <li>Gemini 3.8 Flash</li>
-          </ul>
-        </div>
-      </figure>
       <h3>Task scoring</h3>
       <div class="prose scoring-prose">
         <p>Each task starts with its own "raw" score that the agent is tasked with optimizing, such as accuracy, speedup, or F1 score. We convert that raw score to a reward from 0 to 1 before returning the result to the agent. This gives results from different tasks a common scale.</p>
