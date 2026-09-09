@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchExam measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchExam</title>
-<link rel="stylesheet" href="site.css?v=fable-safety-cutoff-20260909">
+<link rel="stylesheet" href="site.css?v=unboxed-plots-20260909">
 <link rel="canonical" href="https://benchmarks.bespokelabs.ai/autoresearchexam/">
 <meta name="citation_title" content="AutoResearchExam">
 <meta name="citation_publication_date" content="2026/09/09">
@@ -48,7 +48,7 @@
       </div>
       <div class="prose">
         <p>Progress toward recursive self-improvement is predicated on the development of agents that can solve hard, open ended ML research problems over long periods of time. Real open-ended research relies on iteration - often featuring an evolving and improving solution driven by reactions to feedback and the exploration of a diversity of approaches.</p>
-        <p>One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> miss out on the opportunity to measure this evolution. An agent that starts behind another but makes good use of feedback may eventually outperform one that improves more slowly. Standard auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[3]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[4]</a> may not adequately distinguish between progress on test scores and overfitting on validation scores.</p>
+        <p>One-shot and few-shot evaluations <a class="cite" href="https://mls-bench.com/">[1]</a> miss out on the opportunity to measure this evolution. An agent that starts behind another but makes good use of feedback may eventually outperform one that improves more slowly. Standard auto-research evals <a class="cite" href="https://github.com/karpathy/autoresearch">[2]</a> and other long-horizon benchmarks <a class="cite" href="https://edge-bench.org/">[3]</a> may not adequately distinguish between progress on test scores and overfitting on validation scores.</p>
         <p>To address this gap, we introduce AutoResearchExam, a benchmark of open ended ML research tasks designed to measure how quickly agents can improve a private test score over 24-hour auto-research.</p>
         <p>We detail three contributions:</p>
         <ul>
@@ -206,7 +206,7 @@
       <div class="prose">
         <p>In this section, we examine the set of 24-hour rollouts we collect in order to obtain insights into the approaches taken by different models.</p>
         <h3 class="analysis-subheading">Understanding continual model improvement</h3>
-        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[4]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
+        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[3]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
       </div>
 
       <div id="trajectory-overview"></div>
@@ -345,7 +345,7 @@
     </section>
     <footer class="references">
       <strong>References</strong>
-      <ol><li><a href="https://mls-bench.com/">MLSBench</a></li><li><a href="https://arxiv.org/abs/2603.08640">PostTrainBench</a></li><li><a href="https://github.com/karpathy/autoresearch">autoresearch</a></li><li><a href="https://edge-bench.org/">EdgeBench</a></li></ol>
+      <ol><li><a href="https://mls-bench.com/">MLSBench</a></li><li><a href="https://github.com/karpathy/autoresearch">autoresearch</a></li><li><a href="https://edge-bench.org/">EdgeBench</a></li></ol>
     </footer>
   </main>
 </div>
