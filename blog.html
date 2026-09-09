@@ -178,8 +178,7 @@
           <p>Some tasks do not have a fixed best possible result. For these tasks, <em>u</em> is the improvement beyond the baseline divided by the improvement from the baseline to the reference. When a useful reference does not exist, we count reductions in the remaining error instead. The exact calculation is chosen to match meaningful progress on that task.</p>
         </details>
         <div class="scoring-note-row">
-          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores.<sup><a href="#scoring-footnote-2" aria-label="Footnote 2">2</a></sup> The agent can then get useful feedback without viewing the validation data directly.</p>
-          <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
+          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores. The agent can then get useful feedback without viewing the validation data directly.</p>
         </div>
       </div>
       <h3 id="hidden-test-auarc">Main evaluation metric: hidden-test AUARC</h3>
@@ -235,7 +234,8 @@
 </details>
 <h3 id="analysis-2b">How much of agents' research is hyperparameter tuning?</h3>
 <p>We use a prompted model to review each sampled round and classify it as HPO-only when the agent only tunes settings of an existing method, without introducing a new method or substantive fix.</p>
-<figure class="hpo-chart" aria-label="Estimated percentage of HPO-only rounds by model, with 95 percent sampling intervals">
+<figure class="hpo-chart" aria-labelledby="hpo-chart-title">
+<h4 class="figure-heading" id="hpo-chart-title">Estimated percentage of HPO-only rounds by model</h4>
 <div class="hpo-chart-row"><span class="hpo-chart-name">GPT-5.6 Sol</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds."><title>GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds.</title>
 <rect class="hpo-chart-bar" x="0" y="5" width="475.7143" height="22" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Muse Spark 1.3</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds."><title>Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds.</title>
@@ -303,17 +303,12 @@
         <p class="plot-note hint-comparison-note">The result without a hint is from the first AutoResearch iteration. Full AutoResearch shows the final reward after the longer run, not another 200-turn result.</p>
       </figure>
       <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score.</p></div>
-      <details class="hint-method">
-        <summary>Comparison details and limitations</summary>
-        <div class="prose">
-          <p>This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
-        </div>
-      </details>
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
       <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
-      <div id="harness-summary"></div>
+      <h4 class="figure-heading" id="harness-summary-title">Average harness performance across five tasks</h4>
+      <div id="harness-summary" aria-labelledby="harness-summary-title"></div>
       <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2. Codex’s lower test AUARC is driven by <a href="tasks.html#shortest-valid-ci-l2-ece" style="text-decoration:none"><em>Tight confidence intervals for prediction uncertainty estimation</em></a>, where validation improvements stopped transferring to the hidden test earlier than with Terminus 2.</p>
       <div id="harness-ablation-plot"></div>
       <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
