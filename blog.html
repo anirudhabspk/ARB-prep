@@ -19,8 +19,8 @@
     <a href="#benchmark">Overview</a>
     <a href="#tasks">Tasks</a>
     <a href="#setup">Experimental setup</a>
-    <a href="#hint-study">Using hints</a>
     <a href="#general-analysis">Analyzing agent behavior</a>
+    <a href="#hint-study">Using hints</a>
     <a href="#harness-ablations">Comparing harnesses</a>
   </aside>
   <main>
@@ -209,35 +209,6 @@
         </details>
       </div>
     </section>
-    <section class="section hint-study" id="hint-study">
-      <h2>Using a research hint</h2>
-      <div class="prose">
-        <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
-      </div>
-      <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
-        <p class="hint-lanes-title">Average hidden-test reward across 22 CPU tasks</p>
-        <div class="hint-lanes-axis" aria-hidden="true"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div>
-        <article class="hint-lane hint-lane--opus">
-          <p class="hint-lane-model">Claude Opus 5</p>
-          <div class="hint-lane-plot" role="img" aria-label="Claude Opus 5 average hidden-test reward: 0.441 for the initial AutoResearch iteration, 0.547 with a validation hint, and 0.592 at the end of AutoResearch.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:44.1%"><b>0.441</b><small>Initial AR</small></span>
-            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:54.7%"><b>0.547</b><small>Validation hint</small></span>
-            <span class="hint-lane-marker hint-lane-marker--final" style="--score:59.2%"><b>0.592</b><small>Final AR</small></span>
-          </div>
-        </article>
-        <article class="hint-lane hint-lane--muse">
-          <p class="hint-lane-model">Muse Spark 1.3</p>
-          <div class="hint-lane-plot" role="img" aria-label="Muse Spark 1.3 average hidden-test reward: 0.403 for the initial AutoResearch iteration, 0.447 with a validation hint, and 0.449 at the end of AutoResearch.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:40.3%"><b>0.403</b><small>Initial AR</small></span>
-            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:44.7%"><b>0.447</b><small>Validation hint</small></span>
-            <span class="hint-lane-marker hint-lane-marker--final" style="--score:44.9%"><b>0.449</b><small>Final AR</small></span>
-          </div>
-        </article>
-      </div>
-      <p class="hint-lift-caption">The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score. This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
-    </section>
     <section class="section" id="general-analysis">
       <h2>Analyzing agent behavior</h2>
       <div class="prose">
@@ -300,6 +271,35 @@
 <p id="scoring-refresh-todo" style="color:#B2182B;font-weight:600">TODO: Refresh these results when the remaining Fable runs finish.</p>
 <p>We see only a weak association between submission count and test AUARC across models. We don’t see evidence that simply submitting more leads to higher scores on this benchmark. This suggests that naïve hill climbing through more submissions alone is insufficient, and that the quality of research steps matters.</p>
 <figure class="model-effort" id="model-effort-plots"></figure></div>
+    </section>
+    <section class="section hint-study" id="hint-study">
+      <h2>Using a research hint</h2>
+      <div class="prose">
+        <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
+      </div>
+      <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
+        <p class="hint-lanes-title">Average hidden-test reward across 22 CPU tasks</p>
+        <div class="hint-lanes-axis" aria-hidden="true"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div>
+        <article class="hint-lane hint-lane--opus">
+          <p class="hint-lane-model">Claude Opus 5</p>
+          <div class="hint-lane-plot" role="img" aria-label="Claude Opus 5 average hidden-test reward: 0.441 for the initial AutoResearch iteration, 0.547 with a validation hint, and 0.592 at the end of AutoResearch.">
+            <i class="hint-lane-track" aria-hidden="true"></i>
+            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:44.1%"><b>0.441</b><small>Initial AR</small></span>
+            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:54.7%"><b>0.547</b><small>Validation hint</small></span>
+            <span class="hint-lane-marker hint-lane-marker--final" style="--score:59.2%"><b>0.592</b><small>Final AR</small></span>
+          </div>
+        </article>
+        <article class="hint-lane hint-lane--muse">
+          <p class="hint-lane-model">Muse Spark 1.3</p>
+          <div class="hint-lane-plot" role="img" aria-label="Muse Spark 1.3 average hidden-test reward: 0.403 for the initial AutoResearch iteration, 0.447 with a validation hint, and 0.449 at the end of AutoResearch.">
+            <i class="hint-lane-track" aria-hidden="true"></i>
+            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:40.3%"><b>0.403</b><small>Initial AR</small></span>
+            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:44.7%"><b>0.447</b><small>Validation hint</small></span>
+            <span class="hint-lane-marker hint-lane-marker--final" style="--score:44.9%"><b>0.449</b><small>Final AR</small></span>
+          </div>
+        </article>
+      </div>
+      <p class="hint-lift-caption">The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score. This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
