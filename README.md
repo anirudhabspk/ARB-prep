@@ -1,6 +1,6 @@
-# AutoResearchBench
+# AutoResearchExam
 
-This repository contains the AutoResearchBench website.
+This repository contains the AutoResearchExam website.
 
 Open `blog.html` to read the blog and browse the tasks. Each task has a result page at `tasks.html#slug`.
 
