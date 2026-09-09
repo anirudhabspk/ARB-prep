@@ -261,7 +261,7 @@
 <p>A larger positive gap means less of the validation performance carries over to hidden tests. Lines show 95% intervals from resampling tasks. The gap alone does not prove overfitting.</p>
 </details>
 <h3 id="analysis-2b">How much of agents' research is hyperparameter tuning?</h3>
-<p>We measure the share of rounds spent only on hyperparameter optimization (HPO), meaning parameter changes within an existing method.</p>
+<p>We use a prompted model to review each sampled round and classify it as HPO-only when the agent only tunes settings of an existing method, without introducing a new method or substantive fix.</p>
 <figure class="hpo-chart" aria-label="Estimated percentage of HPO-only rounds by model, with 95 percent sampling intervals">
 <div class="hpo-chart-row"><span class="hpo-chart-name">GPT-5.6 Sol</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds."><title>GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds.</title>
 <rect class="hpo-chart-bar" x="0" y="5" width="475.7143" height="22" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
@@ -284,7 +284,7 @@
 <div class="hpo-chart-axis" aria-hidden="true"><span></span><div class="hpo-chart-scale"><span>0%</span><span>35%</span><span>70%</span></div><span></span><div class="hpo-chart-axis-title">HPO-only rounds</div></div>
 <figcaption>200 randomly sampled rounds per model. Lines show 95% confidence intervals.</figcaption>
 </figure>
-<p>In our sample, Anthropic's Fable and Opus spend fewer rounds doing only HPO than the other models. This points to a difference in research approach, though it does not establish that doing less HPO causes their stronger results.</p>
+<p>In our sample, Anthropic's Fable and Opus spend fewer rounds doing only HPO than other models. Both sometimes test several variants using local validation before submitting, suggesting they may shift some experimentation from benchmark submissions to internal checks. This points to a difference in research approach, though it does not establish that doing less HPO causes their stronger results.</p>
 <h3 id="analysis-2d">Do models that submit more perform better?</h3>
 <p id="scoring-refresh-todo" style="color:#B2182B;font-weight:600">TODO: Refresh these results when the remaining Fable runs finish.</p>
 <p>We see only a weak association between submission count and test AUARC across models. We don’t see evidence that simply submitting more leads to higher scores on this benchmark. This suggests that naïve hill climbing through more submissions alone is insufficient, and that the quality of research steps matters.</p>
@@ -309,6 +309,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=actual-mean-trajectories-20260908"></script>
+<script src="results.js?v=auarc-origin-20260908"></script>
 </body>
 </html>
