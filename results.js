@@ -9,7 +9,7 @@ const MODEL_BRANDS={
   "lumen":{company:"Anthropic",short:"Opus",logo:"https://cdn.simpleicons.org/anthropic/191919"},
   "skylark":{company:"OpenAI",short:"Sol",logo:"https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg"},
   "vega":{company:"Moonshot AI",short:"Kimi",logo:"https://cdn.simpleicons.org/moonshotai/191919"},
-  "forge":{company:"Alibaba Cloud",short:"Qwen",logo:"https://cdn.simpleicons.org/alibabacloud/ff6a00"},
+  "forge":{company:"Alibaba Cloud",short:"Qwen",logo:"assets/qwen-logo.svg"},
   "kittiwake":{company:"Google",short:"Gemini",logo:"assets/google-logo.png"},
   "granola-plus":{company:"Meta",short:"Muse",logo:"https://cdn.simpleicons.org/meta/0866ff"},
   "sable-plus":{company:"xAI",short:"Grok",logo:"assets/xai-logo-contained.png"},
