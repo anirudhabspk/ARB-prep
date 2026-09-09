@@ -265,7 +265,7 @@
     <section class="section hint-study" id="hint-study">
       <h2>Using a research hint</h2>
       <div class="prose">
-        <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
+        <p>For each task, an LLM summarizes useful insights from the models’ AutoResearch trajectories into a one-sentence hint. We give this hint to a 200-turn Terminus 2 run and compare its hidden-test reward with the same model’s first 200-turn AutoResearch iteration without a hint.</p>
       </div>
       <figure class="hint-comparison" aria-labelledby="hint-chart-title" aria-describedby="hint-chart-note">
         <figcaption>
@@ -302,7 +302,7 @@
         </div>
         <p class="plot-note hint-comparison-note">The result without a hint is from the first AutoResearch iteration. Full AutoResearch shows the final reward after the longer run, not another 200-turn result.</p>
       </figure>
-      <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score.</p></div>
+      <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score. This suggests that insights discovered during AutoResearch can help models reach better solutions within a single 200-turn run.</p></div>
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
