@@ -211,7 +211,7 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 
 /* Keep the opening comparison left-aligned while leaving enough room for its full model legend. */
 .lead-cost-plot{max-width:940px;margin-left:0;margin-right:0}
-.lead-cost-plot .overview-legend{flex-wrap:nowrap;overflow:visible;gap:6px;font-size:9.5px}
+.lead-cost-plot .overview-legend{flex-wrap:wrap;overflow:visible;gap:10px 16px;font-size:9.5px}
 .lead-cost-plot .overview-legend-logo{width:21px;height:21px}
 .lead-cost-plot .overview-legend-logo .company-logo{width:16px;height:16px}
 
@@ -415,3 +415,13 @@ main .scoring-prose{max-width:var(--content-measure)}
 .hint-method .prose{padding:0 0 14px;font-size:13px;color:var(--muted)}
 .hint-method .prose p{margin:0}
 @media(max-width:640px){.hint-study{padding-bottom:58px}.hint-models{grid-template-columns:1fr;gap:26px}.hint-model+.hint-model{padding-top:22px;border-top:1px solid var(--line)}.hint-model h4{margin-bottom:16px}.hint-comparison{margin-top:24px}}
+
+.citation-section{max-width:var(--content-measure)}
+.citation-box{border:1px solid var(--line);background:var(--soft);margin-top:20px}
+.citation-tools{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.citation-tools>div{display:flex;align-items:center;gap:16px}
+.citation-tools button{padding:5px 10px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink);cursor:pointer;font-size:13px}
+.citation-tools button:hover{border-color:var(--ink)}
+.citation-tools button:focus-visible,.citation-box pre:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.citation-box pre{margin:0;padding:18px 16px;overflow-x:auto;font:12px/1.7 monospace;color:var(--ink);tab-size:2}
+.blog-page main .citation-status{min-height:1.55em;margin:8px 0 0;color:var(--muted);font-size:13px}
