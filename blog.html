@@ -152,16 +152,18 @@
 
       <div id="trajectory-overview"></div>
       <div class="prose">
-        <p>These plots demonstrate a few key points. First, Astra often starts with a strong solution. In particular, it obtains better hidden-test reward on average for the first 2-3 hours of evaluation. After this "critical" threshold, Fable 5.1 begins to outperform on average. By the 24-hour mark, this allows Fable 5.1 to acheive the largest average hidden-test reward (equivalent to the hidden-test AUARC metric we use), and obtain the top spot on our leaderboard.</p>
+        <p>These plots demonstrate a few key points. First, the left plot shows that Astra often starts with a strong solution. In particular, it obtains better hidden-test reward on average for the first 2-3 hours of evaluation. After this "critical" threshold, Fable 5.1 begins to outperform on average. By the 24-hour mark, this allows Fable 5.1 to acheive the largest average hidden-test reward (equivalent to the hidden-test AUARC metric we use), and obtain the top spot on our leaderboard.</p>
+        <p>Second, the right plot shows that Qwen, Muse, and Grok are tied for "most-improvement to come" at the 12-hour mark. In particular, even after 12 hours of work, more than 75% of rollouts will still see further improvement to the hidden-test set score. This means that the agents are still working and improving on their solutions within the environment, that is, that the benchmark itself supports extended amounts of experimentation or optimization.
+        </p>
       </div>
 
-      <div class="todo-items">
+      <!-- <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
         <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
         <p><strong>1A)</strong> If some model is doing something very interesting after the first submission.</p>
         <p><strong>1B)</strong> If any models are not doing anything, e.g. they get stuck in some local minima, or there is some inability to make submissions or work in the environment.</p>
         <p><strong>1C)</strong> Relative model failure analysis.</p>
-      </div>
+      </div> -->
 <div id="analysis-2bcd">
 <h3 id="analysis-2a">How well do agents' improvements generalize?</h3>
 <p>We compare validation and hidden-test AUARC. A smaller gap means closer agreement between the feedback agents optimize and their performance on unseen data.</p>
@@ -222,6 +224,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=trajectory-transparent-hpo-20260908"></script>
+<script src="results.js?v=trajectory-transparent-hpo-markers-20260908"></script>
 </body>
 </html>

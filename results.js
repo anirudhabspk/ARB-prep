@@ -249,11 +249,26 @@ function overviewLine(series,path,detail){
   return`<g class="overview-line-group" data-overview-line data-model="${esc(series.name)}" data-model-key="${series.key}" data-detail="${esc(detail)}" data-color="${series.color}" tabindex="0" role="img" aria-label="${esc(label)}"${modelCursorStyle(series.key)}><path class="curve" stroke="${series.color}" d="${path}"/><path class="overview-hit" d="${path}"/></g>`;
 }
 
+function fittedCrossingHour(overview,fromKey,toKey){
+  const from=overview.series.find(series=>series.key===fromKey),to=overview.series.find(series=>series.key===toKey);
+  if(!from||!to)return null;
+  const start=1,steps=4000,difference=hour=>to.fit.predict(hour)-from.fit.predict(hour);
+  let previousHour=start,previousDifference=difference(start);
+  for(let index=1;index<=steps;index++){
+    const hour=start+(overview.maxHours-start)*index/steps,currentDifference=difference(hour);
+    if(previousDifference<0&&currentDifference>=0)return previousHour+(hour-previousHour)*(-previousDifference)/(currentDifference-previousDifference);
+    previousHour=hour;previousDifference=currentDifference;
+  }
+  return null;
+}
+
 function logTimeTestPlot(overview){
   const W=760,H=430,L=72,R=24,T=20,B=58,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
+  const crossing=fittedCrossingHour(overview,"meridian","vesper-pro");
+  if(Number.isFinite(crossing)){const xx=x(crossing);body+=`<g role="img" aria-label="Claude Fable 5.1 passes GPT-6 Astra at ${crossing.toFixed(1)} hours"><line class="trajectory-reference-line" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="trajectory-reference-label" x="${xx+7}" y="${T+17}">Fable passes Astra · ${crossing.toFixed(1)} h</text></g>`}
   body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean hidden-test reward</text>`;
   for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
   return`<div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div>`;
@@ -278,6 +293,7 @@ function lateImprovementPlot(series){
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const hour of [0,4,8,12,16,20,24]){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   for(const value of [0,25,50,75,100]){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value}</text>`}
+  const twelve=x(12);body+=`<g role="img" aria-label="Twelve-hour reference"><line class="trajectory-reference-line" x1="${twelve}" x2="${twelve}" y1="${T}" y2="${plotB}"/><text class="trajectory-reference-label" x="${twelve+7}" y="${T+17}">12 h</text></g>`;
   body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Hours into the run</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Runs with a later improvement (%)</text>`;
   for(const item of series){
     const path=item.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");
