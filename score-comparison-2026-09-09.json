@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "before_snapshot": {
     "fetchedAt": "2026-09-08T09:04:28.709847+00:00",
     "sourceCommit": "bffa127bdf3b9dd099509f82a387b70d3d9f6e40",
@@ -5519,6 +5519,104 @@
   "time_leaderboard_ordering_changes": {
     "frame_count": 241,
     "changed_frame_count": 90,
+    "final_24_hour_state": {
+      "hour": 24,
+      "changed": false,
+      "before": [
+        {
+          "key": "vesper-pro",
+          "model": "Claude Fable 5.1",
+          "value": 0.6052490988879271
+        },
+        {
+          "key": "meridian",
+          "model": "GPT-6 Astra",
+          "value": 0.6000894530946282
+        },
+        {
+          "key": "lumen",
+          "model": "Claude Opus 5",
+          "value": 0.5790323080032505
+        },
+        {
+          "key": "skylark",
+          "model": "GPT-5.6 Sol",
+          "value": 0.5172615288187912
+        },
+        {
+          "key": "sable-plus",
+          "model": "Grok 4.6",
+          "value": 0.4931355237085956
+        },
+        {
+          "key": "kittiwake",
+          "model": "Gemini 3.8 Flash",
+          "value": 0.48350995545208975
+        },
+        {
+          "key": "vega",
+          "model": "Kimi K3",
+          "value": 0.42821770201478426
+        },
+        {
+          "key": "forge",
+          "model": "Qwen3.8 Max",
+          "value": 0.4234121630633122
+        },
+        {
+          "key": "granola-plus",
+          "model": "Muse Spark 1.3",
+          "value": 0.3843310561146116
+        }
+      ],
+      "after": [
+        {
+          "key": "vesper-pro",
+          "model": "Claude Fable 5.1",
+          "value": 0.6024326804582145
+        },
+        {
+          "key": "meridian",
+          "model": "GPT-6 Astra",
+          "value": 0.6000894530946282
+        },
+        {
+          "key": "lumen",
+          "model": "Claude Opus 5",
+          "value": 0.5790323080032505
+        },
+        {
+          "key": "skylark",
+          "model": "GPT-5.6 Sol",
+          "value": 0.5172615288187912
+        },
+        {
+          "key": "sable-plus",
+          "model": "Grok 4.6",
+          "value": 0.4931355237085956
+        },
+        {
+          "key": "kittiwake",
+          "model": "Gemini 3.8 Flash",
+          "value": 0.48350995545208975
+        },
+        {
+          "key": "vega",
+          "model": "Kimi K3",
+          "value": 0.43545335727965423
+        },
+        {
+          "key": "forge",
+          "model": "Qwen3.8 Max",
+          "value": 0.4234121630633122
+        },
+        {
+          "key": "granola-plus",
+          "model": "Muse Spark 1.3",
+          "value": 0.3843310561146116
+        }
+      ]
+    },
     "ranges": [
       {
         "start_frame": 4,
@@ -5826,6 +5924,1296 @@
           "vega",
           "forge",
           "granola-plus"
+        ]
+      }
+    ]
+  },
+  "continual_improvement_ordering_changes": {
+    "hourly_mean_changed_models": [
+      {
+        "key": "vesper-pro",
+        "model": "Claude Fable 5.1"
+      },
+      {
+        "key": "vega",
+        "model": "Kimi K3"
+      }
+    ],
+    "hourly_mean_ordering_changes": [
+      {
+        "hour": 6,
+        "before": [
+          {
+            "key": "vesper-pro",
+            "model": "Claude Fable 5.1",
+            "value": 0.6302176963048057
+          },
+          {
+            "key": "meridian",
+            "model": "GPT-6 Astra",
+            "value": 0.6114463414192876
+          },
+          {
+            "key": "lumen",
+            "model": "Claude Opus 5",
+            "value": 0.5990589205370696
+          },
+          {
+            "key": "skylark",
+            "model": "GPT-5.6 Sol",
+            "value": 0.5222018639018504
+          },
+          {
+            "key": "sable-plus",
+            "model": "Grok 4.6",
+            "value": 0.48748000642517636
+          },
+          {
+            "key": "kittiwake",
+            "model": "Gemini 3.8 Flash",
+            "value": 0.4854710428809082
+          },
+          {
+            "key": "forge",
+            "model": "Qwen3.8 Max",
+            "value": 0.44317584802839816
+          },
+          {
+            "key": "vega",
+            "model": "Kimi K3",
+            "value": 0.42444081721209653
+          },
+          {
+            "key": "granola-plus",
+            "model": "Muse Spark 1.3",
+            "value": 0.38046824773518917
+          }
+        ],
+        "after": [
+          {
+            "key": "vesper-pro",
+            "model": "Claude Fable 5.1",
+            "value": 0.632927318485972
+          },
+          {
+            "key": "meridian",
+            "model": "GPT-6 Astra",
+            "value": 0.6114463414192876
+          },
+          {
+            "key": "lumen",
+            "model": "Claude Opus 5",
+            "value": 0.5990589205370696
+          },
+          {
+            "key": "skylark",
+            "model": "GPT-5.6 Sol",
+            "value": 0.5222018639018504
+          },
+          {
+            "key": "sable-plus",
+            "model": "Grok 4.6",
+            "value": 0.48748000642517636
+          },
+          {
+            "key": "kittiwake",
+            "model": "Gemini 3.8 Flash",
+            "value": 0.4854710428809082
+          },
+          {
+            "key": "vega",
+            "model": "Kimi K3",
+            "value": 0.4458001545603424
+          },
+          {
+            "key": "forge",
+            "model": "Qwen3.8 Max",
+            "value": 0.44317584802839816
+          },
+          {
+            "key": "granola-plus",
+            "model": "Muse Spark 1.3",
+            "value": 0.38046824773518917
+          }
+        ]
+      },
+      {
+        "hour": 8,
+        "before": [
+          {
+            "key": "vesper-pro",
+            "model": "Claude Fable 5.1",
+            "value": 0.6353096764012462
+          },
+          {
+            "key": "lumen",
+            "model": "Claude Opus 5",
+            "value": 0.6171135339350622
+          },
+          {
+            "key": "meridian",
+            "model": "GPT-6 Astra",
+            "value": 0.6135728104413521
+          },
+          {
+            "key": "skylark",
+            "model": "GPT-5.6 Sol",
+            "value": 0.5202262613171845
+          },
+          {
+            "key": "sable-plus",
+            "model": "Grok 4.6",
+            "value": 0.49318810618079983
+          },
+          {
+            "key": "kittiwake",
+            "model": "Gemini 3.8 Flash",
+            "value": 0.4901739085768386
+          },
+          {
+            "key": "forge",
+            "model": "Qwen3.8 Max",
+            "value": 0.46642595340583926
+          },
+          {
+            "key": "vega",
+            "model": "Kimi K3",
+            "value": 0.4536524403737206
+          },
+          {
+            "key": "granola-plus",
+            "model": "Muse Spark 1.3",
+            "value": 0.38458075502835837
+          }
+        ],
+        "after": [
+          {
+            "key": "vesper-pro",
+            "model": "Claude Fable 5.1",
+            "value": 0.6363726293964391
+          },
+          {
+            "key": "lumen",
+            "model": "Claude Opus 5",
+            "value": 0.6171135339350622
+          },
+          {
+            "key": "meridian",
+            "model": "GPT-6 Astra",
+            "value": 0.6135728104413521
+          },
+          {
+            "key": "skylark",
+            "model": "GPT-5.6 Sol",
+            "value": 0.5202262613171845
+          },
+          {
+            "key": "sable-plus",
+            "model": "Grok 4.6",
+            "value": 0.49318810618079983
+          },
+          {
+            "key": "kittiwake",
+            "model": "Gemini 3.8 Flash",
+            "value": 0.4901739085768386
+          },
+          {
+            "key": "vega",
+            "model": "Kimi K3",
+            "value": 0.47501177772196645
+          },
+          {
+            "key": "forge",
+            "model": "Qwen3.8 Max",
+            "value": 0.46642595340583926
+          },
+          {
+            "key": "granola-plus",
+            "model": "Muse Spark 1.3",
+            "value": 0.38458075502835837
+          }
+        ]
+      }
+    ],
+    "fitted_fable_astra_crossing_hour": {
+      "before": 3.350366055441332,
+      "after": 3.202956001789794,
+      "delta": -0.14741005365153814
+    },
+    "later_improvement_changed_models": [
+      {
+        "key": "vesper-pro",
+        "model": "Claude Fable 5.1"
+      },
+      {
+        "key": "vega",
+        "model": "Kimi K3"
+      }
+    ],
+    "later_improvement_ordering_changes": [
+      {
+        "hour": 2,
+        "before": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 100
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 96.55172413793103
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 93.10344827586206
+            }
+          ],
+          [
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 89.65517241379311
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 100
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 96.55172413793103
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 96.55172413793103
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 89.65517241379311
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 89.65517241379311
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 4,
+        "before": [
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 96.55172413793103
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 93.10344827586206
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 93.10344827586206
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 93.10344827586206
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 89.65517241379311
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 89.65517241379311
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 86.20689655172414
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 86.20689655172414
+            }
+          ],
+          [
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 82.75862068965517
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 96.55172413793103
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 93.10344827586206
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 93.10344827586206
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 93.10344827586206
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 89.65517241379311
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 89.65517241379311
+            }
+          ],
+          [
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 86.20689655172414
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 82.75862068965517
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 82.75862068965517
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 10,
+        "before": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 86.20689655172414
+            }
+          ],
+          [
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 79.3103448275862
+            }
+          ],
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 75.86206896551724
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 72.41379310344827
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 68.96551724137932
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 68.96551724137932
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 55.172413793103445
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 86.20689655172414
+            }
+          ],
+          [
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 79.3103448275862
+            }
+          ],
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 75.86206896551724
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 72.41379310344827
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 68.96551724137932
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 68.96551724137932
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 65.51724137931035
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 12,
+        "before": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 75.86206896551724
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 75.86206896551724
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 75.86206896551724
+            }
+          ],
+          [
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 65.51724137931035
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 48.275862068965516
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 75.86206896551724
+            },
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 75.86206896551724
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 75.86206896551724
+            }
+          ],
+          [
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 65.51724137931035
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 62.06896551724138
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 14,
+        "before": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 65.51724137931035
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 55.172413793103445
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 51.724137931034484
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 37.93103448275862
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 72.41379310344827
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 65.51724137931035
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 65.51724137931035
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 58.62068965517241
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 55.172413793103445
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 55.172413793103445
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 16,
+        "before": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 68.96551724137932
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 58.62068965517241
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 58.62068965517241
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 58.62068965517241
+            }
+          ],
+          [
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 51.724137931034484
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 48.275862068965516
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 24.137931034482758
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 68.96551724137932
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 62.06896551724138
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 62.06896551724138
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 58.62068965517241
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 58.62068965517241
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 58.62068965517241
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 55.172413793103445
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 51.724137931034484
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 51.724137931034484
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 18,
+        "before": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 55.172413793103445
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 55.172413793103445
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 55.172413793103445
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 51.724137931034484
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 48.275862068965516
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 48.275862068965516
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 48.275862068965516
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 41.37931034482759
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 17.24137931034483
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 55.172413793103445
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 55.172413793103445
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 55.172413793103445
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 51.724137931034484
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 48.275862068965516
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 48.275862068965516
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 48.275862068965516
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 44.827586206896555
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 41.37931034482759
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 20,
+        "before": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 44.827586206896555
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 44.827586206896555
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 41.37931034482759
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 41.37931034482759
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 37.93103448275862
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 31.03448275862069
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 31.03448275862069
+            }
+          ],
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 20.689655172413794
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 13.793103448275861
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 44.827586206896555
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 44.827586206896555
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 41.37931034482759
+            },
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 41.37931034482759
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 37.93103448275862
+            },
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 37.93103448275862
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 31.03448275862069
+            },
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 31.03448275862069
+            }
+          ],
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 20.689655172413794
+            }
+          ]
+        ]
+      },
+      {
+        "hour": 22,
+        "before": [
+          [
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 31.03448275862069
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 31.03448275862069
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 27.586206896551722
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 24.137931034482758
+            }
+          ],
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 20.689655172413794
+            }
+          ],
+          [
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 17.24137931034483
+            }
+          ],
+          [
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 13.793103448275861
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 3.4482758620689653
+            },
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 3.4482758620689653
+            }
+          ]
+        ],
+        "after": [
+          [
+            {
+              "key": "sable-plus",
+              "model": "Grok 4.6",
+              "value": 31.03448275862069
+            },
+            {
+              "key": "meridian",
+              "model": "GPT-6 Astra",
+              "value": 31.03448275862069
+            }
+          ],
+          [
+            {
+              "key": "lumen",
+              "model": "Claude Opus 5",
+              "value": 27.586206896551722
+            }
+          ],
+          [
+            {
+              "key": "skylark",
+              "model": "GPT-5.6 Sol",
+              "value": 24.137931034482758
+            }
+          ],
+          [
+            {
+              "key": "granola-plus",
+              "model": "Muse Spark 1.3",
+              "value": 20.689655172413794
+            }
+          ],
+          [
+            {
+              "key": "vesper-pro",
+              "model": "Claude Fable 5.1",
+              "value": 17.24137931034483
+            },
+            {
+              "key": "forge",
+              "model": "Qwen3.8 Max",
+              "value": 17.24137931034483
+            }
+          ],
+          [
+            {
+              "key": "kittiwake",
+              "model": "Gemini 3.8 Flash",
+              "value": 13.793103448275861
+            }
+          ],
+          [
+            {
+              "key": "vega",
+              "model": "Kimi K3",
+              "value": 3.4482758620689653
+            }
+          ]
         ]
       }
     ]

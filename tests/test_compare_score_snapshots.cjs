@@ -11,6 +11,8 @@ const beforePath = path.join(temporary, 'before.js');
 const afterPath = path.join(temporary, 'after.js');
 const outputPath = path.join(temporary, 'changes.json');
 const markdownPath = path.join(temporary, 'changes.md');
+const unchangedOutputPath = path.join(temporary, 'unchanged.json');
+const unchangedMarkdownPath = path.join(temporary, 'unchanged.md');
 
 function run(model, evaluationId, score, apiCost, outputTokens) {
   return {
@@ -63,6 +65,7 @@ fs.writeFileSync(afterPath, `window.ARB_DATA = ${JSON.stringify(fixture(true))};
 const result = spawnSync(process.execPath, [script, '--before', beforePath, '--after', afterPath, '--output', outputPath, '--markdown', markdownPath], {encoding: 'utf8'});
 assert.equal(result.status, 0, result.stderr);
 const report = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+assert.equal(report.schema_version, 2);
 assert.equal(report.changed_cells.length, 2);
 const replaced = report.changed_cells.find(cell => cell.task === 'CPU LLM decode throughput');
 assert.equal(replaced.before.evaluation_id, 'cpu-old');
@@ -82,10 +85,26 @@ for (const field of ['validation_auarc', 'hidden_test_auarc', 'final_hidden', 'a
 }
 assert.equal(report.time_leaderboard_ordering_changes.frame_count, 241);
 assert.ok(report.time_leaderboard_ordering_changes.changed_frame_count > 0);
+assert.equal(report.time_leaderboard_ordering_changes.final_24_hour_state.hour, 24);
+assert.ok(report.continual_improvement_ordering_changes);
+assert.ok(report.continual_improvement_ordering_changes.hourly_mean_ordering_changes.length > 0);
 assert.equal(report.invariants.fastergcg_unchanged, true);
 assert.equal(report.invariants.muse_spark_1_3_unchanged, true);
 const markdown = fs.readFileSync(markdownPath, 'utf8');
 assert.ok(markdown.includes('# Plot ranking changes'));
 assert.ok(markdown.includes('## Time AUARC plot'));
+assert.ok(markdown.includes('## Understanding continual model improvement'));
+assert.ok(markdown.includes('### Mean hidden-test reward over time'));
+assert.ok(markdown.includes('### Runs that improve later'));
 assert.ok(markdown.includes('| CPU LLM decode throughput | Muse Spark 1.3 < Claude Fable 5.1 | Claude Fable 5.1 < Muse Spark 1.3 |'));
+const unchangedResult = spawnSync(process.execPath, [script, '--before', afterPath, '--after', afterPath, '--output', unchangedOutputPath, '--markdown', unchangedMarkdownPath], {encoding: 'utf8'});
+assert.equal(unchangedResult.status, 0, unchangedResult.stderr);
+const unchangedReport = JSON.parse(fs.readFileSync(unchangedOutputPath, 'utf8'));
+assert.equal(unchangedReport.time_leaderboard_ordering_changes.changed_frame_count, 0);
+assert.equal(unchangedReport.time_leaderboard_ordering_changes.final_24_hour_state.changed, false);
+assert.equal(unchangedReport.continual_improvement_ordering_changes.hourly_mean_ordering_changes.length, 0);
+assert.equal(unchangedReport.continual_improvement_ordering_changes.later_improvement_ordering_changes.length, 0);
+const unchangedMarkdown = fs.readFileSync(unchangedMarkdownPath, 'utf8');
+assert.ok(unchangedMarkdown.includes('At 24 hours, the model order is unchanged.'));
+assert.match(unchangedMarkdown, /Claude Fable 5\.1 \([0-9]+\.[0-9]{3}\)/);
 console.log('Score snapshot comparison checks passed.');

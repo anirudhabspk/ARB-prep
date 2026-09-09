@@ -11,7 +11,8 @@ const usage = `Usage: node scripts/compare_score_snapshots.cjs --before FILE --a
 
 Compare two site-data.js snapshots using the repository's current scoring code.
 The JSON output records changed cells, aggregate and task ranking changes, the
-cost frontier, and all 241 time-leaderboard frames with changed ordering.`;
+cost frontier, continual-improvement panels, and all 241 time-leaderboard
+frames with changed ordering.`;
 
 function parseArgs(argv) {
   if (argv.includes('--help') || argv.includes('-h')) return null;
@@ -92,7 +93,21 @@ const snapshotExpression = `JSON.stringify((() => {
       value: row.value
     }))};
   });
-  return {snapshot: DATA.snapshot || null, models: ORDER, tasks, aggregates, frontier, time_frames};
+  const overview = overviewTrajectories();
+  const continual_improvement = {
+    hourly_means: overview.series.map(series => ({
+      key: series.key,
+      model: series.name,
+      points: series.points
+    })),
+    fitted_fable_astra_crossing_hour: trajectoryCrossingHour(overview, 'meridian', 'vesper-pro'),
+    later_improvement: lateImprovementSeries().map(series => ({
+      key: series.key,
+      model: series.name,
+      points: series.points
+    }))
+  };
+  return {snapshot: DATA.snapshot || null, models: ORDER, tasks, aggregates, frontier, time_frames, continual_improvement};
 })())`;
 
 function loadSnapshot(siteDataPath) {
@@ -234,6 +249,9 @@ function costFrontier(before, after) {
 function timeOrderingChanges(before, after) {
   assert.equal(before.time_frames.length, 241);
   assert.equal(after.time_frames.length, 241);
+  const finalBefore = before.time_frames.at(-1), finalAfter = after.time_frames.at(-1);
+  assert.equal(finalBefore.hour, 24);
+  assert.equal(finalAfter.hour, 24);
   const ranges = [];
   let current = null;
   let changedFrames = 0;
@@ -264,7 +282,85 @@ function timeOrderingChanges(before, after) {
     }
   }
   for (const range of ranges) delete range.signature;
-  return {frame_count: 241, changed_frame_count: changedFrames, ranges};
+  return {
+    frame_count: 241,
+    changed_frame_count: changedFrames,
+    final_24_hour_state: {
+      hour: 24,
+      changed: !sameOrder(finalBefore.rows, finalAfter.rows),
+      before: finalBefore.rows,
+      after: finalAfter.rows
+    },
+    ranges
+  };
+}
+
+function seriesRowsAtHour(series, hour, modelOrder) {
+  const rows = series.map(item => {
+    const point = item.points.find(candidate => candidate.hour === hour);
+    assert(point, `Missing hour ${hour} for ${item.model}`);
+    return {key: item.key, model: item.model, value: point.value};
+  });
+  return ranked(rows, 'value', 'descending', modelOrder);
+}
+
+function tiedGroups(rows, tolerance = 1e-10) {
+  const groups = [];
+  for (const row of rows) {
+    const group = groups.at(-1);
+    if (!group || Math.abs(group[0].value - row.value) > tolerance) groups.push([row]);
+    else group.push(row);
+  }
+  return groups;
+}
+
+function groupKeys(groups) {
+  return groups.map(group => group.map(row => row.key));
+}
+
+function changedSeriesModels(before, after) {
+  const prior = new Map(before.map(series => [series.key, series]));
+  return after.filter(series => {
+    const earlier = prior.get(series.key);
+    assert(earlier, `Missing prior continual-improvement series: ${series.model}`);
+    return JSON.stringify(earlier.points) !== JSON.stringify(series.points);
+  }).map(series => ({key: series.key, model: series.model}));
+}
+
+function continualImprovementChanges(before, after) {
+  const earlier = before.continual_improvement, current = after.continual_improvement;
+  assert(earlier && current, 'Missing continual-improvement snapshot data');
+  const hourlyChanges = [];
+  const hourlyHours = earlier.hourly_means[0]?.points.map(point => point.hour) || [];
+  assert.deepStrictEqual(hourlyHours, current.hourly_means[0]?.points.map(point => point.hour) || []);
+  for (const hour of hourlyHours) {
+    const priorRows = seriesRowsAtHour(earlier.hourly_means, hour, before.models);
+    const currentRows = seriesRowsAtHour(current.hourly_means, hour, after.models);
+    if (!sameOrder(priorRows, currentRows)) hourlyChanges.push({hour, before: priorRows, after: currentRows});
+  }
+
+  const laterChanges = [];
+  const laterHours = earlier.later_improvement[0]?.points.map(point => point.hour) || [];
+  assert.deepStrictEqual(laterHours, current.later_improvement[0]?.points.map(point => point.hour) || []);
+  for (const hour of laterHours) {
+    const priorGroups = tiedGroups(seriesRowsAtHour(earlier.later_improvement, hour, before.models));
+    const currentGroups = tiedGroups(seriesRowsAtHour(current.later_improvement, hour, after.models));
+    if (JSON.stringify(groupKeys(priorGroups)) !== JSON.stringify(groupKeys(currentGroups))) {
+      laterChanges.push({hour, before: priorGroups, after: currentGroups});
+    }
+  }
+
+  return {
+    hourly_mean_changed_models: changedSeriesModels(earlier.hourly_means, current.hourly_means),
+    hourly_mean_ordering_changes: hourlyChanges,
+    fitted_fable_astra_crossing_hour: {
+      before: earlier.fitted_fable_astra_crossing_hour,
+      after: current.fitted_fable_astra_crossing_hour,
+      delta: delta(earlier.fitted_fable_astra_crossing_hour, current.fitted_fable_astra_crossing_hour)
+    },
+    later_improvement_changed_models: changedSeriesModels(earlier.later_improvement, current.later_improvement),
+    later_improvement_ordering_changes: laterChanges
+  };
 }
 
 function sha256(file) {
@@ -283,6 +379,8 @@ const metricLabels = {
   api_cost: 'API cost'
 };
 const orderText = (rows, direction = 'descending') => rows.map(row => row.model).join(direction === 'ascending' ? ' < ' : ' > ');
+const orderWithValues = rows => rows.map(row => `${row.model} (${row.value.toFixed(3)})`).join(' > ');
+const tiedOrderWithValues = groups => groups.map(group => `${group.map(row => row.model).join(' = ')} (${group[0].value.toFixed(1)}%)`).join(' > ');
 const hourText = value => value < 1 ? `${Math.round(value * 60)}m` : `${value.toFixed(2)}h`;
 
 function renderMarkdown(report) {
@@ -318,10 +416,57 @@ function renderMarkdown(report) {
     lines.push('');
   }
   const time = report.time_leaderboard_ordering_changes;
-  lines.push('## Time AUARC plot', '', `${time.changed_frame_count} of ${time.frame_count} sampled time frames changed order. The changes fall into these ranges:`, '', '| Time range | Before | After |', '| --- | --- | --- |');
+  const final = time.final_24_hour_state;
+  lines.push(
+    '## Time AUARC plot',
+    '',
+    `At 24 hours, the model order ${final.changed ? 'changed' : 'is unchanged'}. Before: ${orderWithValues(final.before)}. After: ${orderWithValues(final.after)}.`,
+    '',
+    `${time.changed_frame_count} of ${time.frame_count} sampled time frames changed order. The changes fall into these ranges:`,
+    '',
+    '| Time range | Before | After |',
+    '| --- | --- | --- |'
+  );
   for (const range of time.ranges) {
     const label = range.start_frame === range.end_frame ? hourText(range.start_hour) : `${hourText(range.start_hour)} to ${hourText(range.end_hour)}`;
     lines.push(`| ${label} | ${orderText(range.before_order.map(key => ({model: report.model_names[key]})))} | ${orderText(range.after_order.map(key => ({model: report.model_names[key]})))} |`);
+  }
+  const continual = report.continual_improvement_ordering_changes;
+  const modelList = items => items.length ? items.map(item => item.model).join(' and ') : 'no models';
+  const changedHours = items => items.length ? items.map(item => `${item.hour}h`).join(', ') : 'no plotted hours';
+  const hourlyModels = modelList(continual.hourly_mean_changed_models);
+  const laterModels = modelList(continual.later_improvement_changed_models);
+  const crossing = continual.fitted_fable_astra_crossing_hour;
+  const crossingText = finite(crossing.before) && finite(crossing.after)
+    ? `The fitted Fable–Astra crossing moved from ${crossing.before.toFixed(3)} hours to ${crossing.after.toFixed(3)} hours.`
+    : 'A fitted Fable–Astra crossing is not available in both snapshots.';
+  lines.push(
+    '',
+    '## Understanding continual model improvement',
+    '',
+    `The hourly mean and fitted trajectories changed for ${hourlyModels}. ${crossingText}`,
+    '',
+    '### Mean hidden-test reward over time',
+    '',
+    `Ordering changed at ${changedHours(continual.hourly_mean_ordering_changes)}.`,
+    '',
+    '| Hour | Before | After |',
+    '| --- | --- | --- |'
+  );
+  for (const item of continual.hourly_mean_ordering_changes) {
+    lines.push(`| ${item.hour}h | ${orderWithValues(item.before)} | ${orderWithValues(item.after)} |`);
+  }
+  lines.push(
+    '',
+    '### Runs that improve later',
+    '',
+    `The plotted series changed for ${laterModels}. Ordering or tie groups changed at ${changedHours(continual.later_improvement_ordering_changes)}.`,
+    '',
+    '| Hour | Before | After |',
+    '| --- | --- | --- |'
+  );
+  for (const item of continual.later_improvement_ordering_changes) {
+    lines.push(`| ${item.hour}h | ${tiedOrderWithValues(item.before)} | ${tiedOrderWithValues(item.after)} |`);
   }
   lines.push('');
   return `${lines.join('\n').trimEnd()}\n`;
@@ -336,7 +481,7 @@ function main() {
   const before = loadSnapshot(options.before), after = loadSnapshot(options.after);
   assertExclusions(before, after);
   const output = {
-    schema_version: 1,
+    schema_version: 2,
     before_snapshot: before.snapshot,
     after_snapshot: after.snapshot,
     model_names: Object.fromEntries(after.aggregates.map(row => [row.key, row.model])),
@@ -346,7 +491,8 @@ function main() {
     aggregate_orderings: aggregateOrderings(before, after),
     cost_frontier: costFrontier(before, after),
     task_ordering_changes: taskOrderingChanges(before, after),
-    time_leaderboard_ordering_changes: timeOrderingChanges(before, after)
+    time_leaderboard_ordering_changes: timeOrderingChanges(before, after),
+    continual_improvement_ordering_changes: continualImprovementChanges(before, after)
   };
   const target = path.resolve(options.output);
   fs.mkdirSync(path.dirname(target), {recursive: true});

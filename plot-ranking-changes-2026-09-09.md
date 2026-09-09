@@ -80,6 +80,8 @@ The cost frontier is unchanged: Qwen3.8 Max < Gemini 3.8 Flash < Grok 4.6 < Clau
 
 ## Time AUARC plot
 
+At 24 hours, the model order is unchanged. Before: Claude Fable 5.1 (0.605) > GPT-6 Astra (0.600) > Claude Opus 5 (0.579) > GPT-5.6 Sol (0.517) > Grok 4.6 (0.493) > Gemini 3.8 Flash (0.484) > Kimi K3 (0.428) > Qwen3.8 Max (0.423) > Muse Spark 1.3 (0.384). After: Claude Fable 5.1 (0.602) > GPT-6 Astra (0.600) > Claude Opus 5 (0.579) > GPT-5.6 Sol (0.517) > Grok 4.6 (0.493) > Gemini 3.8 Flash (0.484) > Kimi K3 (0.435) > Qwen3.8 Max (0.423) > Muse Spark 1.3 (0.384).
+
 90 of 241 sampled time frames changed order. The changes fall into these ranges:
 
 | Time range | Before | After |
@@ -95,3 +97,32 @@ The cost frontier is unchanged: Qwen3.8 Max < Gemini 3.8 Flash < Grok 4.6 < Clau
 | 3.72h to 3.79h | GPT-6 Astra > GPT-5.6 Sol > Claude Fable 5.1 > Grok 4.6 > Gemini 3.8 Flash > Claude Opus 5 > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 | GPT-6 Astra > GPT-5.6 Sol > Grok 4.6 > Claude Fable 5.1 > Gemini 3.8 Flash > Claude Opus 5 > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 |
 | 4.95h | GPT-6 Astra > Claude Fable 5.1 > GPT-5.6 Sol > Claude Opus 5 > Grok 4.6 > Gemini 3.8 Flash > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 | GPT-6 Astra > GPT-5.6 Sol > Claude Fable 5.1 > Claude Opus 5 > Grok 4.6 > Gemini 3.8 Flash > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 |
 | 19.10h to 21.41h | Claude Fable 5.1 > GPT-6 Astra > Claude Opus 5 > GPT-5.6 Sol > Grok 4.6 > Gemini 3.8 Flash > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 | GPT-6 Astra > Claude Fable 5.1 > Claude Opus 5 > GPT-5.6 Sol > Grok 4.6 > Gemini 3.8 Flash > Kimi K3 > Qwen3.8 Max > Muse Spark 1.3 |
+
+## Understanding continual model improvement
+
+The hourly mean and fitted trajectories changed for Claude Fable 5.1 and Kimi K3. The fitted Fable–Astra crossing moved from 3.350 hours to 3.203 hours.
+
+### Mean hidden-test reward over time
+
+Ordering changed at 6h, 8h.
+
+| Hour | Before | After |
+| --- | --- | --- |
+| 6h | Claude Fable 5.1 (0.630) > GPT-6 Astra (0.611) > Claude Opus 5 (0.599) > GPT-5.6 Sol (0.522) > Grok 4.6 (0.487) > Gemini 3.8 Flash (0.485) > Qwen3.8 Max (0.443) > Kimi K3 (0.424) > Muse Spark 1.3 (0.380) | Claude Fable 5.1 (0.633) > GPT-6 Astra (0.611) > Claude Opus 5 (0.599) > GPT-5.6 Sol (0.522) > Grok 4.6 (0.487) > Gemini 3.8 Flash (0.485) > Kimi K3 (0.446) > Qwen3.8 Max (0.443) > Muse Spark 1.3 (0.380) |
+| 8h | Claude Fable 5.1 (0.635) > Claude Opus 5 (0.617) > GPT-6 Astra (0.614) > GPT-5.6 Sol (0.520) > Grok 4.6 (0.493) > Gemini 3.8 Flash (0.490) > Qwen3.8 Max (0.466) > Kimi K3 (0.454) > Muse Spark 1.3 (0.385) | Claude Fable 5.1 (0.636) > Claude Opus 5 (0.617) > GPT-6 Astra (0.614) > GPT-5.6 Sol (0.520) > Grok 4.6 (0.493) > Gemini 3.8 Flash (0.490) > Kimi K3 (0.475) > Qwen3.8 Max (0.466) > Muse Spark 1.3 (0.385) |
+
+### Runs that improve later
+
+The plotted series changed for Claude Fable 5.1 and Kimi K3. Ordering or tie groups changed at 2h, 4h, 10h, 12h, 14h, 16h, 18h, 20h, 22h.
+
+| Hour | Before | After |
+| --- | --- | --- |
+| 2h | Qwen3.8 Max (100.0%) > Claude Opus 5 = GPT-5.6 Sol = Kimi K3 = Gemini 3.8 Flash = Muse Spark 1.3 = Grok 4.6 (96.6%) > Claude Fable 5.1 (93.1%) > GPT-6 Astra (89.7%) | Qwen3.8 Max (100.0%) > Claude Opus 5 = GPT-5.6 Sol = Kimi K3 = Gemini 3.8 Flash = Muse Spark 1.3 = Grok 4.6 (96.6%) > Claude Fable 5.1 = GPT-6 Astra (89.7%) |
+| 4h | Claude Opus 5 (96.6%) > GPT-5.6 Sol = Qwen3.8 Max = Muse Spark 1.3 (93.1%) > Kimi K3 = GPT-6 Astra (89.7%) > Claude Fable 5.1 = Grok 4.6 (86.2%) > Gemini 3.8 Flash (82.8%) | Claude Opus 5 (96.6%) > GPT-5.6 Sol = Qwen3.8 Max = Muse Spark 1.3 (93.1%) > Kimi K3 = GPT-6 Astra (89.7%) > Grok 4.6 (86.2%) > Claude Fable 5.1 = Gemini 3.8 Flash (82.8%) |
+| 10h | Qwen3.8 Max (86.2%) > Grok 4.6 (79.3%) > Muse Spark 1.3 (75.9%) > GPT-5.6 Sol = GPT-6 Astra (72.4%) > Claude Opus 5 = Gemini 3.8 Flash (69.0%) > Kimi K3 (62.1%) > Claude Fable 5.1 (55.2%) | Qwen3.8 Max (86.2%) > Grok 4.6 (79.3%) > Muse Spark 1.3 (75.9%) > GPT-5.6 Sol = GPT-6 Astra (72.4%) > Claude Opus 5 = Gemini 3.8 Flash (69.0%) > Claude Fable 5.1 = Kimi K3 (65.5%) |
+| 12h | Qwen3.8 Max = Muse Spark 1.3 = Grok 4.6 (75.9%) > GPT-6 Astra (72.4%) > Claude Opus 5 (65.5%) > GPT-5.6 Sol = Kimi K3 = Gemini 3.8 Flash (62.1%) > Claude Fable 5.1 (48.3%) | Qwen3.8 Max = Muse Spark 1.3 = Grok 4.6 (75.9%) > GPT-6 Astra (72.4%) > Claude Opus 5 = Kimi K3 (65.5%) > Claude Fable 5.1 = GPT-5.6 Sol = Gemini 3.8 Flash (62.1%) |
+| 14h | Muse Spark 1.3 (72.4%) > Claude Opus 5 = Grok 4.6 = GPT-6 Astra (65.5%) > GPT-5.6 Sol = Qwen3.8 Max (62.1%) > Gemini 3.8 Flash (55.2%) > Kimi K3 (51.7%) > Claude Fable 5.1 (37.9%) | Muse Spark 1.3 (72.4%) > Claude Opus 5 = Grok 4.6 = GPT-6 Astra (65.5%) > GPT-5.6 Sol = Qwen3.8 Max (62.1%) > Claude Fable 5.1 (58.6%) > Kimi K3 = Gemini 3.8 Flash (55.2%) |
+| 16h | Muse Spark 1.3 (69.0%) > Claude Opus 5 = Grok 4.6 (62.1%) > GPT-5.6 Sol = Qwen3.8 Max = GPT-6 Astra (58.6%) > Gemini 3.8 Flash (51.7%) > Kimi K3 (48.3%) > Claude Fable 5.1 (24.1%) | Muse Spark 1.3 (69.0%) > Claude Opus 5 = Grok 4.6 (62.1%) > GPT-5.6 Sol = Qwen3.8 Max = GPT-6 Astra (58.6%) > Claude Fable 5.1 (55.2%) > Kimi K3 = Gemini 3.8 Flash (51.7%) |
+| 18h | Muse Spark 1.3 = Grok 4.6 = GPT-6 Astra (55.2%) > Claude Opus 5 (51.7%) > GPT-5.6 Sol = Qwen3.8 Max = Gemini 3.8 Flash (48.3%) > Kimi K3 (41.4%) > Claude Fable 5.1 (17.2%) | Muse Spark 1.3 = Grok 4.6 = GPT-6 Astra (55.2%) > Claude Opus 5 (51.7%) > GPT-5.6 Sol = Qwen3.8 Max = Gemini 3.8 Flash (48.3%) > Claude Fable 5.1 (44.8%) > Kimi K3 (41.4%) |
+| 20h | Muse Spark 1.3 = GPT-6 Astra (44.8%) > GPT-5.6 Sol = Grok 4.6 (41.4%) > Claude Opus 5 (37.9%) > Kimi K3 = Gemini 3.8 Flash (31.0%) > Qwen3.8 Max (20.7%) > Claude Fable 5.1 (13.8%) | Muse Spark 1.3 = GPT-6 Astra (44.8%) > GPT-5.6 Sol = Grok 4.6 (41.4%) > Claude Fable 5.1 = Claude Opus 5 (37.9%) > Kimi K3 = Gemini 3.8 Flash (31.0%) > Qwen3.8 Max (20.7%) |
+| 22h | Grok 4.6 = GPT-6 Astra (31.0%) > Claude Opus 5 (27.6%) > GPT-5.6 Sol (24.1%) > Muse Spark 1.3 (20.7%) > Qwen3.8 Max (17.2%) > Gemini 3.8 Flash (13.8%) > Claude Fable 5.1 = Kimi K3 (3.4%) | Grok 4.6 = GPT-6 Astra (31.0%) > Claude Opus 5 (27.6%) > GPT-5.6 Sol (24.1%) > Muse Spark 1.3 (20.7%) > Claude Fable 5.1 = Qwen3.8 Max (17.2%) > Gemini 3.8 Flash (13.8%) > Kimi K3 (3.4%) |

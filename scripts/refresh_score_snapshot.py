@@ -330,11 +330,11 @@ def main():
         iterations = copy.deepcopy(attempt['iterations'])
         carried = False
         if eid == '60a7e9e2-c234-4091-a258-242d0574dc30':
-            previous = next(r for r in iterations if r['iteration'] == 22)
+            previous_checkpoint = next(r for r in iterations if r['iteration'] == 22)
             missing = next(r for r in iterations if r['iteration'] == 23)
             if missing.get('private_score') is None:
                 for field in ('private_score', 'private_raw_score'):
-                    missing[field] = previous.get(field)
+                    missing[field] = previous_checkpoint.get(field)
                 carried = True
         ro = payload['rollouts'][0]['rollout']
         end = max([0] + [elapsed(row) for row in iterations])
