@@ -145,6 +145,10 @@
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
                   <text x="22" y="126">&minus;&infin;</text><text x="254" y="126" text-anchor="end">&infin;</text>
                 </svg>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u, where u is the nonnegative signed improvement over the baseline divided by the signed improvement of the reference.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                </div>
                 <p>Use this when there is no fixed best possible score.</p>
                 <p>Examples include episode return, log likelihood, and objective values without a fixed useful range.</p>
               </article>
@@ -162,6 +166,10 @@
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
                   <text x="22" y="126">0</text><text x="254" y="126" text-anchor="end">&infin;</text>
                 </svg>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u, where u is the base two logarithm of one plus the signed improvement over the baseline divided by the signed improvement of the reference.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><msub><mi>log</mi><mn>2</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                </div>
                 <p>Use this for positive metrics where improvements are meaningful in ratios and may span many orders of magnitude.</p>
                 <p>Examples include throughput, speedup, and inverse error.</p>
               </article>
@@ -179,6 +187,10 @@
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
                   <text x="22" y="126">s<tspan baseline-shift="sub" font-size="8">1</tspan></text><text x="254" y="126" text-anchor="end">s<tspan baseline-shift="sub" font-size="8">2</tspan></text>
                 </svg>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u. The gap d is the distance from s two, and u compares the agent's log gap reduction with the reference's log gap reduction.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>2</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                </div>
                 <p>Use this when a metric has a known best value.</p>
                 <p>Examples include accuracy, F1, and AUC with a best value of 1, plus error, latency, and regret with a best value of 0.</p>
               </article>
