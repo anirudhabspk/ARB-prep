@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchExam measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchExam</title>
-<link rel="stylesheet" href="site.css?v=reward-hints-20260909">
+<link rel="stylesheet" href="site.css?v=unboxed-plots-20260909">
 <link rel="canonical" href="https://benchmarks.bespokelabs.ai/autoresearchexam/">
 <meta name="citation_title" content="AutoResearchExam">
 <meta name="citation_publication_date" content="2026/09/09">
@@ -33,8 +33,8 @@
     <a href="#tasks">Tasks</a>
     <a href="#setup">Experimental setup</a>
     <a href="#general-analysis">Analyzing agent behavior</a>
+    <a href="#hint-study">Using hints</a>
     <a href="#harness-ablations">Comparing harnesses</a>
-    <a href="#citation">Citation</a>
   </aside>
   <main>
     <section class="section" id="leaderboard">
@@ -90,32 +90,17 @@
       </div>
       <h3>Task scoring</h3>
       <div class="prose scoring-prose">
-        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. The task returns a raw score, and raw scores cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67 percent worst-group accuracy on Waterbirds group robust coreset selection, and 41.28 dB mean PSNR on FasterCache video DiT policy. Pass/fail tasks can use average pass rate, but open-ended metrics need a common reward scale.</p>
-        <p>We use baseline anchor scores and reward maps to convert a raw score into a final reward. We use "score" for the metric computed by the task and "reward" for the mapped value used in AUARC. A trivial baseline receives reward 0. Some maps reserve the range from 0 to 0.1 for weaker trivial baselines. A strong reference solution receives reward 0.5, or 0.55 for maps with that baseline band.</p>
-        <p>We use three maps based on the raw score range: bounded scores in [<em>a</em>, <em>b</em>], signed unbounded scores in (&minus;&infin;, &infin;), and unsigned unbounded scores in (0, &infin;). For bounded metrics, the map gives more credit to the same absolute improvement near the known best score, where progress is usually harder. For example, improving accuracy from 0.85 to 0.95 can earn more reward than improving it from 0.10 to 0.20.</p>
-        <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward.</p>
-      </div>
-      <h3>Main evaluation metric: hidden-test AUARC</h3>
-      <div class="prose">
-        <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
-      </div>
-      <figure class="task-scoring-figure">
-        <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
-        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
-      </figure>
-      <div class="prose">
-        <p><strong>Choosing the curve.</strong> At each point in time, the validation score selects the best submission so far. The hidden test curve shows the hidden test reward for that same submission. The hidden test result does not help select it.</p>
-        <p><strong>Area under the curve.</strong> We calculate the area under the Auto Research Curve, or AUARC, across the run. This metric is equivalent to the time weighted average hidden test score. A score held for more time contributes more area. An improvement made early therefore adds more than the same improvement made near the end.</p>
-        <p><strong>Combining tasks.</strong> Hidden test AUARC is our main measure of progress on one task. We compare models within each task, then combine those comparisons into a task relative Elo rating. This rating rises when a model has a higher hidden test AUARC than other models across tasks. We also report the final hidden test result so that a large improvement near the end remains visible.</p>
-      </div>
-      <div class="prose" id="reward-normalization">
-        <p>We turn each task's raw score into a reward from 0 to 1. The score's mathematical limits determine the mapping.</p>
-        <details class="reward-formula">
-          <summary>Raw Score -&gt; Reward map</summary>
+        <p>Each task starts with its own "raw" score that the agent is tasked with optimizing, such as accuracy, speedup, or F1 score. We convert that raw score to a reward from 0 to 1 before returning the result to the agent. This gives results from different tasks a common scale.</p>
+        <div class="scoring-note-row">
+          <p>When available, we use two guide "anchor scores" to perform the transformation to [0, 1]. These are the baseline and the reference solution. The baseline is the score of a simple method that the agent should beat. The reference is the score of a strong known method applied to the problem. If the agent submits the baseline, it usually receives a reward of 0. If it submits the reference, it receives a reward of 0.5.<sup><a href="#scoring-footnote-1" aria-label="Footnote 1">1</a></sup> Results above the reference continue to earn more reward and approach the maximum score of 1.</p>
+          <aside class="scoring-sidenote" id="scoring-footnote-1" aria-label="Footnote 1"><sup>1</sup> Some tasks reserve rewards from 0 to 0.1 for results below the main baseline. Their reference receives 0.55.</aside>
+        </div>
+        <details class="reward-formula" id="reward-normalization">
+          <summary>Reward formula</summary>
           <div class="reward-scaling" id="reward-scaling">
-            <p class="reward-scaling-lead">The sketches below illustrate our mapping from raw score to [0, 1]. Such a mapping lets us account for the changing difficulty of making marginal improvements at different score ranges, and lets us average scores in a meaningful way. We illustrate this for metrics where a higher score is better. We appropriately flip the map when a lower score is better.</p>
+            <p class="reward-scaling-lead">The sketches show higher scores as better. For a lower-is-better metric, the same idea applies with the horizontal direction reversed.</p>
             <div class="reward-scaling-grid">
-              <article class="reward-scaling-card reward-scaling-card--signed">
+              <article class="reward-scaling-card">
                 <div class="reward-scaling-card-heading">
                   <h4>Signed, unbounded</h4>
                   <p class="reward-scaling-map"><span>(&minus;&infin;, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
@@ -129,24 +114,14 @@
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
                   <text x="22" y="126">&minus;&infin;</text><text x="254" y="126" text-anchor="end">&infin;</text>
                 </svg>
-                <p>We use this map when there is no fixed best possible score.</p>
-                <p>Examples include episode return, log likelihood, and objective values without a fixed useful range.</p>
-                <details class="reward-scaling-formula">
-                  <summary>Show formula</summary>
-                  <table class="reward-scaling-terms"><tbody>
-                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
-                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
-                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
-                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
-                    <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
-                  </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u, where u is the nonnegative signed improvement over the baseline divided by the signed improvement of the reference.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
                   <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
-                </details>
+                </div>
+                <p>Use this when there is no fixed best possible score.</p>
+                <p>Examples include episode return, log likelihood, and objective values without a fixed useful range.</p>
               </article>
-              <article class="reward-scaling-card reward-scaling-card--unsigned">
+              <article class="reward-scaling-card">
                 <div class="reward-scaling-card-heading">
                   <h4>Unsigned, unbounded</h4>
                   <p class="reward-scaling-map"><span>(0, &infin;)</span><b>&rarr;</b><span>[0, 1)</span></p>
@@ -160,27 +135,17 @@
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
                   <text x="22" y="126">0</text><text x="254" y="126" text-anchor="end">&infin;</text>
                 </svg>
-                <p>We use this map for positive metrics where improvements are meaningful in ratios and may span many orders of magnitude.</p>
-                <p>Examples include throughput, speedup, and inverse error.</p>
-                <details class="reward-scaling-formula">
-                  <summary>Show formula</summary>
-                  <table class="reward-scaling-terms"><tbody>
-                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
-                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
-                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
-                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
-                    <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
-                  </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u, where u is the base two logarithm of one plus the signed improvement over the baseline divided by the signed improvement of the reference.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
                   <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><msub><mi>log</mi><mn>2</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
-                </details>
+                </div>
+                <p>Use this for positive metrics where improvements are meaningful in ratios and may span many orders of magnitude.</p>
+                <p>Examples include throughput, speedup, and inverse error.</p>
               </article>
-              <article class="reward-scaling-card reward-scaling-card--bounded">
+              <article class="reward-scaling-card">
                 <div class="reward-scaling-card-heading">
                   <h4>Bounded</h4>
-                  <p class="reward-scaling-map"><span>[s<sub>0</sub>, s<sub>1</sub>]</span><b>&rarr;</b><span>[0, 1]</span></p>
+                  <p class="reward-scaling-map"><span>[s<sub>1</sub>, s<sub>2</sub>]</span><b>&rarr;</b><span>[0, 1]</span></p>
                 </div>
                 <svg class="reward-scaling-plot" viewBox="0 0 280 132" role="img" aria-label="Gap ratio maps a score between known endpoints to a reward from zero to one.">
                   <defs><marker id="gap-ratio-arrow" viewBox="0 0 6 6" refX="5.5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6 Z"/></marker></defs>
@@ -189,30 +154,33 @@
                   <path class="reward-scale-curve" d="M21 108 C42 106 62 101 81 91 C105 79 117 61 140 48 C163 35 197 24 256 20"/>
                   <circle class="reward-scale-endpoint" cx="256" cy="20" r="3.5"/>
                   <text x="11" y="112" text-anchor="end">0</text><text x="11" y="25" text-anchor="end">1</text>
-                  <text x="22" y="126">s<tspan baseline-shift="sub" font-size="8">0</tspan></text><text x="254" y="126" text-anchor="end">s<tspan baseline-shift="sub" font-size="8">1</tspan></text>
+                  <text x="22" y="126">s<tspan baseline-shift="sub" font-size="8">1</tspan></text><text x="254" y="126" text-anchor="end">s<tspan baseline-shift="sub" font-size="8">2</tspan></text>
                 </svg>
-                <p>We use this map when a metric has a known best value.</p>
+                <div class="reward-scaling-formula" aria-label="Reward equals c plus one minus c times u divided by one plus u. The gap d is the distance from s two, and u compares the agent's log gap reduction with the reference's log gap reduction.">
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>R</mi><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>2</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                </div>
+                <p>Use this when a metric has a known best value.</p>
                 <p>Examples include accuracy, F1, and AUC with a best value of 1, plus error, latency, and regret with a best value of 0.</p>
-                <details class="reward-scaling-formula">
-                  <summary>Show formula</summary>
-                  <table class="reward-scaling-terms"><tbody>
-                    <tr><th scope="row"><em>reward</em></th><td>Returned score.</td></tr>
-                    <tr><th scope="row"><em>reward</em><sub>baseline</sub></th><td>Reward at the baseline score.</td></tr>
-                    <tr><th scope="row"><em>u</em></th><td>Progress in units of the reference improvement.</td></tr>
-                    <tr><th scope="row"><em>s</em></th><td>Raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>0</sub></th><td>Baseline raw score.</td></tr>
-                    <tr><th scope="row"><em>s</em><sub>1</sub></th><td>Best possible raw score.</td></tr>
-                    <tr><th scope="row"><em>d</em><sub>0</sub></th><td>Distance from <em>s</em><sub>1</sub> at the baseline score.</td></tr>
-                    <tr><th scope="row"><em>d</em></th><td>Distance from <em>s</em><sub>1</sub> at the agent score.</td></tr>
-                    <tr><th scope="row"><em>d</em><sub>ref</sub></th><td>Distance from <em>s</em><sub>1</sub> at the reference score.</td></tr>
-                  </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>1</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
-                </details>
               </article>
             </div>
           </div>
+          <p>Let <em>d</em> be the distance from the best possible result. We compare the agent's reduction in this distance with the reduction achieved by the reference.</p>
+          <div class="reward-equation">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Progress u equals the maximum of zero and log of baseline gap divided by agent gap, divided by log of baseline gap divided by reference gap.">
+              <mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>agent</mtext></msub><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mtext>baseline</mtext></msub><mo>/</mo><msub><mi>d</mi><mtext>reference</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo>
+            </math>
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Reward equals c plus one minus c times u divided by one plus u."><mtext>Reward</mtext><mo>=</mo><mi>c</mi><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><mi>c</mi><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+          </div>
+          <p>The logarithm measures proportional reductions in the distance. Each halving adds the same amount to <em>u</em>. Improving accuracy from 90 percent to 95 percent removes half of the remaining error. Improving from 98 percent to 99 percent also removes half of the remaining error.</p>
+          <p>The value <em>u</em> measures progress in units of the reference improvement. The baseline has <em>u</em> equal to 0. The reference has <em>u</em> equal to 1. The resulting reward is always between 0 and 1, and improvements beyond the reference still receive more reward.</p>
+          <p>The value <em>c</em> is the reward at the baseline. It is either 0 or 0.1. Results below the baseline receive no more than <em>c</em>. A perfect result receives 1.</p>
+          <p>Some tasks do not have a fixed best possible result. For these tasks, <em>u</em> is the improvement beyond the baseline divided by the improvement from the baseline to the reference. When a useful reference does not exist, we count reductions in the remaining error instead. The exact calculation is chosen to match meaningful progress on that task.</p>
         </details>
+        <div class="scoring-note-row">
+          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores.<sup><a href="#scoring-footnote-2" aria-label="Footnote 2">2</a></sup> The agent can then get useful feedback without viewing the validation data directly.</p>
+          <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
+        </div>
       </div>
       <h3 id="hidden-test-auarc">Main evaluation metric: hidden-test AUARC</h3>
       <div class="prose">
@@ -246,78 +214,6 @@
         <p>Second, the right plot shows that Muse has the largest share of runs that still improve after the 12-hour mark, at about 79%. Qwen and Grok follow at about 76%. This means that the agents are still working and improving on their solutions within the environment, that is, that the benchmark itself supports extended amounts of experimentation or optimization.
         </p>
       </div>
-
-      <section class="hint-study" id="hint-study">
-      <h3 class="analysis-subheading">How well can the agents use a hint?</h3>
-      <div class="prose">
-      <p>We measured the improvement on Terminus-2 when the insights from the set of auto-research trajectory are condensed into a single sentence and used as a hint. We see that the agents are generally able to use these effectively over a single 200 turn Terminus-2 rollout. Note that this section uses only the CPU subset of tasks from the full benchmark.</p>
-      </div>
-      <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
-        <svg class="hint-lanes-graphic" viewBox="0 24 940 200" role="img" aria-labelledby="hint-graphic-title hint-graphic-desc">
-          <title id="hint-graphic-title">Average hidden-test rewards with and without a research hint</title>
-          <desc id="hint-graphic-desc">For each model, the colored arrow runs from the first AutoResearch iteration to the iteration with the best validation score. A shared callout points to the hinted score without AutoResearch. The black marker is the Opus hinted score, 0.547. The white marker is the Muse hinted score, 0.447.</desc>
-          <defs>
-            <marker id="hint-wavy-arrowhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 Z"/></marker>
-          </defs>
-          <g class="hint-svg-axis" aria-hidden="true">
-            <line x1="164" y1="55" x2="928" y2="55"/>
-            <text x="164" y="42">0.0</text><text x="355" y="42" text-anchor="middle">0.25</text><text x="546" y="42" text-anchor="middle">0.50</text><text x="737" y="42" text-anchor="middle">0.75</text><text x="928" y="42" text-anchor="end">1.0</text>
-          </g>
-          <line class="hint-svg-divider" x1="0" y1="72" x2="940" y2="72"/>
-          <text class="hint-svg-model" x="0" y="116">Claude Opus 5</text>
-          <line class="hint-svg-track" x1="164" y1="112" x2="928" y2="112"/>
-          <line class="hint-svg-interval hint-svg-interval--opus" x1="501" y1="112" x2="616" y2="112"/>
-          <polygon class="hint-svg-interval-head hint-svg-interval-head--opus" points="616,112 607,107 607,117"/>
-          <circle class="hint-svg-start hint-svg-start--opus" cx="501" cy="112" r="4.5"/>
-          <text class="hint-svg-score hint-svg-score--opus" x="501" y="94" text-anchor="end">0.441</text><text class="hint-svg-label" x="501" y="105" text-anchor="end">First auto-research iteration</text>
-          <text class="hint-svg-score hint-svg-score--opus" x="616" y="94">0.592</text><text class="hint-svg-label" x="616" y="105">best auto-research iteration</text>
-          <circle class="hint-svg-hint-marker hint-svg-hint-marker--opus" cx="582" cy="112" r="3.6"/>
-          <text class="hint-svg-hint-score" x="590" y="128">0.547</text>
-          <line class="hint-svg-divider" x1="0" y1="154" x2="940" y2="154"/>
-          <text class="hint-svg-model" x="0" y="198">Muse Spark 1.3</text>
-          <line class="hint-svg-track" x1="164" y1="194" x2="928" y2="194"/>
-          <line class="hint-svg-interval hint-svg-interval--muse" x1="472" y1="194" x2="507" y2="194"/>
-          <polygon class="hint-svg-interval-head hint-svg-interval-head--muse" points="507,194 498,189 498,199"/>
-          <circle class="hint-svg-start hint-svg-start--muse" cx="472" cy="194" r="4.5"/>
-          <text class="hint-svg-score hint-svg-score--muse" x="472" y="176" text-anchor="end">0.403</text><text class="hint-svg-label" x="472" y="187" text-anchor="end">First auto-research iteration</text>
-          <text class="hint-svg-score hint-svg-score--muse" x="507" y="176">0.449</text><text class="hint-svg-label" x="507" y="187">best auto-research iteration</text>
-          <circle class="hint-svg-hint-marker hint-svg-hint-marker--muse" cx="505" cy="194" r="3.6"/>
-          <text class="hint-svg-hint-score" x="513" y="210">0.447</text>
-          <rect class="hint-svg-callout" x="650" y="136" width="188" height="30"/>
-          <text class="hint-svg-callout-text" x="664" y="155">hinted score, no auto-research</text>
-          <path class="hint-svg-wavy-arrow" d="M650 146 C635 141 620 126 610 132 S595 119 588 112" marker-end="url(#hint-wavy-arrowhead)"/>
-          <path class="hint-svg-wavy-arrow" d="M650 157 C620 158 608 195 575 179 S540 201 511 194" marker-end="url(#hint-wavy-arrowhead)"/>
-        </svg>
-        <div class="hint-lanes-axis" aria-hidden="true"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div>
-        <article class="hint-lane hint-lane--opus">
-          <p class="hint-lane-model">Claude Opus 5</p>
-          <div class="hint-lane-plot" role="img" aria-label="Claude Opus 5 average hidden-test reward: AutoResearch moves from 0.441 at its first iteration to 0.592 at the iteration selected by its best validation score. The hinted score without AutoResearch is 0.547.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <i class="hint-lane-interval" aria-hidden="true" style="--start:44.1%;--end:59.2%"></i>
-            <span class="hint-lane-marker hint-lane-marker--first" style="--score:44.1%"><b>0.441</b><small>First auto-research iteration</small></span>
-            <span class="hint-lane-hint" aria-hidden="true" style="--score:54.7%"><b>0.547</b><small>hinted score, no auto-research</small></span>
-            <span class="hint-lane-marker hint-lane-marker--best" style="--score:59.2%"><b>0.592</b><small>best auto-research iteration</small></span>
-          </div>
-        </article>
-        <article class="hint-lane hint-lane--muse">
-          <p class="hint-lane-model">Muse Spark 1.3</p>
-          <div class="hint-lane-plot" role="img" aria-label="Muse Spark 1.3 average hidden-test reward: AutoResearch moves from 0.403 at its first iteration to 0.449 at the iteration selected by its best validation score. The hinted score without AutoResearch is 0.447.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <i class="hint-lane-interval" aria-hidden="true" style="--start:40.3%;--end:44.9%"></i>
-            <span class="hint-lane-marker hint-lane-marker--first" style="--score:40.3%"><b>0.403</b><small>First auto-research iteration</small></span>
-            <span class="hint-lane-hint" aria-hidden="true" style="--score:44.7%"><b>0.447</b><small>hinted score, no auto-research</small></span>
-            <span class="hint-lane-marker hint-lane-marker--best" style="--score:44.9%"><b>0.449</b><small>best auto-research iteration</small></span>
-          </div>
-        </article>
-      </div>
-      <div class="prose">
-        <details class="trajectory-method">
-          <summary>How we make and use the hints</summary>
-          <p>An LLM reads all AutoResearch trajectories from all models. It highlights key ideas that improved reward and writes a single sentence that summarizes an insight about the environment, problem, or verification procedure discovered during the trajectory.</p>
-          <p>We append the sentence to the task's <code>instruction.md</code> file. We release the hints with the tasks.</p>
-        </details>
-      </div>
-    </section>
 
       <!-- <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
@@ -365,6 +261,54 @@
 <h3 id="analysis-2d">Do models that submit more perform better?</h3>
 <p>We see only a weak association between submission count and test AUARC across models. We don’t see evidence that simply submitting more leads to higher scores on this benchmark. This suggests that naïve hill climbing through more submissions alone is insufficient, and that the quality of research steps matters.</p>
 <figure class="model-effort" id="model-effort-plots"><div class="model-effort-panels"><div><h4>Number of submissions vs. test AUARC</h4><div class="efficiency-chart-wrap model-effort-chart"><svg viewBox="0 0 680 350" role="img" aria-label="Number of submissions vs. test AUARC"><text x="60" y="17">Mean test AUARC</text><text x="50" y="294" text-anchor="end">0.00</text><text x="50" y="231.5" text-anchor="end">0.25</text><text x="50" y="169" text-anchor="end">0.50</text><text x="50" y="106.5" text-anchor="end">0.75</text><text x="50" y="44" text-anchor="end">1.00</text><path d="M60 40V290H650" fill="none" stroke="var(--line)"/><line class="effort-trend" x1="220.70476190476188" y1="158.68971677138057" x2="571.3333333333333" y2="175.48132040228467" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"><title>Linear fit across model averages</title></line><text class="effort-correlation" x="583.3333333333333" y="179.48132040228467">r = −0.26</text><text x="60" y="311" text-anchor="middle">0</text><text x="178" y="311" text-anchor="middle">15</text><text x="296" y="311" text-anchor="middle">30</text><text x="414" y="311" text-anchor="middle">45</text><text x="532" y="311" text-anchor="middle">60</text><text x="650" y="311" text-anchor="middle">75</text><text x="355" y="338" text-anchor="middle">Mean number of submissions per task</text><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Claude Fable 5.1: 20.4 submissions, 81.6% of active run time outside grading, test AUARC 0.602; 29 tasks." data-model="Claude Fable 5.1" data-resource-label="Mean number of submissions per task" data-resource-value="20.4" data-score-label="Mean test AUARC" data-score-value="0.602" data-left="32.456582633053216" data-top="39.826237110127536" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="220.70476190476188" cy="139.39182988544638" r="13"/><rect class="company-logo-backdrop" x="210.39476190476188" y="129.08182988544638" width="20.63" height="20.63" fill="#fff" stroke="#6A3D9A" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/anthropic/191919" x="212.45476190476188" y="131.14182988544638" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="GPT-6 Astra: 29.5 submissions, 77.8% of active run time outside grading, test AUARC 0.600; 29 tasks." data-model="GPT-6 Astra" data-resource-label="Mean number of submissions per task" data-resource-value="29.5" data-score-label="Mean test AUARC" data-score-value="0.600" data-left="42.99547511312217" data-top="39.993610493240844" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="292.36923076923074" cy="139.97763672634295" r="13"/><rect class="company-logo-backdrop" x="282.05923076923074" y="129.66763672634295" width="20.63" height="20.63" fill="#fff" stroke="#B2182B" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg" x="284.11923076923074" y="131.72763672634295" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Claude Opus 5: 22.0 submissions, 85.3% of active run time outside grading, test AUARC 0.579; 29 tasks." data-model="Claude Opus 5" data-resource-label="Mean number of submissions per task" data-resource-value="22.0" data-score-label="Mean test AUARC" data-score-value="0.579" data-left="34.3207843137255" data-top="41.49769228548211" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="233.38133333333334" cy="145.24192299918738" r="13"/><rect class="company-logo-backdrop" x="223.07133333333334" y="134.93192299918738" width="20.63" height="20.63" fill="#fff" stroke="#D95F02" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/anthropic/191919" x="225.13133333333334" y="136.99192299918738" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="GPT-5.6 Sol: 65.0 submissions, 68.1% of active run time outside grading, test AUARC 0.513; 29 tasks." data-model="GPT-5.6 Sol" data-resource-label="Mean number of submissions per task" data-resource-value="65.0" data-score-label="Mean test AUARC" data-score-value="0.513" data-left="84.01960784313725" data-top="46.20145397253454" data-place-left="true" data-place-below="false"><circle class="efficiency-hit" cx="571.3333333333333" cy="161.7050889038709" r="13"/><rect class="company-logo-backdrop" x="561.0233333333333" y="151.39508890387089" width="20.63" height="20.63" fill="#fff" stroke="#1F78B4" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/openai.svg" x="563.0833333333333" y="153.4550889038709" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Grok 4.6: 48.3 submissions, 72.6% of active run time outside grading, test AUARC 0.493; 29 tasks." data-model="Grok 4.6" data-resource-label="Mean number of submissions per task" data-resource-value="48.3" data-score-label="Mean test AUARC" data-score-value="0.493" data-left="64.65286855482934" data-top="47.63317687795745" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="439.6395061728395" cy="166.7161190728511" r="13"/><rect class="company-logo-backdrop" x="429.3295061728395" y="156.40611907285108" width="20.63" height="20.63" fill="#fff" stroke="#4D4D4D" stroke-width="1.4"/><image class="company-logo-svg" href="assets/xai-logo-contained.png" x="431.3895061728395" y="158.4661190728511" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Gemini 3.8 Flash: 40.2 submissions, 77.6% of active run time outside grading, test AUARC 0.484; 29 tasks." data-model="Gemini 3.8 Flash" data-resource-label="Mean number of submissions per task" data-resource-value="40.2" data-score-label="Mean test AUARC" data-score-value="0.484" data-left="55.3122730573711" data-top="48.320717467707865" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="376.12345679012344" cy="169.12251113697755" r="13"/><rect class="company-logo-backdrop" x="365.81345679012344" y="158.81251113697755" width="20.63" height="20.63" fill="#fff" stroke="#A6761D" stroke-width="1.4"/><image class="company-logo-svg" href="assets/google-logo.png" x="367.87345679012344" y="160.87251113697755" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Kimi K3: 41.7 submissions, 72.5% of active run time outside grading, test AUARC 0.435; 29 tasks." data-model="Kimi K3" data-resource-label="Mean number of submissions per task" data-resource-value="41.7" data-score-label="Mean test AUARC" data-score-value="0.435" data-left="57.05580693815988" data-top="51.75333162288184" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="387.9794871794872" cy="181.13666068008644" r="13"/><rect class="company-logo-backdrop" x="377.6694871794872" y="170.82666068008643" width="20.63" height="20.63" fill="#fff" stroke="#E7298A" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/moonshotai/191919" x="379.7294871794872" y="172.88666068008644" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Qwen3.8 Max: 32.2 submissions, 78.7% of active run time outside grading, test AUARC 0.423; 29 tasks." data-model="Qwen3.8 Max" data-resource-label="Mean number of submissions per task" data-resource-value="32.2" data-score-label="Mean test AUARC" data-score-value="0.423" data-left="46.021116138763205" data-top="52.613416924049126" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="312.94358974358977" cy="184.14695923417196" r="13"/><rect class="company-logo-backdrop" x="302.63358974358977" y="173.83695923417196" width="20.63" height="20.63" fill="#fff" stroke="#1B9E77" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/alibabacloud/ff6a00" x="304.69358974358977" y="175.89695923417196" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g><g class="model-dot efficiency-point" role="button" tabindex="0" aria-label="Muse Spark 1.3: 29.3 submissions, 86.8% of active run time outside grading, test AUARC 0.379; 29 tasks." data-model="Muse Spark 1.3" data-resource-label="Mean number of submissions per task" data-resource-value="29.3" data-score-label="Mean test AUARC" data-score-value="0.379" data-left="42.684012066365014" data-top="55.795969853068286" data-place-left="false" data-place-below="false"><circle class="efficiency-hit" cx="290.2512820512821" cy="195.285894485739" r="13"/><rect class="company-logo-backdrop" x="279.9412820512821" y="184.975894485739" width="20.63" height="20.63" fill="#fff" stroke="#00A6D6" stroke-width="1.4"/><image class="company-logo-svg" href="https://cdn.simpleicons.org/meta/0866ff" x="282.0012820512821" y="187.035894485739" width="16.5" height="16.5" preserveAspectRatio="xMidYMid meet" aria-hidden="true" pointer-events="none"/></g></svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div></div></div></figure></div>
+    </section>
+    <section class="section hint-study" id="hint-study">
+      <h2>Using a research hint</h2>
+      <div class="prose">
+        <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
+      </div>
+      <figure class="hint-comparison" aria-labelledby="hint-chart-title" aria-describedby="hint-chart-note">
+        <figcaption>
+          <h3 id="hint-chart-title">Hidden-test reward with and without a hint</h3>
+          <p id="hint-chart-note" class="plot-note">Average across 22 CPU tasks. Higher is better.</p>
+        </figcaption>
+        <div class="hint-models">
+          <section class="hint-model hint-model--opus" aria-labelledby="hint-opus-title">
+            <h4 id="hint-opus-title"><img src="https://cdn.simpleicons.org/anthropic/191919" alt="" width="22" height="22">Claude Opus 5</h4>
+            <p class="hint-budget">200 turns</p>
+            <dl class="hint-bars">
+              <div class="hint-bar-row"><dt>Without hint</dt><dd><span class="hint-bar-value">0.441</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.1%"></span></span></dd></div>
+              <div class="hint-bar-row"><dt>With validation hint</dt><dd><span class="hint-bar-value">0.547</span><span class="hint-bar-track" aria-hidden="true"><span style="width:54.7%"></span></span></dd></div>
+            </dl>
+            <div class="hint-reference">
+              <p class="hint-budget">Longer run, for reference</p>
+              <dl class="hint-bars"><div class="hint-bar-row"><dt>Full AutoResearch</dt><dd><span class="hint-bar-value">0.592</span><span class="hint-bar-track" aria-hidden="true"><span style="width:59.2%"></span></span></dd></div></dl>
+            </div>
+            <div class="hint-score-axis" aria-hidden="true"><span>0</span><span>0.5</span><span>1.0</span></div>
+          </section>
+          <section class="hint-model hint-model--muse" aria-labelledby="hint-muse-title">
+            <h4 id="hint-muse-title"><img src="https://cdn.simpleicons.org/meta/0866ff" alt="" width="22" height="22">Muse Spark 1.3</h4>
+            <p class="hint-budget">200 turns</p>
+            <dl class="hint-bars">
+              <div class="hint-bar-row"><dt>Without hint</dt><dd><span class="hint-bar-value">0.403</span><span class="hint-bar-track" aria-hidden="true"><span style="width:40.3%"></span></span></dd></div>
+              <div class="hint-bar-row"><dt>With validation hint</dt><dd><span class="hint-bar-value">0.447</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.7%"></span></span></dd></div>
+            </dl>
+            <div class="hint-reference">
+              <p class="hint-budget">Longer run, for reference</p>
+              <dl class="hint-bars"><div class="hint-bar-row"><dt>Full AutoResearch</dt><dd><span class="hint-bar-value">0.449</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.9%"></span></span></dd></div></dl>
+            </div>
+            <div class="hint-score-axis" aria-hidden="true"><span>0</span><span>0.5</span><span>1.0</span></div>
+          </section>
+        </div>
+        <p class="plot-note hint-comparison-note">The result without a hint is from the first AutoResearch iteration. Full AutoResearch shows the final reward after the longer run, not another 200-turn result.</p>
+      </figure>
+      <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score.</p></div>
+      <details class="hint-method">
+        <summary>Comparison details and limitations</summary>
+        <div class="prose">
+          <p>This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
+        </div>
+      </details>
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
