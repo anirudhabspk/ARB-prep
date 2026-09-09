@@ -227,12 +227,12 @@
       <div class="prose">
         <p>In this section, we examine the set of 24-hour rollouts we collect in order to obtain insights into the approaches taken by different models.</p>
         <h3 class="analysis-subheading">Understanding continual model improvement</h3>
-        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[3]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
+        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the following two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[3]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
       </div>
 
       <div id="trajectory-overview"></div>
       <div class="prose">
-        <p>These plots show that Astra often starts with a strong solution. It has the higher fitted hidden-test reward for about the first three hours, after which Fable 5.1 then begins to outperform on average. By hour 24, Fable 5.1 narrowly leads in the hidden-test area under the curve, the metric we use to evaluate overall performance on our <a href="#leaderboard">leaderboard</a>.</p>
+        <p>These plots show that Astra often starts with a strong solution. It has the higher fitted hidden-test reward for about the first three hours, after which Fable 5.1 then begins to outperform on average. By hour 22, Fable 5.1 narrowly leads in the hidden-test area under the curve (AUARC), the metric we use to evaluate overall performance on our <a href="#leaderboard">leaderboard</a>.</p>
         <p>Second, the right plot shows that Muse has the largest share of runs that still improve after the 12-hour mark, at about 79%. Qwen and Grok follow at about 76%. This means that the agents are still working and improving on their solutions within the environment, that is, that the benchmark itself supports extended amounts of experimentation or optimization.
         </p>
       </div>
@@ -240,7 +240,7 @@
       <section class="hint-study" id="hint-study">
       <h3 class="analysis-subheading">How well can the agents use a hint?</h3>
       <div class="prose">
-      <p>We measured the improvement on Terminus-2 when the insights from the set of auto-research trajectory are condensed into a single sentence and used as a hint. We see that the agents are generally able to use these effectively over a single 200 turn Terminus-2 rollout. Note that this section uses only the CPU subset of tasks from the full benchmark.</p>
+      <p>We measured the improvement on Terminus-2 when the insights from the set of auto-research trajectory are condensed into a single sentence and used as a hint. We see that the agents are generally able to use these effectively over a single, non-AutoResearch 200 turn Terminus-2 rollout. Note that this section uses only the CPU subset of tasks from the full benchmark.</p>
       </div>
       <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
         <svg class="hint-lanes-graphic" viewBox="0 24 940 200" role="img" aria-labelledby="hint-graphic-title hint-graphic-desc">
@@ -323,8 +323,12 @@
 <div class="prose result-notes" id="behavior-result-notes"></div>
 <details class="trajectory-method">
 <summary>How we measure the gap</summary>
-<p>At each point in a run, validation selects the best checkpoint so far. We evaluate that same checkpoint on hidden tests, which the agent never sees.</p>
-<p>For each model, we average validation AUARC (<em>V</em>) and hidden-test AUARC (<em>T</em>) across its included tasks. The relative gap is <strong>(<em>V</em> − <em>T</em>) / max(|<em>V</em>|, |<em>T</em>|)</strong>.</p>
+<p>For each model, we average validation AUARC (<em>V</em>) and hidden-test AUARC (<em>T</em>) across its included tasks. We then calculate the relative gap:</p>
+<div class="gap-equation">
+  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="Relative gap equals validation AUARC minus hidden-test AUARC, divided by the maximum of their absolute values.">
+    <mtext>Relative gap</mtext><mo>=</mo><mfrac><mrow><mi>V</mi><mo>−</mo><mi>T</mi></mrow><mrow><mi>max</mi><mo>(</mo><mo>|</mo><mi>V</mi><mo>|</mo><mo>,</mo><mo>|</mo><mi>T</mi><mo>|</mo><mo>)</mo></mrow></mfrac>
+  </math>
+</div>
 <p>A larger positive gap means less of the validation performance carries over to hidden tests. Lines show 95% intervals from resampling tasks. The gap alone does not prove overfitting.</p>
 </details>
 <h3 id="analysis-2b">How much of agents' research is hyperparameter tuning?</h3>

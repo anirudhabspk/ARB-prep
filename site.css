@@ -161,6 +161,8 @@
 .reward-formula math{font-size:1.12em;margin:16px 0}
 .auarc-equation{overflow-x:auto;margin:14px 0;color:var(--ink)}
 .auarc-equation math{font-size:1.12em;margin:16px 0}
+.gap-equation{max-width:850px;overflow-x:auto;margin:4px 0 18px;color:var(--ink)}
+.gap-equation math{font-size:1.12em;margin:0}
 
 /* The blog uses its contents sidebar instead of a fixed header. */
 body:has(.hero) .contents{top:28px}
