@@ -10,11 +10,22 @@ from scripts.refresh_score_snapshot import (
     eligible_terminal_result,
     eligible_current_result,
     eligible_selected_result,
+    retain_previous_run,
     validate_selected_evaluation,
 )
 
 
 class ApiLedgerCostTest(unittest.TestCase):
+    def test_partial_snapshot_reuses_only_the_same_evaluation(self):
+        previous = {'evaluationId': 'same', 'points': [{'testAtBest': 0.4}]}
+
+        retained = retain_previous_run('same', previous)
+
+        self.assertEqual(retained, previous)
+        self.assertIsNot(retained, previous)
+        with self.assertRaises(FileNotFoundError):
+            retain_previous_run('changed', previous)
+
     def test_completed_rerun_cohort_has_21_evaluations(self):
         self.assertEqual(len(COMPLETED_23H_RERUN_IDS), 21)
 

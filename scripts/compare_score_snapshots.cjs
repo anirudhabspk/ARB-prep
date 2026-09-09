@@ -1,0 +1,366 @@
+#!/usr/bin/env node
+const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+
+const root = path.resolve(__dirname, '..');
+const scoringFiles = ['raw-score-maps.js', 'difficulty-reward-maps.js', 'results.js'];
+const usage = `Usage: node scripts/compare_score_snapshots.cjs --before FILE --after FILE --output FILE [--markdown FILE]
+
+Compare two site-data.js snapshots using the repository's current scoring code.
+The JSON output records changed cells, aggregate and task ranking changes, the
+cost frontier, and all 241 time-leaderboard frames with changed ordering.`;
+
+function parseArgs(argv) {
+  if (argv.includes('--help') || argv.includes('-h')) return null;
+  const options = {};
+  for (let index = 0; index < argv.length; index += 2) {
+    const flag = argv[index];
+    const value = argv[index + 1];
+    if (!['--before', '--after', '--output', '--markdown'].includes(flag) || !value) {
+      throw new Error(`${usage}\n\nUnknown or incomplete argument: ${flag || '(missing)'}`);
+    }
+    if (options[flag]) throw new Error(`Duplicate argument: ${flag}`);
+    options[flag] = value;
+  }
+  for (const flag of ['--before', '--after', '--output']) {
+    if (!options[flag]) throw new Error(`${usage}\n\nMissing required argument: ${flag}`);
+  }
+  return {before: options['--before'], after: options['--after'], output: options['--output'], markdown: options['--markdown']};
+}
+
+function scoringSource(file) {
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  return file === 'results.js' ? source.split('if(document.body.dataset.page')[0] : source;
+}
+
+const snapshotExpression = `JSON.stringify((() => {
+  const results = currentResults().rows;
+  const costs = new Map(costPerformanceRows(results).map(row => [row.key, row]));
+  const effort = new Map(effortModelRows().map(row => [row.key, row]));
+  const tasks = DATA.tasks.map(task => ({
+    task: task.name,
+    models: task.models.map(run => {
+      const stats = difficultyAdjustedRunStats(task, run);
+      return {
+        key: run.model,
+        model: MODEL[run.model]?.name || run.model,
+        evaluation_id: run.evaluationId || null,
+        validation_auarc: stats?.validation ?? null,
+        hidden_test_auarc: stats?.test ?? null,
+        final_hidden: stats?.final ?? null,
+        api_cost: Number.isFinite(run.apiCost) ? run.apiCost : null,
+        submissions: Number.isFinite(run.submissions) ? run.submissions : null,
+        output_tokens: Number.isFinite(run.outputTokens) ? run.outputTokens : null
+      };
+    })
+  }));
+  const aggregates = results.map(row => {
+    const cost = costs.get(row.key), work = effort.get(row.key);
+    const tokens = DATA.tasks.flatMap(task => task.models.flatMap(run =>
+      run.model === row.key && difficultyAdjustedRunStats(task, run) && Number.isFinite(run.outputTokens)
+        ? [run.outputTokens]
+        : []
+    ));
+    return {
+      key: row.key,
+      model: row.name,
+      hidden_test_auarc: row.test,
+      validation_auarc: row.validation,
+      final_hidden: row.final,
+      relative_gap: row.gap,
+      elo: row.elo,
+      mean_api_cost: cost?.cost ?? null,
+      submissions: work?.submissions ?? null,
+      output_tokens: mean(tokens)
+    };
+  });
+  const frontier = wholeDollarCostFrontier(costPerformanceRows(results)).map(row => ({
+    key: row.key,
+    model: row.name,
+    mean_api_cost: row.cost,
+    hidden_test_auarc: row.test
+  }));
+  const runs = leaderboardRuns(), steps = 240, minHour = .25, maxHour = 24;
+  const time_frames = Array.from({length: steps + 1}, (_, frame) => {
+    const hour = minHour * Math.pow(maxHour / minHour, frame / steps);
+    return {frame, hour, rows: leaderboardAtTime(runs, hour).map(row => ({
+      key: row.key,
+      model: row.name,
+      value: row.value
+    }))};
+  });
+  return {snapshot: DATA.snapshot || null, models: ORDER, tasks, aggregates, frontier, time_frames};
+})())`;
+
+function loadSnapshot(siteDataPath) {
+  const context = vm.createContext({window: {}, console});
+  const resolved = path.resolve(siteDataPath);
+  vm.runInContext(fs.readFileSync(resolved, 'utf8'), context, {filename: resolved});
+  for (const file of scoringFiles) {
+    vm.runInContext(scoringSource(file), context, {filename: path.join(root, file)});
+  }
+  return JSON.parse(vm.runInContext(snapshotExpression, context));
+}
+
+const finite = value => typeof value === 'number' && Number.isFinite(value);
+const delta = (before, after) => finite(before) && finite(after) ? after - before : null;
+const orderKeys = rows => rows.map(row => row.key);
+const sameOrder = (before, after) => JSON.stringify(orderKeys(before)) === JSON.stringify(orderKeys(after));
+
+function cellMap(snapshot) {
+  return new Map(snapshot.tasks.flatMap(task => task.models.map(model => [`${task.task}\u0000${model.key}`, {task: task.task, ...model}])));
+}
+
+function comparableCell(cell) {
+  return {
+    key: cell.key,
+    model: cell.model,
+    evaluation_id: cell.evaluation_id,
+    validation_auarc: cell.validation_auarc,
+    hidden_test_auarc: cell.hidden_test_auarc,
+    final_hidden: cell.final_hidden,
+    api_cost: cell.api_cost,
+    submissions: cell.submissions,
+    output_tokens: cell.output_tokens
+  };
+}
+
+function assertExclusions(before, after) {
+  const beforeTasks = new Map(before.tasks.map(task => [task.task, task]));
+  const afterTasks = new Map(after.tasks.map(task => [task.task, task]));
+  const excludedTask = 'FasterGCG candidate token ranking';
+  assert(beforeTasks.has(excludedTask), `Missing excluded task: ${excludedTask}`);
+  assert.deepStrictEqual(afterTasks.get(excludedTask), beforeTasks.get(excludedTask), `${excludedTask} changed`);
+
+  const museName = 'Muse Spark 1.3';
+  const muse = snapshot => snapshot.tasks.map(task => {
+    const model = task.models.find(row => row.model === museName);
+    assert(model, `Missing ${museName} for ${task.task}`);
+    return {task: task.task, ...comparableCell(model)};
+  });
+  assert.deepStrictEqual(muse(after), muse(before), `${museName} values changed`);
+}
+
+function changedCells(before, after) {
+  const a = cellMap(before), b = cellMap(after);
+  assert.deepStrictEqual([...b.keys()].sort(), [...a.keys()].sort(), 'Task/model cells differ between snapshots');
+  return [...a].flatMap(([key, oldCell]) => {
+    const newCell = b.get(key);
+    if (oldCell.evaluation_id === newCell.evaluation_id) return [];
+    const beforeValues = comparableCell(oldCell), afterValues = comparableCell(newCell);
+    return [{
+      task: oldCell.task,
+      key: oldCell.key,
+      model: oldCell.model,
+      before: beforeValues,
+      after: afterValues,
+      delta: {
+        validation_auarc: delta(beforeValues.validation_auarc, afterValues.validation_auarc),
+        hidden_test_auarc: delta(beforeValues.hidden_test_auarc, afterValues.hidden_test_auarc),
+        final_hidden: delta(beforeValues.final_hidden, afterValues.final_hidden)
+      }
+    }];
+  });
+}
+
+function ranked(rows, field, direction, modelOrder) {
+  const index = new Map(modelOrder.map((key, position) => [key, position]));
+  return rows.filter(row => finite(row[field])).map(row => ({key: row.key, model: row.model, value: row[field]})).sort((a, b) => {
+    const difference = direction === 'ascending' ? a.value - b.value : b.value - a.value;
+    return difference || index.get(a.key) - index.get(b.key);
+  });
+}
+
+const aggregateMetrics = {
+  hidden_test_auarc: 'descending',
+  validation_auarc: 'descending',
+  final_hidden: 'descending',
+  relative_gap: 'ascending',
+  elo: 'descending',
+  mean_api_cost: 'ascending',
+  submissions: 'ascending',
+  output_tokens: 'ascending'
+};
+
+const taskMetrics = {
+  validation_auarc: 'descending',
+  hidden_test_auarc: 'descending',
+  final_hidden: 'descending',
+  api_cost: 'ascending',
+  output_tokens: 'ascending'
+};
+
+function aggregateOrderings(before, after) {
+  return Object.fromEntries(Object.entries(aggregateMetrics).map(([field, direction]) => {
+    const a = ranked(before.aggregates, field, direction, before.models);
+    const b = ranked(after.aggregates, field, direction, after.models);
+    return [field, {direction, changed: !sameOrder(a, b), before: a, after: b}];
+  }));
+}
+
+function taskOrderingChanges(before, after) {
+  const afterTasks = new Map(after.tasks.map(task => [task.task, task]));
+  return Object.fromEntries(Object.entries(taskMetrics).map(([field, direction]) => {
+    const changes = [];
+    for (const task of before.tasks) {
+      const next = afterTasks.get(task.task);
+      assert(next, `Missing task after refresh: ${task.task}`);
+      const a = ranked(task.models, field, direction, before.models);
+      const b = ranked(next.models, field, direction, after.models);
+      if (!sameOrder(a, b)) changes.push({task: task.task, direction, before: a, after: b});
+    }
+    return [field, changes];
+  }));
+}
+
+function costFrontier(before, after) {
+  return {
+    changed: !sameOrder(before.frontier, after.frontier),
+    before: before.frontier,
+    after: after.frontier
+  };
+}
+
+function timeOrderingChanges(before, after) {
+  assert.equal(before.time_frames.length, 241);
+  assert.equal(after.time_frames.length, 241);
+  const ranges = [];
+  let current = null;
+  let changedFrames = 0;
+  for (let frame = 0; frame < 241; frame++) {
+    const a = before.time_frames[frame], b = after.time_frames[frame];
+    assert.equal(a.frame, b.frame);
+    const beforeOrder = orderKeys(a.rows), afterOrder = orderKeys(b.rows);
+    if (JSON.stringify(beforeOrder) === JSON.stringify(afterOrder)) {
+      current = null;
+      continue;
+    }
+    changedFrames++;
+    const signature = JSON.stringify([beforeOrder, afterOrder]);
+    if (current && current.end_frame === frame - 1 && current.signature === signature) {
+      current.end_frame = frame;
+      current.end_hour = b.hour;
+    } else {
+      current = {
+        start_frame: frame,
+        end_frame: frame,
+        start_hour: b.hour,
+        end_hour: b.hour,
+        before_order: beforeOrder,
+        after_order: afterOrder,
+        signature
+      };
+      ranges.push(current);
+    }
+  }
+  for (const range of ranges) delete range.signature;
+  return {frame_count: 241, changed_frame_count: changedFrames, ranges};
+}
+
+function sha256(file) {
+  return crypto.createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex');
+}
+
+const metricLabels = {
+  hidden_test_auarc: 'Hidden-test AUARC',
+  validation_auarc: 'Validation AUARC',
+  final_hidden: 'Final hidden-test score',
+  relative_gap: 'Relative validation-to-test gap',
+  elo: 'Task-relative Elo',
+  mean_api_cost: 'Mean API cost',
+  submissions: 'Mean submissions',
+  output_tokens: 'Mean output tokens',
+  api_cost: 'API cost'
+};
+const orderText = rows => rows.map(row => row.model).join(' > ');
+const hourText = value => value < 1 ? `${Math.round(value * 60)}m` : `${value.toFixed(2)}h`;
+
+function renderMarkdown(report) {
+  const changedAggregates = Object.entries(report.aggregate_orderings).filter(([, item]) => item.changed);
+  const unchangedAggregates = Object.entries(report.aggregate_orderings).filter(([, item]) => !item.changed);
+  const lines = [
+    '# Plot ranking changes on 2026-09-09',
+    '',
+    'This report compares the prior blog data with the refreshed 24 hour results. FasterGCG and every Muse Spark 1.3 result are unchanged.',
+    '',
+    '## Overall plots',
+    '',
+    `The order changed in ${changedAggregates.length} aggregate comparisons. The order did not change for ${unchangedAggregates.map(([key]) => metricLabels[key]).join(', ')}.`,
+    ''
+  ];
+  for (const [key, item] of changedAggregates) {
+    lines.push(`- ${metricLabels[key]}. Before: ${orderText(item.before)}. After: ${orderText(item.after)}.`);
+  }
+  lines.push('', report.cost_frontier.changed
+    ? `The cost frontier changed from ${orderText(report.cost_frontier.before)} to ${orderText(report.cost_frontier.after)}.`
+    : `The cost frontier is unchanged: ${orderText(report.cost_frontier.after)}.`, '');
+  lines.push('## Task plots', '');
+  for (const [key, changes] of Object.entries(report.task_ordering_changes)) {
+    lines.push(`### ${metricLabels[key]}`, '');
+    if (!changes.length) {
+      lines.push('No task order changed.', '');
+      continue;
+    }
+    lines.push('| Task | Before | After |', '| --- | --- | --- |');
+    for (const item of changes) {
+      lines.push(`| ${item.task} | ${orderText(item.before)} | ${orderText(item.after)} |`);
+    }
+    lines.push('');
+  }
+  const time = report.time_leaderboard_ordering_changes;
+  lines.push('## Time AUARC plot', '', `${time.changed_frame_count} of ${time.frame_count} sampled time frames changed order. The changes fall into these ranges:`, '', '| Time range | Before | After |', '| --- | --- | --- |');
+  for (const range of time.ranges) {
+    const label = range.start_frame === range.end_frame ? hourText(range.start_hour) : `${hourText(range.start_hour)} to ${hourText(range.end_hour)}`;
+    lines.push(`| ${label} | ${orderText(range.before_order.map(key => ({model: report.model_names[key]})))} | ${orderText(range.after_order.map(key => ({model: report.model_names[key]})))} |`);
+  }
+  lines.push('');
+  return `${lines.join('\n').trimEnd()}\n`;
+}
+
+function main() {
+  const options = parseArgs(process.argv.slice(2));
+  if (!options) {
+    console.log(usage);
+    return;
+  }
+  const before = loadSnapshot(options.before), after = loadSnapshot(options.after);
+  assertExclusions(before, after);
+  const output = {
+    schema_version: 1,
+    before_snapshot: before.snapshot,
+    after_snapshot: after.snapshot,
+    model_names: Object.fromEntries(after.aggregates.map(row => [row.key, row.model])),
+    scoring_inputs: Object.fromEntries(scoringFiles.map(file => [file, {sha256: sha256(file)}])),
+    invariants: {fastergcg_unchanged: true, muse_spark_1_3_unchanged: true},
+    changed_cells: changedCells(before, after),
+    aggregate_orderings: aggregateOrderings(before, after),
+    cost_frontier: costFrontier(before, after),
+    task_ordering_changes: taskOrderingChanges(before, after),
+    time_leaderboard_ordering_changes: timeOrderingChanges(before, after)
+  };
+  const target = path.resolve(options.output);
+  fs.mkdirSync(path.dirname(target), {recursive: true});
+  fs.writeFileSync(target, `${JSON.stringify(output, null, 2)}\n`);
+  if (options.markdown) {
+    const markdown = path.resolve(options.markdown);
+    fs.mkdirSync(path.dirname(markdown), {recursive: true});
+    fs.writeFileSync(markdown, renderMarkdown(output));
+  }
+  console.log(JSON.stringify({
+    output: target,
+    changed_cells: output.changed_cells.length,
+    changed_aggregate_orders: Object.values(output.aggregate_orderings).filter(item => item.changed).length,
+    changed_task_orders: Object.values(output.task_ordering_changes).reduce((count, items) => count + items.length, 0),
+    changed_time_frames: output.time_leaderboard_ordering_changes.changed_frame_count
+  }));
+}
+
+try {
+  main();
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}

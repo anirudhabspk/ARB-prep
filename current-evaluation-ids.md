@@ -1,6 +1,6 @@
-# Current evaluation IDs
+# Evaluation ID audit from 2026-09-08
 
-This report records the evaluation IDs used by `site-data.js` at `ARB-prep-blog-fix` commit `b9e1d48548052e7f6ca21e35842bd0d04b062a16`.
+This historical report records the evaluation IDs used by `site-data.js` at `ARB-prep-blog-fix` commit `b9e1d48548052e7f6ca21e35842bd0d04b062a16`. See [`evaluation-replacements.md`](evaluation-replacements.md) and [`plot-ranking-changes-2026-09-09.md`](plot-ranking-changes-2026-09-09.md) for the September 9 refresh.
 The IDs in the Used in calculations column are the inputs to the published curves and summary values.
 The replacement column lists later attempts from the matching task page in the Preview repository.
 Horizon states for the indexed IDs were checked at `2026-09-08T16:59:51Z`. The extra Muse Spark 1.3 FasterGCG attempt was checked at `2026-09-08T18:36:21Z`.

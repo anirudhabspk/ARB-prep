@@ -30,5 +30,5 @@ assert.match(css,/\.blog-page p\.plot-takeaway\{[^}]*max-width:var\(--content-me
 assert.ok(css.includes('.time-leaderboard{max-width:var(--content-measure)'));
 assert.ok(css.includes('.main-leaderboard{max-width:var(--content-measure)'));
 assert.ok(css.includes('.blog-page main #results{max-width:var(--content-measure);font-size:var(--article-copy-size)'));
-assert.ok(css.includes('.blog-page main .section>p.hint-lift-caption'));
+assert.ok(css.includes('.hint-comparison{max-width:var(--content-measure)'));
 assert.ok(!css.includes('#benchmark{padding-bottom:0}'));

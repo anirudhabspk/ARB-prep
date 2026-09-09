@@ -91,6 +91,13 @@ def apply_published_window(run):
         run['extension'] = True
 
 
+def retain_previous_run(evaluation_id, previous):
+    """Reuse an unchanged cell when a partial snapshot omits its payload."""
+    if not previous or previous.get('evaluationId') != evaluation_id:
+        raise FileNotFoundError(f'Missing fresh snapshot for changed evaluation {evaluation_id}')
+    return copy.deepcopy(previous)
+
+
 def read_site(path):
     return json.loads(path.read_text().split('=', 1)[1].rstrip(';\n'))
 
@@ -263,18 +270,26 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--snapshot', type=Path, required=True)
     parser.add_argument('--previous', type=Path, required=True)
-    parser.add_argument('--older-manifest', type=Path, required=True)
+    parser.add_argument('--older-manifest', type=Path,
+                        help='Legacy evaluation manifest. Current site data already records each source file.')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--include-current-runs', action='store_true',
                         help='Use current completed/running IDs; exclude crashes and cost estimates.')
     args = parser.parse_args()
     site = read_site(args.previous)
     known = {r['evaluationId']: t['name'] for t in site['tasks'] for r in t['models']}
-    old = json.loads(args.older_manifest.read_text())['evaluations']
-    old_names = {r['task_slug']: known[r['evaluation_id']] for r in old if r['evaluation_id'] in known}
-    by_id = {r['evaluation_id']: old_names[r['task_slug']] for r in old}
+    site_names = {}
+    for task in site['tasks']:
+        for run in task['models']:
+            source_file = run.get('sourceFile')
+            if source_file:
+                site_names[Path(source_file).stem] = task['name']
+    if args.older_manifest:
+        old = json.loads(args.older_manifest.read_text())['evaluations']
+        old_names = {r['task_slug']: known[r['evaluation_id']] for r in old if r['evaluation_id'] in known}
+        site_names.update(old_names)
     manifest = json.loads((args.snapshot / 'manifest.json').read_text())
-    names = {r['task_slug']: by_id[r['evaluation_id']] for r in manifest['evaluations'] if r['evaluation_id'] in by_id}
+    names = {r['task_slug']: site_names[r['task_slug']] for r in manifest['evaluations']}
     assert len(names) == 29
     task_lookup = {t['name']: t for t in site['tasks']}
     models = {m['name']: m['codename'] for m in site['models']}
@@ -283,9 +298,22 @@ def main():
     for task in site['tasks']:
         task['models'] = []
     audit = []
+    fresh_updates = 0
     for source in manifest['evaluations']:
         eid = source['evaluation_id']
-        payload = json.load(gzip.open(args.snapshot / 'evaluations' / (eid + '.json.gz')))
+        task_name = names[source['task_slug']]
+        model = models[source['model']]
+        previous = old_runs_by_cell.get((task_name, model))
+        payload_path = args.snapshot / 'evaluations' / (eid + '.json.gz')
+        if not payload_path.is_file():
+            run = retain_previous_run(eid, previous)
+            task_lookup[task_name]['models'].append(run)
+            audit.append({**source, 'included': bool(run.get('points')),
+                          'status': run.get('status'), 'task_name': task_name,
+                          'published_evaluation_id': eid,
+                          'retained_from_previous_snapshot': True})
+            continue
+        payload = json.load(gzip.open(payload_path))
         result = payload['results']['rollouts'][0]
         attempts = result['attempts']
         attempt = next((a for a in attempts if a.get('is_final_attempt')), attempts[-1])
@@ -347,12 +375,13 @@ def main():
         if completed_23h_rerun:
             run.update({'displayHours': DISPLAY_WINDOW_HOURS,
                         'benchmarkWindow': '23h research + 1h infrastructure'})
-        task_name = names[source['task_slug']]
+        if eligible and previous and previous.get('evaluationId') != eid:
+            fresh_updates += 1
         replacement_status = None
         if args.include_current_runs and not eligible:
             manifest_status = source['manifest_status'].lower()
             if status == 'running' or manifest_status.startswith(('rerun incomplete', 'rerun failed')):
-                prior = old_runs_by_cell.get((task_name, models[source['model']]))
+                prior = old_runs_by_cell.get((task_name, model))
                 if prior and prior.get('points') and prior.get('evaluationId') != eid:
                     run = copy.deepcopy(prior)
                     replacement_status = 'running' if status == 'running' else 'invalid'
@@ -383,9 +412,10 @@ def main():
                         'provisional': any(r['provisional'] and r['points'] for r in all_runs),
                         'eligibleRuns': sum(bool(r['points']) for r in all_runs),
                         'includedRuns': sum(bool(r['points']) for r in all_runs),
-                        'completedRerunCount': sum(r['evaluationId'] in COMPLETED_23H_RERUN_IDS and bool(r['points']) for r in all_runs),
+                        'completedRerunCount': site.get('snapshot', {}).get('completedRerunCount', 0) + fresh_updates,
                         'runningRerunCount': sum(r['replacementStatus'] == 'running' for r in all_runs if r.get('replacementStatus')),
-                        'invalidRerunCount': sum(r['replacementStatus'] == 'invalid' for r in all_runs if r.get('replacementStatus'))}
+                        'invalidRerunCount': sum(r['replacementStatus'] == 'invalid' for r in all_runs if r.get('replacementStatus')),
+                        'apiCostsFetchedAt': max(r['apiCostFetchedAt'] for r in all_runs if r.get('apiCostFetchedAt'))}
     args.output.write_text('window.ARB_DATA = ' + json.dumps(site, separators=(',', ':')) + ';\n')
     (args.snapshot / 'score-refresh-audit.json').write_text(json.dumps(audit, indent=2) + '\n')
     print(json.dumps(site['snapshot']))

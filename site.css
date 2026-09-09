@@ -214,6 +214,7 @@ body:has(.lead-cost-plot) .hero{padding-bottom:24px}
 .lead-cost-plot .overview-legend{flex-wrap:wrap;overflow:visible;gap:10px 16px;font-size:9.5px}
 .lead-cost-plot .overview-legend-logo{width:21px;height:21px}
 .lead-cost-plot .overview-legend-logo .company-logo{width:16px;height:16px}
+@media(max-width:640px){.lead-cost-plot .overview-legend{overflow-x:auto}}
 
 /* Keep explanatory copy aligned with the site's full-width figures. */
 :root{--content-measure:940px}

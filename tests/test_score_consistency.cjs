@@ -57,11 +57,12 @@ assert.equal(completedReruns.length,21);
 assert.ok(completedReruns.every(run=>run.hours===24&&run.displayHours===24&&run.extension&&!run.provisional));
 const retainedRunning=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="running")');
 const retainedInvalid=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="invalid")');
-assert.equal(retainedRunning.length,16);
+assert.equal(retainedRunning.length,1);
 assert.equal(retainedInvalid.length,2);
 assert.ok([...retainedRunning,...retainedInvalid].every(run=>run.points.length&&run.evaluationId!==run.replacementEvaluationId));
-assert.equal(context.window.ARB_DATA.snapshot.runningRerunCount,16);
+assert.equal(context.window.ARB_DATA.snapshot.runningRerunCount,1);
 assert.equal(context.window.ARB_DATA.snapshot.invalidRerunCount,2);
+assert.equal(context.window.ARB_DATA.snapshot.completedRerunCount,36);
 evaluate('var completedRerunTask=DATA.tasks.find(t=>t.name==="Label efficient risk estimator");var completedRerun=completedRerunTask.models.find(r=>r.evaluationId==="942c3b95-5c23-4dae-b6ab-a8b0fa6a5ff1")');
 assert.equal(evaluate('taskStats(completedRerunTask).find(r=>r.key===completedRerun.model).hours'),24);
 close(evaluate('difficultyAdjustedRunStats(completedRerunTask,completedRerun).test'),evaluate('timeAuc(completedRerun.points.map(point=>({...point,test:difficultyAdjustedPoint(completedRerunTask,point,"testAtBest")})),"test",24*3600)'));
@@ -80,17 +81,14 @@ assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
 const allRuns=context.window.ARB_DATA.tasks.flatMap(task=>task.models);
 assert.equal(allRuns.filter(run=>run.points.some(point=>Number.isFinite(point.testAtBest))).length,261);
-assert.equal(allRuns.filter(run=>run.extension).length,52);
+assert.equal(allRuns.filter(run=>run.extension).length,49);
 assert.ok(allRuns.filter(run=>run.extension).every(run=>run.hours===24));
 assert.ok(allRuns.filter(run=>run.points.length).every(run=>run.hours===24));
 const newlyFlattenedIds=new Set([
   '64f07bb3-0573-4287-abcd-bb615ef31cdd',
-  'd52b8c71-bf11-4f24-97f0-3ea02cfd9585',
   '017f8831-67b5-4966-a18a-87b7feca9d2f',
   '2e7af4a3-bb00-47fe-a600-451dccc6cea9',
   '322e5f13-314f-436f-9705-cd1e07fa9f51',
-  '6ddbc139-353f-46f8-9254-331649aa91ee',
-  '651fe36c-e75f-4607-ac75-d9c9cb13b5b0',
 ]);
 const newlyFlattened=allRuns.filter(run=>newlyFlattenedIds.has(run.evaluationId));
 assert.equal(newlyFlattened.length,newlyFlattenedIds.size);
