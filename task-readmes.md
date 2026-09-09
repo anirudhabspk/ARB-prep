@@ -1,4 +1,4 @@
-# AutoResearchBench tasks
+# AutoResearchExam tasks
 
 29 tasks, grouped by research area. Each block is the task's README copied from the tasks repo.
 

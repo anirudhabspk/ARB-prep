@@ -91,7 +91,7 @@
       clearTaskFiles();
       show(missingView);
       document.getElementById("missing-slug").textContent = slug;
-      document.title = "Task not found · AutoResearchBench";
+      document.title = "Task not found · AutoResearchExam";
       return;
     }
 
@@ -134,7 +134,7 @@
       taskView.innerHTML = '<p class="plot-note">No runs recorded for this task yet.</p>';
     }
     renderTaskFiles(slug);
-    document.title = `${entry.title} · AutoResearchBench`;
+    document.title = `${entry.title} · AutoResearchExam`;
   }
 
   function route() {
