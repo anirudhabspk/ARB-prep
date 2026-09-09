@@ -46,6 +46,13 @@ function fixture(changed) {
           run('vesper-pro', changed ? 'cpu-new' : 'cpu-old', changed ? .8 : .2, changed ? 5 : 20, changed ? 50 : 200),
           run('granola-plus', 'cpu-muse', .5, 10, 100)
         ]
+      },
+      {
+        name: 'SVDQuant W4A4 reconstruction',
+        models: [
+          {...run('vesper-pro', 'svd-fable', changed ? .45 : .2, changed ? 19 : 20, changed ? 190 : 200), submissions: changed ? 3 : 2},
+          run('granola-plus', 'svd-muse', .5, 10, 100)
+        ]
       }
     ]
   };
@@ -56,9 +63,16 @@ fs.writeFileSync(afterPath, `window.ARB_DATA = ${JSON.stringify(fixture(true))};
 const result = spawnSync(process.execPath, [script, '--before', beforePath, '--after', afterPath, '--output', outputPath, '--markdown', markdownPath], {encoding: 'utf8'});
 assert.equal(result.status, 0, result.stderr);
 const report = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
-assert.equal(report.changed_cells.length, 1);
-assert.equal(report.changed_cells[0].before.evaluation_id, 'cpu-old');
-assert.equal(report.changed_cells[0].after.evaluation_id, 'cpu-new');
+assert.equal(report.changed_cells.length, 2);
+const replaced = report.changed_cells.find(cell => cell.task === 'CPU LLM decode throughput');
+assert.equal(replaced.before.evaluation_id, 'cpu-old');
+assert.equal(replaced.after.evaluation_id, 'cpu-new');
+const sameId = report.changed_cells.find(cell => cell.task === 'SVDQuant W4A4 reconstruction');
+assert.equal(sameId.before.evaluation_id, 'svd-fable');
+assert.equal(sameId.after.evaluation_id, 'svd-fable');
+assert.ok(sameId.changed_fields.includes('hidden_test_auarc'));
+assert.ok(sameId.changed_fields.includes('api_cost'));
+assert.equal(sameId.delta.submissions, 1);
 assert.deepEqual(Object.keys(report.aggregate_orderings), [
   'hidden_test_auarc', 'validation_auarc', 'final_hidden', 'relative_gap',
   'elo', 'mean_api_cost', 'submissions', 'output_tokens'
@@ -73,4 +87,5 @@ assert.equal(report.invariants.muse_spark_1_3_unchanged, true);
 const markdown = fs.readFileSync(markdownPath, 'utf8');
 assert.ok(markdown.includes('# Plot ranking changes'));
 assert.ok(markdown.includes('## Time AUARC plot'));
+assert.ok(markdown.includes('| CPU LLM decode throughput | Muse Spark 1.3 < Claude Fable 5.1 | Claude Fable 5.1 < Muse Spark 1.3 |'));
 console.log('Score snapshot comparison checks passed.');

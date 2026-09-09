@@ -149,18 +149,25 @@ function changedCells(before, after) {
   assert.deepStrictEqual([...b.keys()].sort(), [...a.keys()].sort(), 'Task/model cells differ between snapshots');
   return [...a].flatMap(([key, oldCell]) => {
     const newCell = b.get(key);
-    if (oldCell.evaluation_id === newCell.evaluation_id) return [];
     const beforeValues = comparableCell(oldCell), afterValues = comparableCell(newCell);
+    const changedFields = Object.keys(beforeValues).filter(field =>
+      !['key', 'model'].includes(field) && !Object.is(beforeValues[field], afterValues[field])
+    );
+    if (!changedFields.length) return [];
     return [{
       task: oldCell.task,
       key: oldCell.key,
       model: oldCell.model,
+      changed_fields: changedFields,
       before: beforeValues,
       after: afterValues,
       delta: {
         validation_auarc: delta(beforeValues.validation_auarc, afterValues.validation_auarc),
         hidden_test_auarc: delta(beforeValues.hidden_test_auarc, afterValues.hidden_test_auarc),
-        final_hidden: delta(beforeValues.final_hidden, afterValues.final_hidden)
+        final_hidden: delta(beforeValues.final_hidden, afterValues.final_hidden),
+        api_cost: delta(beforeValues.api_cost, afterValues.api_cost),
+        submissions: delta(beforeValues.submissions, afterValues.submissions),
+        output_tokens: delta(beforeValues.output_tokens, afterValues.output_tokens)
       }
     }];
   });
@@ -275,7 +282,7 @@ const metricLabels = {
   output_tokens: 'Mean output tokens',
   api_cost: 'API cost'
 };
-const orderText = rows => rows.map(row => row.model).join(' > ');
+const orderText = (rows, direction = 'descending') => rows.map(row => row.model).join(direction === 'ascending' ? ' < ' : ' > ');
 const hourText = value => value < 1 ? `${Math.round(value * 60)}m` : `${value.toFixed(2)}h`;
 
 function renderMarkdown(report) {
@@ -292,11 +299,11 @@ function renderMarkdown(report) {
     ''
   ];
   for (const [key, item] of changedAggregates) {
-    lines.push(`- ${metricLabels[key]}. Before: ${orderText(item.before)}. After: ${orderText(item.after)}.`);
+    lines.push(`- ${metricLabels[key]}. Before: ${orderText(item.before, item.direction)}. After: ${orderText(item.after, item.direction)}.`);
   }
   lines.push('', report.cost_frontier.changed
-    ? `The cost frontier changed from ${orderText(report.cost_frontier.before)} to ${orderText(report.cost_frontier.after)}.`
-    : `The cost frontier is unchanged: ${orderText(report.cost_frontier.after)}.`, '');
+    ? `The cost frontier changed from ${orderText(report.cost_frontier.before, 'ascending')} to ${orderText(report.cost_frontier.after, 'ascending')}.`
+    : `The cost frontier is unchanged: ${orderText(report.cost_frontier.after, 'ascending')}.`, '');
   lines.push('## Task plots', '');
   for (const [key, changes] of Object.entries(report.task_ordering_changes)) {
     lines.push(`### ${metricLabels[key]}`, '');
@@ -306,7 +313,7 @@ function renderMarkdown(report) {
     }
     lines.push('| Task | Before | After |', '| --- | --- | --- |');
     for (const item of changes) {
-      lines.push(`| ${item.task} | ${orderText(item.before)} | ${orderText(item.after)} |`);
+      lines.push(`| ${item.task} | ${orderText(item.before, item.direction)} | ${orderText(item.after, item.direction)} |`);
     }
     lines.push('');
   }

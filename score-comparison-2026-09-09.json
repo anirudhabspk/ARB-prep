@@ -63,6 +63,15 @@
       "task": "CausalRivers held out station graph AUROC",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -88,13 +97,25 @@
       "delta": {
         "validation_auarc": -0.021279363803523577,
         "hidden_test_auarc": -0.023922776088782016,
-        "final_hidden": 0.003134385601297418
+        "final_hidden": 0.003134385601297418,
+        "api_cost": 53.798145000000005,
+        "submissions": 7,
+        "output_tokens": 583086
       }
     },
     {
       "task": "Waterbirds group robust coreset selection",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -120,13 +141,25 @@
       "delta": {
         "validation_auarc": 0.24315890559597586,
         "hidden_test_auarc": 0.22624530683094302,
-        "final_hidden": 0.2639729376738371
+        "final_hidden": 0.2639729376738371,
+        "api_cost": 96.035842,
+        "submissions": 11,
+        "output_tokens": 1345014
       }
     },
     {
       "task": "DCTabEval pooled categorical statistics",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -152,13 +185,25 @@
       "delta": {
         "validation_auarc": 0.005669755191801018,
         "hidden_test_auarc": 0.012644637744293918,
-        "final_hidden": 0.009368659502363264
+        "final_hidden": 0.009368659502363264,
+        "api_cost": 92.63556599999998,
+        "submissions": 9,
+        "output_tokens": 1524867
       }
     },
     {
       "task": "COCO 16 bit hash head",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -184,13 +229,25 @@
       "delta": {
         "validation_auarc": -0.03543779709000383,
         "hidden_test_auarc": -0.03536726643825172,
-        "final_hidden": -0.019221988969293613
+        "final_hidden": -0.019221988969293613,
+        "api_cost": 53.862059999999985,
+        "submissions": 2,
+        "output_tokens": 823820
       }
     },
     {
       "task": "CPU decoder graph executor",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -216,13 +273,24 @@
       "delta": {
         "validation_auarc": 0.04151602197401272,
         "hidden_test_auarc": 0.03584324014937301,
-        "final_hidden": 0.012011434517876562
+        "final_hidden": 0.012011434517876562,
+        "api_cost": 230.49812799999998,
+        "submissions": 12,
+        "output_tokens": 3365224
       }
     },
     {
       "task": "RePPO reliable on policy control",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -248,13 +316,25 @@
       "delta": {
         "validation_auarc": -0.008095138524306322,
         "hidden_test_auarc": -0.0035071432064845975,
-        "final_hidden": 0
+        "final_hidden": 0,
+        "api_cost": 111.09284299999999,
+        "submissions": 15,
+        "output_tokens": 1367954
       }
     },
     {
       "task": "SOPCC online chance constrained policy",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -280,13 +360,25 @@
       "delta": {
         "validation_auarc": -0.0021771520494070495,
         "hidden_test_auarc": -0.1793298689166769,
-        "final_hidden": -0.26053289988765826
+        "final_hidden": -0.26053289988765826,
+        "api_cost": 102.811036,
+        "submissions": 3,
+        "output_tokens": 1558818
       }
     },
     {
       "task": "Sparse ELSA item embeddings",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -312,13 +404,25 @@
       "delta": {
         "validation_auarc": -0.026557397842655317,
         "hidden_test_auarc": -0.025610020151479396,
-        "final_hidden": -0.003928869582825234
+        "final_hidden": -0.003928869582825234,
+        "api_cost": 91.21572400000002,
+        "submissions": 8,
+        "output_tokens": 1218023
       }
     },
     {
       "task": "TGAT MILP branching",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -344,13 +448,25 @@
       "delta": {
         "validation_auarc": 0.03371298799644479,
         "hidden_test_auarc": 0.03012240739843608,
-        "final_hidden": -0.0009004113862544072
+        "final_hidden": -0.0009004113862544072,
+        "api_cost": 98.336138,
+        "submissions": 9,
+        "output_tokens": 1306454
       }
     },
     {
       "task": "VAS maskless deployment feasibility",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -376,13 +492,25 @@
       "delta": {
         "validation_auarc": 0.0007709232245934894,
         "hidden_test_auarc": 0.00046862137005454496,
-        "final_hidden": 0.007386355780439113
+        "final_hidden": 0.007386355780439113,
+        "api_cost": 78.39090500000003,
+        "submissions": 1,
+        "output_tokens": 1149125
       }
     },
     {
       "task": "HalfCheetah advantage estimator",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -408,13 +536,25 @@
       "delta": {
         "validation_auarc": -0.029717179725676224,
         "hidden_test_auarc": -0.017186194196243565,
-        "final_hidden": -0.026762463563013816
+        "final_hidden": -0.026762463563013816,
+        "api_cost": 47.76952,
+        "submissions": 3,
+        "output_tokens": 863026
       }
     },
     {
       "task": "SVDQuant W4A4 reconstruction",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -440,13 +580,25 @@
       "delta": {
         "validation_auarc": -0.038568672211741206,
         "hidden_test_auarc": -0.05706936314338856,
-        "final_hidden": -0.05661045547793381
+        "final_hidden": -0.05661045547793381,
+        "api_cost": 84.675097,
+        "submissions": 4,
+        "output_tokens": 1487493
       }
     },
     {
       "task": "FastAdv budgeted PGD50",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -472,13 +624,25 @@
       "delta": {
         "validation_auarc": -0.0386132389669549,
         "hidden_test_auarc": -0.03863915002931728,
-        "final_hidden": 0.004999974051447698
+        "final_hidden": 0.004999974051447698,
+        "api_cost": 118.06227800000002,
+        "submissions": 24,
+        "output_tokens": 1578012
       }
     },
     {
       "task": "Sparse autoencoder dictionary learning",
       "key": "vesper-pro",
       "model": "Claude Fable 5.1",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vesper-pro",
         "model": "Claude Fable 5.1",
@@ -504,13 +668,25 @@
       "delta": {
         "validation_auarc": -0.006333027045686612,
         "hidden_test_auarc": -0.006368565784143354,
-        "final_hidden": 0.002298494613488522
+        "final_hidden": 0.002298494613488522,
+        "api_cost": 47.33274300000002,
+        "submissions": 9,
+        "output_tokens": 627510
       }
     },
     {
       "task": "Sparse autoencoder dictionary learning",
       "key": "vega",
       "model": "Kimi K3",
+      "changed_fields": [
+        "evaluation_id",
+        "validation_auarc",
+        "hidden_test_auarc",
+        "final_hidden",
+        "api_cost",
+        "submissions",
+        "output_tokens"
+      ],
       "before": {
         "key": "vega",
         "model": "Kimi K3",
@@ -536,7 +712,10 @@
       "delta": {
         "validation_auarc": 0.21277649516720715,
         "hidden_test_auarc": 0.20983400268122765,
-        "final_hidden": 0.0262676625788566
+        "final_hidden": 0.0262676625788566,
+        "api_cost": -1.942223999999996,
+        "submissions": 15,
+        "output_tokens": 587544
       }
     }
   ],
