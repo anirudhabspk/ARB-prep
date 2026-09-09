@@ -371,13 +371,13 @@ main .scoring-prose{max-width:var(--content-measure)}
 .hint-study{padding-bottom:72px}
 .hint-lanes{max-width:var(--content-measure);margin:30px 0 14px;border-top:2px solid var(--ink)}
 .hint-lanes-title{margin:13px 0 12px;color:var(--muted);font-size:12px}
-.hint-lanes-axis{display:grid;grid-template-columns:repeat(5,1fr);margin:0 0 6px;padding-left:164px;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
+.hint-lanes-axis{display:flex;justify-content:space-between;margin:0 0 6px;padding-left:164px;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
 .hint-lanes-axis span:last-child{text-align:right}
 .hint-lane{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center;min-height:88px;border-top:1px solid var(--line)}
 .hint-lane--opus{--hint-lane-color:#c83220}
 .hint-lane--muse{--hint-lane-color:#21636a}
 .hint-lane-model{margin:0;color:var(--ink);font-size:14px;font-weight:650;line-height:1.35}
-.hint-lane-plot{position:relative;min-width:0;height:88px;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),var(--line) calc(25% - 1px),var(--line) 25%)}
+.hint-lane-plot{position:relative;min-width:0;height:88px}
 .hint-lane-track{position:absolute;top:43px;right:0;left:0;height:2px;background:var(--ink);opacity:.34}
 .hint-lane-marker{position:absolute;z-index:1;left:var(--score);top:43px;display:block;width:0;height:0;color:var(--hint-lane-color);font-variant-numeric:tabular-nums}
 .hint-lane-marker::after{position:absolute;top:-5px;left:-5px;width:10px;height:10px;border-radius:50%;background:var(--hint-lane-color);box-shadow:0 0 0 2px var(--paper);content:""}
