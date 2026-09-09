@@ -142,7 +142,9 @@ function renderHarnessAblations(){
   container.querySelectorAll("[data-harness-task]").forEach(button=>button.addEventListener("click",()=>{harnessTask=Number(button.dataset.harnessTask);renderHarnessAblations();container.querySelector(".harness-task-menu summary").focus()}));
   const taskMenu=container.querySelector(".harness-task-menu");
   taskMenu.addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();taskMenu.open=false;taskMenu.querySelector("summary").focus()}});
-  taskMenu.addEventListener("focusout",event=>{if(!taskMenu.contains(event.relatedTarget))taskMenu.open=false});
+  // Safari can blur the summary without focusing the clicked button. Keep the
+  // menu open until that click is handled; outside pointer presses close it below.
+  taskMenu.addEventListener("focusout",event=>{if(event.relatedTarget&&!taskMenu.contains(event.relatedTarget))taskMenu.open=false});
 }
 
 function backwardRunningTestMinimum(points){
@@ -896,3 +898,10 @@ if(document.body.dataset.page!=="tasks"){renderTrajectoryOverview();renderModelE
   }, {passive: true});
   updateContents();
 })();
+
+// Register once: task selection rebuilds the picker and its local listeners.
+document.addEventListener("pointerdown",event=>{
+  document.querySelectorAll(".harness-task-menu[open]").forEach(menu=>{
+    if(!menu.contains(event.target))menu.open=false;
+  });
+});
