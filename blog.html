@@ -89,10 +89,9 @@
       </div>
       <h3>Task scoring</h3>
       <div class="prose scoring-prose">
-        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. The task returns a raw score, and raw scores cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67 percent worst-group accuracy on <a href="tasks.html#coreset-selection-group-robust-waterbirds">"Selecting Bird Images Across Hidden Background Groups"</a>, and 41.28 dB mean PSNR on <a href="tasks.html#fastercache-budgeted-video-dit-cache-policy">"Accelerating video diffusion by reusing predictions"</a>. Pass/fail tasks can use average pass rate, but open-ended metrics need a common reward scale.</p>
+        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. The task returns a raw score which cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67% worst-group accuracy on <a href="tasks.html#coreset-selection-group-robust-waterbirds">"Selecting Bird Images Across Hidden Background Groups"</a>, and 41.28 dB mean PSNR on <a href="tasks.html#fastercache-budgeted-video-dit-cache-policy">"Accelerating video diffusion by reusing predictions"</a>. Pass/fail tasks can use average pass rate, but open-ended metrics need a common reward scale.</p>
         <p>We use baseline anchor scores and reward maps to convert a raw score into a final reward. In particular, we distinguish between the raw "score" for the metric achieved by the agent and the resulting tracked "reward" for the mapped value used in the AUARC. A trivial baseline receives reward 0. Some maps reserve the range from 0 to 0.1 for weaker trivial baselines. A strong reference solution receives reward 0.5, or 0.55 for maps with that baseline band.</p>
         <p>Depending on the natural raw score range for a task, we use three maps: bounded scores in [<em>a</em>, <em>b</em>], signed unbounded scores in (&minus;&infin;, &infin;), and unsigned unbounded scores in (0, &infin;). For bounded metrics, the map gives more credit to the same absolute improvement near the known best score, where progress is usually harder. For example, improving accuracy from 0.85 to 0.95 can earn more reward than improving it from 0.10 to 0.20.</p>
-        <p>Recall that the agent receives a validation score after each submission. It never receives the hidden test score.</p>
       </div>
       <div class="prose" id="reward-normalization">
         <details class="reward-formula">
@@ -299,7 +298,7 @@
         <details class="trajectory-method">
           <summary>How we make and use the hints</summary>
           <p>An LLM reads all AutoResearch trajectories from all models. It highlights key ideas that improved reward and writes a single sentence that summarizes an insight about the environment, problem, or verification procedure discovered during the trajectory.</p>
-          <p>We append the sentence to the task's <code>instruction.md</code> file. We release the hints with the tasks.</p>
+          <p>We append the sentence to the task's <code>instruction.md</code> file.</p>
         </details>
       </div>
     </section>
