@@ -19,8 +19,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     OMP_NUM_THREADS=1
 
-RUN git config --system user.email "autoresearch@horizon.local" \
-    && git config --system user.name "Autoresearch"
+RUN git config --system user.email "agent@localhost" \
+    && git config --system user.name "agent"
 
 RUN useradd --create-home --uid 1001 agent
 

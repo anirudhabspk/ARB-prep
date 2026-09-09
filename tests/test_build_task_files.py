@@ -48,6 +48,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.git(repo, "init", "-q")
         self.git(repo, "config", "user.email", "tests@example.com")
         self.git(repo, "config", "user.name", "Test User")
+        files = {"hints/hint.md": b"validation hint\n", **files}
         for relative, data in files.items():
             path = repo / build_task_files.TASK_SLUG / relative
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -57,6 +58,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         return repo, self.git(repo, "rev-parse", "HEAD")
 
     def test_build_writes_sorted_metadata_without_file_contents(self):
+        self.write_task_file("hints/hint.md", b"validation hint\n")
         self.write_task_file("z-last.txt", b"not embedded\n")
         self.write_task_file("instruction.md", b"# Task\n")
         self.write_task_file("environment/Dockerfile", b"FROM scratch\n")
@@ -91,6 +93,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.assertEqual(markdown["sha256"], hashlib.sha256(b"# Task\n").hexdigest())
 
     def test_build_rejects_symlinks(self):
+        self.write_task_file("hints/hint.md", b"validation hint\n")
         self.write_task_file("instruction.md", b"task\n")
         link = self.task_files_root / build_task_files.TASK_SLUG / "escape"
         os.symlink(self.root / "outside", link)
@@ -104,6 +107,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.assertFalse(self.manifest_path.exists())
 
     def test_build_excludes_binary_files_but_still_checks_excluded_entries(self):
+        self.write_task_file("hints/hint.md", b"validation hint\n")
         self.write_task_file("instruction.md", b"task\n")
         self.write_task_file("data.npy", b"binary array")
 
@@ -113,7 +117,7 @@ class BuildTaskFilesTests(unittest.TestCase):
             task_slugs=(build_task_files.TASK_SLUG,),
         )[build_task_files.TASK_SLUG]
 
-        self.assertEqual([item["path"] for item in files], ["instruction.md"])
+        self.assertEqual([item["path"] for item in files], ["hints/hint.md", "instruction.md"])
 
         binary_link = self.task_files_root / build_task_files.TASK_SLUG / "excluded.npy"
         os.symlink(self.root / "outside", binary_link)
@@ -145,7 +149,7 @@ class BuildTaskFilesTests(unittest.TestCase):
             )[build_task_files.TASK_SLUG]
 
         by_path = {item["path"]: item for item in files}
-        self.assertEqual(set(by_path), set(source_files))
+        self.assertEqual(set(by_path), set(source_files) | {"hints/hint.md"})
         self.assertEqual(by_path["instruction.md"]["viewer"], "text")
         self.assertEqual(by_path["tests/check.py"]["viewer"], "text")
         for path in ("data/panel.npz", "data/rows.npy", "weights/model.safetensors", "data/archive.gz"):
@@ -158,7 +162,7 @@ class BuildTaskFilesTests(unittest.TestCase):
             for path in (self.task_files_root / build_task_files.TASK_SLUG).rglob("*")
             if path.is_file()
         }
-        self.assertEqual(copied, {"instruction.md", "tests/check.py"})
+        self.assertEqual(copied, {"hints/hint.md", "instruction.md", "tests/check.py"})
 
         rebuilt = build_task_files.build(
             self.task_files_root,
@@ -215,7 +219,9 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.assertTrue((build_task_files.ROOT / ".nojekyll").is_file())
 
     def test_build_writes_multiple_task_bundles(self):
+        self.write_task_file("hints/hint.md", b"task a hint\n", slug="task-a")
         self.write_task_file("README.md", b"task a\n", slug="task-a")
+        self.write_task_file("hints/hint.md", b"task b hint\n", slug="task-b")
         self.write_task_file("instruction.md", b"task b\n", slug="task-b")
 
         files_by_task = build_task_files.build(
@@ -238,8 +244,10 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.git(repo, "config", "user.name", "Test User")
         source_files = {
             "task-a/instruction.md": b"task a\n",
+            "task-a/hints/hint.md": b"task a hint\n",
             "task-a/data.npy": b"binary array",
             "task-b/Dockerfile": b"FROM scratch\n",
+            "task-b/hints/hint.md": b"task b hint\n",
             "task-b/rows.csv": b"x,y\n1,2\n",
             "task-b/archive.gz": b"compressed",
         }
@@ -263,11 +271,11 @@ class BuildTaskFilesTests(unittest.TestCase):
 
         self.assertEqual(
             {item["path"] for item in files_by_task["task-a"]},
-            {"instruction.md", "data.npy"},
+            {"instruction.md", "hints/hint.md", "data.npy"},
         )
         self.assertEqual(
             {item["path"] for item in files_by_task["task-b"]},
-            {"Dockerfile", "rows.csv", "archive.gz"},
+            {"Dockerfile", "hints/hint.md", "rows.csv", "archive.gz"},
         )
         self.assertEqual(
             next(item for item in files_by_task["task-a"] if item["path"] == "data.npy")["viewer"],
@@ -303,10 +311,11 @@ class BuildTaskFilesTests(unittest.TestCase):
         actual_paths = sorted(
             path.relative_to(destination).as_posix() for path in destination.rglob("*") if path.is_file()
         )
-        self.assertEqual(actual_paths, sorted(committed))
+        self.assertEqual(actual_paths, sorted((*committed, "hints/hint.md")))
         for relative, expected in committed.items():
             self.assertEqual((destination / relative).read_bytes(), expected)
-        self.assertEqual([item["path"] for item in files], sorted(committed))
+        self.assertEqual((destination / "hints/hint.md").read_bytes(), b"validation hint\n")
+        self.assertEqual([item["path"] for item in files], sorted((*committed, "hints/hint.md")))
         self.assertEqual(self.read_manifest()["sourceCommit"], commit)
 
     def test_sync_rejects_a_branch_or_abbreviated_commit(self):
@@ -369,8 +378,8 @@ class BuildTaskFilesTests(unittest.TestCase):
 
         self.assertEqual(tuple(files_by_task), slugs)
         self.assertEqual({path.name for path in build_task_files.TASK_FILES_ROOT.iterdir()}, set(slugs))
-        self.assertEqual(len(files), 678)
-        self.assertEqual(sum(item["size"] for item in files), 3_763_974)
+        self.assertEqual(len(files), 620)
+        self.assertEqual(sum(item["size"] for item in files), 3_709_097)
         self.assertEqual(sum(item["path"].endswith(".py") for item in files), 225)
         self.assertEqual(sum(Path(item["path"]).name == "Dockerfile" for item in files), 58)
         self.assertTrue(all(build_task_files.is_publishable_path(item["path"]) for item in files))
@@ -386,8 +395,8 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.assertEqual(manifest["sourceCommit"], build_task_files.SOURCE_COMMIT)
         self.assertEqual(tuple(manifest["tasks"]), slugs)
         manifest_files = [item for slug in slugs for item in manifest["tasks"][slug]["files"]]
-        self.assertEqual(len(manifest_files), 1_058)
-        self.assertEqual(sum(item["viewer"] == build_task_files.TEXT_VIEWER for item in manifest_files), 678)
+        self.assertEqual(len(manifest_files), 1_000)
+        self.assertEqual(sum(item["viewer"] == build_task_files.TEXT_VIEWER for item in manifest_files), 620)
         self.assertEqual(sum(item["viewer"] == build_task_files.UNAVAILABLE_VIEWER for item in manifest_files), 380)
         self.assertEqual(
             Counter(
@@ -398,11 +407,28 @@ class BuildTaskFilesTests(unittest.TestCase):
             {".npz": 206, ".npy": 145, ".safetensors": 23, ".gz": 6},
         )
         for slug in slugs:
+            paths = {item["path"] for item in manifest["tasks"][slug]["files"]}
+            build_task_files.validate_hint_layout(paths, slug)
             viewable = [
                 item for item in manifest["tasks"][slug]["files"]
                 if item["viewer"] == build_task_files.TEXT_VIEWER
             ]
             self.assertEqual(viewable, files_by_task[slug])
+
+    def test_repository_links_point_to_autoresearchexam(self):
+        catalog_text = build_task_files.TASK_CATALOG_PATH.read_text(encoding="utf-8")
+        catalog = json.loads(
+            catalog_text.removeprefix("window.ARB_TASK_CATALOG=").removesuffix(";\n")
+        )
+
+        self.assertEqual(build_task_files.SOURCE_REPOSITORY, "bespokelabsai/AutoResearchExam")
+        self.assertTrue(
+            all(
+                entry["github"]
+                == f"https://github.com/bespokelabsai/AutoResearchExam/tree/main/{entry['slug']}"
+                for entry in catalog
+            )
+        )
 
     def test_sync_detects_a_staged_path_mismatch_before_replacement(self):
         repo, commit = self.make_source_repo({"instruction.md": b"task\n"})
@@ -436,7 +462,9 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.git(repo, "config", "user.name", "Test User")
         for relative, data in {
             "task-a/instruction.md": b"new task a\n",
+            "task-a/hints/hint.md": b"task a hint\n",
             "task-b/instruction.md": b"new task b\n",
+            "task-b/hints/hint.md": b"task b hint\n",
         }.items():
             path = repo / relative
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -476,6 +504,52 @@ class BuildTaskFilesTests(unittest.TestCase):
             },
         )
         self.assertFalse(self.manifest_path.exists())
+
+    def test_sync_preserves_the_hint_bytes_exactly(self):
+        expected_hint = b"# Hint\n\nExact validation content.\n"
+        repo, commit = self.make_source_repo({"instruction.md": b"task\n", "hints/hint.md": expected_hint})
+
+        with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+            build_task_files.sync(
+                repo,
+                commit,
+                self.task_files_root,
+                self.manifest_path,
+                task_slugs=(build_task_files.TASK_SLUG,),
+            )
+
+        actual = self.task_files_root / build_task_files.TASK_SLUG / "hints/hint.md"
+        self.assertEqual(actual.read_bytes(), expected_hint)
+
+    def test_sync_rejects_legacy_or_missing_hint_layouts(self):
+        cases = {
+            "legacy": {"instruction.md": b"task\n", "hint/hint.md": b"old hint\n"},
+            "missing": {"instruction.md": b"task\n"},
+        }
+        for label, files in cases.items():
+            with self.subTest(label=label):
+                repo = self.root / label
+                repo.mkdir()
+                self.git(repo, "init", "-q")
+                self.git(repo, "config", "user.email", "tests@example.com")
+                self.git(repo, "config", "user.name", "Test User")
+                for relative, data in files.items():
+                    path = repo / build_task_files.TASK_SLUG / relative
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(data)
+                self.git(repo, "add", build_task_files.TASK_SLUG)
+                self.git(repo, "commit", "-qm", "fixture")
+                commit = self.git(repo, "rev-parse", "HEAD")
+
+                with mock.patch.object(build_task_files, "SOURCE_COMMIT", commit):
+                    with self.assertRaises(build_task_files.BuildError):
+                        build_task_files.sync(
+                            repo,
+                            commit,
+                            self.task_files_root,
+                            self.manifest_path,
+                            task_slugs=(build_task_files.TASK_SLUG,),
+                        )
 
 
 if __name__ == "__main__":

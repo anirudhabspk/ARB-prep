@@ -13,7 +13,7 @@ HIGHER_IS_BETTER = True
 
 
 def r2_imp(pred_at_eval, truth_at_eval):
-    """Paper Eq. 19: R^2_imp pooled over one instance's held-out cells.
+    """R^2_imp pooled over one instance's held-out cells.
 
     1 - sum_m (x_m - xtilde_m)^2 / sum_m (x_m - xbar)^2, with xbar the mean of the
     held-out TRUE values.

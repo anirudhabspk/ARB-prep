@@ -1,6 +1,6 @@
 window.ARB_TASK_FILES = {
-  "sourceRepository": "bespokelabsai/AutoResearchBench-Preview-Tasks",
-  "sourceCommit": "8f9db7e09ac21446f08d3751e08414562efeb32f",
+  "sourceRepository": "bespokelabsai/AutoResearchExam",
+  "sourceCommit": "ee554d7033ed8d1ea27e95e665fc4bca81ac4972",
   "tasks": {
     "cpu-llm-decode-throughput": {
       "defaultFile": "instruction.md",
@@ -90,16 +90,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 318,
-          "sha256": "abac8f0a512a2db9e11da6aa07dd2ee734a81849e32dee98606d520e7f1d52e7",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1363,
-          "sha256": "7bddf0e811366e972eb4cc521ea2b1fb288a0554022032515a529407e73bdb02",
+          "path": "hints/hint.md",
+          "size": 503,
+          "sha256": "366e07079923ad9007d6886c05e06b351ee390da020e6e601dfba0dbc0c33e46",
           "language": "markdown",
           "viewer": "text"
         },
@@ -242,13 +235,6 @@ window.ARB_TASK_FILES = {
           "sha256": "dcf97dd744cbeb24dad3256f79c5576ab3c9f4750637ba76c57dbb75db9e0a8d",
           "language": "json",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 503,
-          "sha256": "366e07079923ad9007d6886c05e06b351ee390da020e6e601dfba0dbc0c33e46",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -348,16 +334,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 307,
-          "sha256": "442168465241f382051fc604a53e77d52174aa5a1a3cc94ad7794d8091d3e3ec",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1486,
-          "sha256": "654aec1e66d1435ae27fb633db4eb1811e7b915edb50d029c12a00c9ce9a2bfa",
+          "path": "hints/hint.md",
+          "size": 476,
+          "sha256": "24a7036c80a0117f8f7a23e4a0d01279c6fbddfcf1814c1558a108d2d5c3ef1a",
           "language": "markdown",
           "viewer": "text"
         },
@@ -506,13 +485,6 @@ window.ARB_TASK_FILES = {
           "sha256": "ebbb48ae1442f161a2b3b1474ea297c93a2d92a2c187cb4244887c9d0674820b",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 476,
-          "sha256": "24a7036c80a0117f8f7a23e4a0d01279c6fbddfcf1814c1558a108d2d5c3ef1a",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -555,16 +527,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 261,
-          "sha256": "0204c867762feec0efe4c31b93be3e98f5462edd5b8ae7be82b9632bf9fb00c2",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1402,
-          "sha256": "32c11bd8417dc7d714ee28973e9e174f4d007ba0dbe049b017e897eb1a8e48b2",
+          "path": "hints/hint.md",
+          "size": 514,
+          "sha256": "2dbecaa8ed4a3803c5c59443bd83ba4c11c0d0bae4bec6bed66c0d2b23e473e1",
           "language": "markdown",
           "viewer": "text"
         },
@@ -664,13 +629,6 @@ window.ARB_TASK_FILES = {
           "size": 11626,
           "sha256": "bc6861269f3c97d3c00d2a9b28f882163d7f9fa56ba673633674212bda543a6e",
           "language": "python",
-          "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 514,
-          "sha256": "2dbecaa8ed4a3803c5c59443bd83ba4c11c0d0bae4bec6bed66c0d2b23e473e1",
-          "language": "markdown",
           "viewer": "text"
         }
       ]
@@ -844,16 +802,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 286,
-          "sha256": "c1a4ae2cb3f84e83680102d87b3409100fc93afa4f72d1be6828b6c9f80ebcd0",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1412,
-          "sha256": "cc1479c06264916f77a0f7ed5be950ba5d979761275dfcdc423741a0f3f180ba",
+          "path": "hints/hint.md",
+          "size": 457,
+          "sha256": "d86c312784426d3766084d83ffd72d75f8596477ff5a0f67f5fe7ed81099130a",
           "language": "markdown",
           "viewer": "text"
         },
@@ -1005,13 +956,6 @@ window.ARB_TASK_FILES = {
           "sha256": "ecc76601cf9e12d9f45216e8afe03e4530a31349d9ebdcdfed3016b78e451cca",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 457,
-          "sha256": "d86c312784426d3766084d83ffd72d75f8596477ff5a0f67f5fe7ed81099130a",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -1073,16 +1017,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 295,
-          "sha256": "6284563a9392ec02176d7990a5c3c331a85dde250a4f4e47e9d9e2e7cc6ba190",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1520,
-          "sha256": "b676f672217ba7c9bcb3550085596d90661e7c9b94c7aba14940b249d81a7166",
+          "path": "hints/hint.md",
+          "size": 533,
+          "sha256": "f288ffed10735299a6f7d868fa047f4592192cef94e1e4ec3c186ed48ec294aa",
           "language": "markdown",
           "viewer": "text"
         },
@@ -1231,13 +1168,6 @@ window.ARB_TASK_FILES = {
           "size": 1644,
           "sha256": "ed5124fa0c18d79e592cae076de57da5851aaae314096115df295f38abc43fa4",
           "language": "python",
-          "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 533,
-          "sha256": "f288ffed10735299a6f7d868fa047f4592192cef94e1e4ec3c186ed48ec294aa",
-          "language": "markdown",
           "viewer": "text"
         }
       ]
@@ -1567,16 +1497,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 329,
-          "sha256": "b4652c7aafc26edda4d1f8023ff996ce4088b3615c3f4fa22024152f894c4b5c",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1512,
-          "sha256": "7ae98c53544d8b7019e4fc6d654c896bbb00a301619acd6ed5e052924f9d7107",
+          "path": "hints/hint.md",
+          "size": 518,
+          "sha256": "6e66c26337e70c02a406736f8ddaac5963a4918d40352525a9ca5bcf7f486150",
           "language": "markdown",
           "viewer": "text"
         },
@@ -1856,13 +1779,6 @@ window.ARB_TASK_FILES = {
           "sha256": "7534342a29e610e10454e9af4bcd2cac7bbcf0d00a71d5d12fb5f1803c478a61",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 518,
-          "sha256": "6e66c26337e70c02a406736f8ddaac5963a4918d40352525a9ca5bcf7f486150",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -1939,16 +1855,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 329,
-          "sha256": "ed91d7da66f4c9a1fd73753247192e1afb503533a7a09e9f54a43f90e2dfce82",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1439,
-          "sha256": "6f55f5add419e89f1138a8cb984318e8df16fedfe61f022ad153f969448dfd0f",
+          "path": "hints/hint.md",
+          "size": 493,
+          "sha256": "9d1b5e07219e037c710477e80bc5ca2da99203add7d0f2ff4525da6711a98922",
           "language": "markdown",
           "viewer": "text"
         },
@@ -1982,8 +1891,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/grader_core.py",
-          "size": 2233,
-          "sha256": "fc37f4f3b765d5555e9c7bc1054d676373e598d46579a9d5af1a10afea65b25a",
+          "size": 2219,
+          "sha256": "4be89d0473b450e42336f2a01a129ca98635381b7dc2cee68f0701bb45085102",
           "language": "python",
           "viewer": "text"
         },
@@ -2172,13 +2081,6 @@ window.ARB_TASK_FILES = {
           "sha256": "03339c2db3f610fa80e682ba5fc87d5301f5dcee5b7b199c2fbc2a66719e9abe",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 493,
-          "sha256": "9d1b5e07219e037c710477e80bc5ca2da99203add7d0f2ff4525da6711a98922",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -2326,16 +2228,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 263,
-          "sha256": "956991d7455710bd5a89e6c98fad15a13ed74a2a184ae983355edc26dcb7f286",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1525,
-          "sha256": "c9dc5c54dc6f48bfb7cdcc6401feffd0ab4e4aa6395eaf2991d4e0954cebd372",
+          "path": "hints/hint.md",
+          "size": 485,
+          "sha256": "1ccff5ec64b54ea5644a4292972f45c0e68495cf039f93c5abff7f9e86e074d3",
           "language": "markdown",
           "viewer": "text"
         },
@@ -2508,13 +2403,6 @@ window.ARB_TASK_FILES = {
           "sha256": "3b5e156eb0b9ae872ff526a91d9c52984b98fe69b7344c5828fb4a65e3ed6b37",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 485,
-          "sha256": "1ccff5ec64b54ea5644a4292972f45c0e68495cf039f93c5abff7f9e86e074d3",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -2557,16 +2445,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 259,
-          "sha256": "5bc1d45b0e4fee3055422ae3c5a15d67b20b5863aac3ac466d5d825c3efd934c",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1637,
-          "sha256": "f569be930438b1d78b676599d724ea84fbda3fde01a35421a7d36bf4f97a2802",
+          "path": "hints/hint.md",
+          "size": 469,
+          "sha256": "8f3a2b5b7a6297e8a605f234673cac52fc52a117e8475ea832a3d6b239ab77d8",
           "language": "markdown",
           "viewer": "text"
         },
@@ -2667,13 +2548,6 @@ window.ARB_TASK_FILES = {
           "sha256": "e0eddced9235b202cc99b96663d373aa923dad291e5822d20f136d2f441ce744",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 469,
-          "sha256": "8f3a2b5b7a6297e8a605f234673cac52fc52a117e8475ea832a3d6b239ab77d8",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -2757,16 +2631,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 327,
-          "sha256": "47a4e7558aa2d72610dda7a3a42a4fb6e9d5336c5d20da09a62b43584c0563fd",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1538,
-          "sha256": "11308d5e31bd7dfdf911a6e3d4d494ec47824cb0fd529c3629b69f2f4f3ba3f8",
+          "path": "hints/hint.md",
+          "size": 500,
+          "sha256": "78cf0fa43a541b8e05fbe3d4213e049ad4a8eef3dfb826e0675803b1e5c9c337",
           "language": "markdown",
           "viewer": "text"
         },
@@ -3040,13 +2907,6 @@ window.ARB_TASK_FILES = {
           "sha256": "1d6f0f98a4fbad92460fcd7cca43c53d416ba4e937ab0d3f94443250f24e2117",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 500,
-          "sha256": "78cf0fa43a541b8e05fbe3d4213e049ad4a8eef3dfb826e0675803b1e5c9c337",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -3062,8 +2922,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "environment/Dockerfile",
-          "size": 1885,
-          "sha256": "83b3dd85792063e19bce30c7742122ef1ababebc2ee6c9cbf5df73e65188fb57",
+          "size": 1867,
+          "sha256": "4e44f857ba0e201f4f606d9a355deaabb784f4215544a37be0f6f7b798821a16",
           "language": "dockerfile",
           "viewer": "text"
         },
@@ -3675,16 +3535,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 286,
-          "sha256": "f701b051129c819e223c001a6fa0d947ba934418ee809bae6e86d9e64d0e2717",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1544,
-          "sha256": "d23ca6913e6f6ca71e850af064f32017bcf020709d391382819fe6c7648e0df4",
+          "path": "hints/hint.md",
+          "size": 551,
+          "sha256": "cb1c1ec82bad97e0667a42ca5ed6af077f011f1121230ce46904757347ecbe3a",
           "language": "markdown",
           "viewer": "text"
         },
@@ -3776,13 +3629,6 @@ window.ARB_TASK_FILES = {
           "sha256": "c4b7a6192c0a1362b8d75ed55a0fa4533726d5396fe970c0490614d6a853f91b",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 551,
-          "sha256": "cb1c1ec82bad97e0667a42ca5ed6af077f011f1121230ce46904757347ecbe3a",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -3798,8 +3644,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "environment/Dockerfile",
-          "size": 2259,
-          "sha256": "77fcd9371d14c1bb6c9f5bfd66cda9eba5a676adcfcd7bbd93611ef6e3500535",
+          "size": 2247,
+          "sha256": "3af7fa94ea93c53efc452898cf434b20961f5f128ea87643e5dc93d8b70017df",
           "language": "dockerfile",
           "viewer": "text"
         },
@@ -3864,16 +3710,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 304,
-          "sha256": "6b0bd3fd93a4308d3f9e31323c87f4ee4aea0d49f9690a8439f7f69255cf2546",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1598,
-          "sha256": "4c1936002f8ac40e9aa6e04df6b633942714f6df584e09dea59c944d6d841f9d",
+          "path": "hints/hint.md",
+          "size": 558,
+          "sha256": "8db617337d5da9b6118e362f5cae0e4f20aea27edcec7640342b3d9ef031b0d7",
           "language": "markdown",
           "viewer": "text"
         },
@@ -3993,13 +3832,6 @@ window.ARB_TASK_FILES = {
           "sha256": "95e4e25a0af0fcae8b6c9d64c368349de86d3558f909e89b9a8a8e1997db57ee",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 558,
-          "sha256": "8db617337d5da9b6118e362f5cae0e4f20aea27edcec7640342b3d9ef031b0d7",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -4046,16 +3878,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 292,
-          "sha256": "d94e0eb09b4dc3212c79c42a2f0154a8d4806a159b8681e1254a12bd81d7d325",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1605,
-          "sha256": "9fa265cc35be8dd68e333b7efa6ed0266a2cc43ad33c3112379da703e871f749",
+          "path": "hints/hint.md",
+          "size": 501,
+          "sha256": "6e6b642005080946b2410feaf498d523153d8d6e7ba94970d8149824de55f180",
           "language": "markdown",
           "viewer": "text"
         },
@@ -4189,13 +4014,6 @@ window.ARB_TASK_FILES = {
           "sha256": "8f261adf1be9f690444c6655d138d7aed9efc0987328c209993485d24696801d",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 501,
-          "sha256": "6e6b642005080946b2410feaf498d523153d8d6e7ba94970d8149824de55f180",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -4238,16 +4056,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 287,
-          "sha256": "f5affeb0fdd8116b570996b06df993778f40fd28f55ef6fbb74235c8919679f8",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1508,
-          "sha256": "a21954d11ad410e2c0fa55d706e9aaff86da36703781d2ce3ef90933adae6aa7",
+          "path": "hints/hint.md",
+          "size": 476,
+          "sha256": "a994491a495dd173a09c5abf89d34aa8741ea63b3b02f0ac52e91bd47709aad6",
           "language": "markdown",
           "viewer": "text"
         },
@@ -4355,13 +4166,6 @@ window.ARB_TASK_FILES = {
           "sha256": "e358c237c45fa866e87a1df0c61729d86bd1f34e14f39539057afd1a5625e99f",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 476,
-          "sha256": "a994491a495dd173a09c5abf89d34aa8741ea63b3b02f0ac52e91bd47709aad6",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -4402,16 +4206,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 309,
-          "sha256": "1e96b51098bebc4863b45d967c574bfe7e8f0a5f5b841ca853c5d301a559da05",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1549,
-          "sha256": "c0c8c05b4a2ed324582c2949bdc8443eccaee6e1923e68a56dfec9ebe5b9ef3a",
+          "path": "hints/hint.md",
+          "size": 482,
+          "sha256": "b2c05ce890bd07c2f679a724f785480e99a6b8c09798f7fee5c402371e8b81a6",
           "language": "markdown",
           "viewer": "text"
         },
@@ -4551,13 +4348,6 @@ window.ARB_TASK_FILES = {
           "sha256": "4977a30ffdced5493251d5f87c3d231c0c6b009a3280aef782cb6d56560961d2",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 482,
-          "sha256": "b2c05ce890bd07c2f679a724f785480e99a6b8c09798f7fee5c402371e8b81a6",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -4621,16 +4411,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 291,
-          "sha256": "e3030d247fdc73afe52dab79b1b83381d07bf570bd62ea2267dbf0df50ecd3db",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1580,
-          "sha256": "ff7ff7a3bf4a3a1031a03816bb20a57f792569cb9dbccbe135bb7641e05870ec",
+          "path": "hints/hint.md",
+          "size": 617,
+          "sha256": "2e3dd602434753755def600fe43be71221dc4a7a14711af6b68cd503dd33999e",
           "language": "markdown",
           "viewer": "text"
         },
@@ -4738,13 +4521,6 @@ window.ARB_TASK_FILES = {
           "sha256": "179d72e86a548dcb7e96ea98a54f4b5b33f10c3d608ec65eafb8b59637be91a6",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 617,
-          "sha256": "2e3dd602434753755def600fe43be71221dc4a7a14711af6b68cd503dd33999e",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -4815,16 +4591,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 246,
-          "sha256": "4feb9efc4652027c17cc1eda991e02763fd126b7e5c4ec8a37c200667902c310",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1884,
-          "sha256": "d9dbadf47df489abb7f4a39e40bb32e74be4a04b0dae78e80af2cd97166cc552",
+          "path": "hints/hint.md",
+          "size": 603,
+          "sha256": "890c03d73a0cef221c6012fbaf4fb058ecdb49b72b1b4e2dce5a49882698da9a",
           "language": "markdown",
           "viewer": "text"
         },
@@ -4939,13 +4708,6 @@ window.ARB_TASK_FILES = {
           "sha256": "7dc70689c09e5f666f1df7dad14c09f5823e02c84d8e6a7b8dfd1f6dd5f06e15",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 603,
-          "sha256": "890c03d73a0cef221c6012fbaf4fb058ecdb49b72b1b4e2dce5a49882698da9a",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5009,16 +4771,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 307,
-          "sha256": "34dae4eedb5c0ea474af33a47f1a018ab0bf46abaee986474ab2085aa3dd894f",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1775,
-          "sha256": "b68e624c9e905d5ea9ac5bb0ce33a5498370dffdabeafa53081a1cf0200929cc",
+          "path": "hints/hint.md",
+          "size": 508,
+          "sha256": "733c88239463673b452babe497329689da567611cb9597e0aff316934522ad8f",
           "language": "markdown",
           "viewer": "text"
         },
@@ -5124,13 +4879,6 @@ window.ARB_TASK_FILES = {
           "sha256": "a6ed1bfacdc8224236e4827abd88cd12b43877463210a631d11768564f8af99c",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 508,
-          "sha256": "733c88239463673b452babe497329689da567611cb9597e0aff316934522ad8f",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5178,16 +4926,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 297,
-          "sha256": "73396e78e06bbcd33464add3379eceb2c4a278a22f9dfd6f2134063e2c9d7c3f",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1752,
-          "sha256": "d46593df9a0a521fd16d876df5d3f38fd28c002d5d32742ddb11251dc419af35",
+          "path": "hints/hint.md",
+          "size": 640,
+          "sha256": "255d8021ff9aae4df563fe0587e48918a394fc7881516d46b708179ef0dbada5",
           "language": "markdown",
           "viewer": "text"
         },
@@ -5285,13 +5026,6 @@ window.ARB_TASK_FILES = {
           "sha256": "13e187b00ef2d2d346358612a495f04a94400bf841fe8fc4fc9ceab4a60d3a58",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 640,
-          "sha256": "255d8021ff9aae4df563fe0587e48918a394fc7881516d46b708179ef0dbada5",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5383,16 +5117,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 304,
-          "sha256": "47157b74a9029fe8b4e2c89e35ba269ed2484d96c158a28ab9d1d344dc5200e8",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1873,
-          "sha256": "92e0657b9110772e4228325b589afc34b3517e6de7b9263200fe1ef87cee790a",
+          "path": "hints/hint.md",
+          "size": 560,
+          "sha256": "e6e7f4070c80a7a1c26dce733c6d01db12ecfbe26b305c7a4604d1aeb987d5a5",
           "language": "markdown",
           "viewer": "text"
         },
@@ -5535,13 +5262,6 @@ window.ARB_TASK_FILES = {
           "sha256": "8393aa686b1518a1f20c3166e4da5f3598cf7593bf61657ed2160c1ff0b3aecc",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 560,
-          "sha256": "e6e7f4070c80a7a1c26dce733c6d01db12ecfbe26b305c7a4604d1aeb987d5a5",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5602,16 +5322,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 274,
-          "sha256": "b8264d611fe62b403b2cf7bd32d076234a20edccc042c472d7a6be0aa6645fbe",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1840,
-          "sha256": "8d9f91dedd30e189bb1b479e9438689d3a18c2927ffa84940495ad1c3798d071",
+          "path": "hints/hint.md",
+          "size": 572,
+          "sha256": "e87e779d33e367d95d84dd519c1dfe224ac7bdc51d6fc4adb9638c466b92c22c",
           "language": "markdown",
           "viewer": "text"
         },
@@ -5624,8 +5337,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 953,
-          "sha256": "b2d29d72154a9f7ca7623bb01282e676bc96ba6aacd43a6ec5e425c1d859645b",
+          "size": 918,
+          "sha256": "79711a90aa57d55796223fca5bbd71bb531e611c85e4c02038a6d3844710998f",
           "language": "toml",
           "viewer": "text"
         },
@@ -5744,13 +5457,6 @@ window.ARB_TASK_FILES = {
           "sha256": "0ada18a2947fd86cc30860ae8486396f8270d37762245056587590763d00d567",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 572,
-          "sha256": "e87e779d33e367d95d84dd519c1dfe224ac7bdc51d6fc4adb9638c466b92c22c",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5807,16 +5513,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 272,
-          "sha256": "085043051dc518fed097b0b226d902991924bcf40928d488b1cdccc012ddca1b",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1652,
-          "sha256": "dc13cce38df99cd90362ba3213f9764d11e35a80a71bd1b07b289384891792aa",
+          "path": "hints/hint.md",
+          "size": 532,
+          "sha256": "b92674febf73b5fdca47d577afcaf32e7d93d9dc6077639a72513bad26f97c24",
           "language": "markdown",
           "viewer": "text"
         },
@@ -5829,8 +5528,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 1403,
-          "sha256": "1280fd06710a90997c23d0131e910ae4697179cfdc8e9cb444a345635b695ce7",
+          "size": 1366,
+          "sha256": "06babbdcd16ad5422e4916af3d50b560fcc430fb32aea27b7004f8bf726c99f4",
           "language": "toml",
           "viewer": "text"
         },
@@ -5931,13 +5630,6 @@ window.ARB_TASK_FILES = {
           "sha256": "ea092dc6b8e8ae0d029b53b28892bac2847e18c262d043124c025a34bf15ceb9",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 532,
-          "sha256": "b92674febf73b5fdca47d577afcaf32e7d93d9dc6077639a72513bad26f97c24",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -5980,16 +5672,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 328,
-          "sha256": "eeda8075eb17ee5625400889aa8518c3e10026f9d3f3f457f117b2168862f506",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1608,
-          "sha256": "513539acf828db3a90c24e4875f4554f7f5564784535e837bcb06e06c4be01b7",
+          "path": "hints/hint.md",
+          "size": 403,
+          "sha256": "9a4fa694eba19df93f196035c2d836850471def3bb76095c02b8ae52d48a3e1a",
           "language": "markdown",
           "viewer": "text"
         },
@@ -6090,13 +5775,6 @@ window.ARB_TASK_FILES = {
           "sha256": "10c2cf7a42dfafac5f1826b822a1b7a9598bb1861048553ca865123be5ac60ef",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 403,
-          "sha256": "9a4fa694eba19df93f196035c2d836850471def3bb76095c02b8ae52d48a3e1a",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -6132,16 +5810,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 283,
-          "sha256": "5b2b875d5b37880e4d9dbd94de144970e5081ac2eedfe3912634467f2a1c2105",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1623,
-          "sha256": "89766fa3763c0e10935c1a6e468df4ba88c669aaaa08659e9ba0eb4b8d92004c",
+          "path": "hints/hint.md",
+          "size": 534,
+          "sha256": "4fbb2f485e07c2de58b81b3f0b8fa8ce6c7b580ebf9099e4386c11a0c0ce4eee",
           "language": "markdown",
           "viewer": "text"
         },
@@ -6182,8 +5853,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "tests/grader_core.py",
-          "size": 8657,
-          "sha256": "d7afb426c6d8cabc89e068a3562a3ed150560db82df8a7386735372f5fd24ec0",
+          "size": 8649,
+          "sha256": "d2059803fc0a9f98f733ba3c18eaeaf41865977af2652d9643d928c6dd812457",
           "language": "python",
           "viewer": "text"
         },
@@ -6220,13 +5891,6 @@ window.ARB_TASK_FILES = {
           "size": 12790,
           "sha256": "925b27e30e339103a6c43baba92ecd6c8c9b05792696cedda4ce1ea3c457083a",
           "language": "python",
-          "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 534,
-          "sha256": "4fbb2f485e07c2de58b81b3f0b8fa8ce6c7b580ebf9099e4386c11a0c0ce4eee",
-          "language": "markdown",
           "viewer": "text"
         }
       ]
@@ -6352,16 +6016,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 291,
-          "sha256": "9b85a9d878091bb83141834477bdf84bfacc4077941b19a72e7986b4eadcc932",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1602,
-          "sha256": "1b5888ed07489d134b27102ced8a3434f727710b5e59d89c73d2c01092751a68",
+          "path": "hints/hint.md",
+          "size": 460,
+          "sha256": "8ec87d9af1ae1f528833480f6ad542a268469a0268c9fd3db63a9a4dabb36160",
           "language": "markdown",
           "viewer": "text"
         },
@@ -6560,13 +6217,6 @@ window.ARB_TASK_FILES = {
           "sha256": "08412636da1e8322d25d104b87bfd4e86cde6e9cfac5858893380d2140811ddd",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 460,
-          "sha256": "8ec87d9af1ae1f528833480f6ad542a268469a0268c9fd3db63a9a4dabb36160",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -6615,16 +6265,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 271,
-          "sha256": "5a76a48dcae23dcd1c35061b2373076b685faf248b8c5526ebfa5d7e3415dd4e",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1553,
-          "sha256": "7953c489a80036be946136d3c745cd36973b7312939659a0ecdde688c4e4d58b",
+          "path": "hints/hint.md",
+          "size": 511,
+          "sha256": "b5bfc0d0478b84c917a5db9e3ffb50a481d273872a2a55d40c29b9c5818f35fe",
           "language": "markdown",
           "viewer": "text"
         },
@@ -6721,13 +6364,6 @@ window.ARB_TASK_FILES = {
           "sha256": "482f38f431a74fda07317a9f388facd0752554727a768b20abb22b87630cd9ce",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 511,
-          "sha256": "b5bfc0d0478b84c917a5db9e3ffb50a481d273872a2a55d40c29b9c5818f35fe",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -6784,16 +6420,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 271,
-          "sha256": "6a31ab26c307c2673364c04eca3e1ecd94aa71fe355fdbb1c094d3fd31a2163e",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1655,
-          "sha256": "42f43f71cb578da66adc02762f0565326c7fe7a25adaf5b9cdde18d3375f7553",
+          "path": "hints/hint.md",
+          "size": 452,
+          "sha256": "35d9562e2c5c10ae39250db5852d2d9b9d5c1a748fafb17a0c3c3ec3e4c8ea8b",
           "language": "markdown",
           "viewer": "text"
         },
@@ -6806,8 +6435,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 1378,
-          "sha256": "b1ef9a9e102a3d73d10456eb5f59d44cba5b56a302a49afeee0b3064dae8cba4",
+          "size": 1359,
+          "sha256": "a717fd2b240ade44231eff3c27989da07a98dc9b8911e0e94623736a0bdf1975",
           "language": "toml",
           "viewer": "text"
         },
@@ -6887,13 +6516,6 @@ window.ARB_TASK_FILES = {
           "sha256": "5e8be710098fddb2d4b732619d1781a9989bb3830d9d52d35bacf38dfd19c2dd",
           "language": "json",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 452,
-          "sha256": "35d9562e2c5c10ae39250db5852d2d9b9d5c1a748fafb17a0c3c3ec3e4c8ea8b",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -6922,16 +6544,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 254,
-          "sha256": "c64de5a893df3f2d4b62e07a21a6219192f33ae595a42ed5529407c7b43f70d0",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1585,
-          "sha256": "7f18de0856b1a8d5ffd3c97c6e24847268e8fe20bd2b64c68fd34938b5b8de23",
+          "path": "hints/hint.md",
+          "size": 491,
+          "sha256": "3563b9a9f3e217900fb8df34f7ed990643e10f38d7406be5c8569b13223b5896",
           "language": "markdown",
           "viewer": "text"
         },
@@ -7025,13 +6640,6 @@ window.ARB_TASK_FILES = {
           "sha256": "59b8b6cf448dbccbf66efa6fc61797752e6eb5c01db51fd3b72b279d0e8ae5f8",
           "language": "python",
           "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 491,
-          "sha256": "3563b9a9f3e217900fb8df34f7ed990643e10f38d7406be5c8569b13223b5896",
-          "language": "markdown",
-          "viewer": "text"
         }
       ]
     },
@@ -7067,16 +6675,9 @@ window.ARB_TASK_FILES = {
           "viewer": "text"
         },
         {
-          "path": "hint-brief/hint.md",
-          "size": 245,
-          "sha256": "d6286e7ccb192ff4533bb503778b5c4c79eeb06a0d3a45a0b950776cf09958a3",
-          "language": "markdown",
-          "viewer": "text"
-        },
-        {
-          "path": "hint/hint.md",
-          "size": 1728,
-          "sha256": "6dd72b53fc8d5733d9170df44860ac98e3ce1f874cbf375ab24e7734985c69c2",
+          "path": "hints/hint.md",
+          "size": 512,
+          "sha256": "818bf85c1dd02f4c227a06fcd5e5b5beb10a3d580d66715e23fbb2138bf8e6a8",
           "language": "markdown",
           "viewer": "text"
         },
@@ -7162,13 +6763,6 @@ window.ARB_TASK_FILES = {
           "size": 15889,
           "sha256": "bb057efb5d57f10a42c9120520b60ab5e65538f2258b1d6dcbb34743346d2188",
           "language": "python",
-          "viewer": "text"
-        },
-        {
-          "path": "val-hints-brief/hint.md",
-          "size": 512,
-          "sha256": "818bf85c1dd02f4c227a06fcd5e5b5beb10a3d580d66715e23fbb2138bf8e6a8",
-          "language": "markdown",
           "viewer": "text"
         }
       ]

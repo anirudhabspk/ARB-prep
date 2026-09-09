@@ -1,1 +1,0 @@
-The reference is described as serving requests one at a time while your engine receives the whole workload in a single call, and construction plus warm-up are explicitly untimed — so the two levers the statement hands you are amortising work across requests and moving everything you can out of the measured window.

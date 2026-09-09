@@ -17,14 +17,16 @@ TASK_FILES_ROOT = ROOT / "task-files"
 MANIFEST_PATH = ROOT / "task-files-manifest.js"
 TASK_CATALOG_PATH = ROOT / "task-catalog.js"
 TASK_SLUG = "cpu-llm-decode-throughput"
-SOURCE_REPOSITORY = "bespokelabsai/AutoResearchBench-Preview-Tasks"
-SOURCE_COMMIT = "8f9db7e09ac21446f08d3751e08414562efeb32f"
+SOURCE_REPOSITORY = "bespokelabsai/AutoResearchExam"
+SOURCE_COMMIT = "ee554d7033ed8d1ea27e95e665fc4bca81ac4972"
 EXACT_COMMIT_RE = re.compile(r"[0-9a-fA-F]{40}")
 TASK_SLUG_RE = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9._-]*")
 PUBLISHABLE_FILENAMES = {"Dockerfile"}
 PUBLISHABLE_SUFFIXES = {".csv", ".json", ".jsonl", ".md", ".py", ".sh", ".toml", ".txt"}
 TEXT_VIEWER = "text"
 UNAVAILABLE_VIEWER = "unavailable"
+HINT_PATH = "hints/hint.md"
+LEGACY_HINT_DIRECTORIES = ("hint", "hint-brief", "val-hints-brief")
 
 
 class BuildError(Exception):
@@ -104,6 +106,17 @@ def validate_relative_path(path):
 
 def _bytewise_path_key(path):
     return path.encode("utf-8")
+
+
+def validate_hint_layout(paths, task_slug):
+    paths = set(paths)
+    legacy_paths = sorted(
+        path for path in paths if PurePosixPath(path).parts[0] in LEGACY_HINT_DIRECTORIES
+    )
+    if legacy_paths:
+        raise BuildError(f"legacy hint path in {task_slug}: {legacy_paths[0]}")
+    if HINT_PATH not in paths:
+        raise BuildError(f"task is missing {HINT_PATH}: {task_slug}")
 
 
 def scan_task_tree(task_root):
@@ -187,6 +200,7 @@ def build(
         files.sort(key=lambda item: _bytewise_path_key(item["path"]))
         if len({item["path"] for item in files}) != len(files):
             raise BuildError(f"manifest contains duplicate paths for task: {slug}")
+        validate_hint_layout((item["path"] for item in files), slug)
         files_by_task[slug] = files
     write_manifest(files_by_task, manifest_path, source_commit)
     return files_by_task
@@ -377,6 +391,8 @@ def sync(
     commit = resolve_exact_commit(source_repo, source_ref)
     slugs = _task_slugs(task_slugs)
     source_blobs_by_task = {slug: list_source_blobs(source_repo, commit, slug) for slug in slugs}
+    for slug, blobs in source_blobs_by_task.items():
+        validate_hint_layout((path for path, *_ in blobs), slug)
     source_files_by_task = {
         slug: read_source_blobs(source_repo, source_blobs_by_task[slug]) for slug in slugs
     }

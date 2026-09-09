@@ -6,11 +6,11 @@ import re
 from pathlib import Path
 
 
-DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoresearchBench-Tasks"
+DEFAULT_TASKS_REPO = Path(__file__).resolve().parent.parent / "AutoResearchExam"
 README_PATH = Path("task-readmes.md")
 CATALOG_PATH = Path("task-catalog.js")
 SITE_DATA_PATH = Path("site-data.js")
-GITHUB_ROOT = "https://github.com/bespokelabsai/AutoresearchBench-Tasks/tree/main"
+GITHUB_ROOT = "https://github.com/bespokelabsai/AutoResearchExam/tree/main"
 
 CATEGORY_ORDER = [
     "Model training",
@@ -138,9 +138,9 @@ def verify_source_paragraphs(entries, tasks_repo):
 
 def load_site_data():
     text = SITE_DATA_PATH.read_text().strip()
-    prefix = "window.ARB_DATA="
-    assert text.startswith(prefix) and text.endswith(";"), "Unexpected site-data.js format"
-    return json.loads(text[len(prefix) : -1])
+    name, separator, payload = text.partition("=")
+    assert separator and name.strip() == "window.ARB_DATA", "Unexpected site-data.js format"
+    return json.loads(payload.removesuffix(";").strip())
 
 
 def expert_hours(slug, tasks_repo):

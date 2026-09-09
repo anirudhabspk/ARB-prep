@@ -1,1 +1,0 @@
-You are scored against a reference that samples uniformly and takes a plain mean, on the median error over thousands of seeds, and you are explicitly told the second classifier's quality varies between pools — so both the sampling design and the estimator must beat uniform, and neither may depend on the auxiliary being good.

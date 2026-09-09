@@ -1,1 +1,0 @@
-The statement says that ranking by the gradient row earns only a small reward, which is the clue: the gradient is a first-order quantity evaluated before the substitution, so what it cannot see is how much the loss actually moves when a particular token is put in place.

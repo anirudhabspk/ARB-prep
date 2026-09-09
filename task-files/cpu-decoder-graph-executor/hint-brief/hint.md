@@ -1,1 +1,0 @@
-Instance time is the fastest of fifteen repetitions and the score is a geometric mean over instances, so caches are warm when it counts and one slow instance costs more than one fast instance gains — uniformity across the shapes in the family matters more than a best case on any of them.

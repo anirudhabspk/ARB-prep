@@ -1,5 +1,4 @@
 name = "predict_action_validity_masks"
-reward_type = "bounded_continuous"
 artifacts = ["/app/output"]
 
 [metadata]

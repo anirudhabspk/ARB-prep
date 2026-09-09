@@ -129,7 +129,7 @@ def _clean_correct(model, x_all, y_all, temperature):
 
 
 def _attack_batch(model, x, y, temperature, eps, alpha, low, high):
-    """The paper's attack_pgd: `RESTARTS` random restarts of `ATTACK_ITERS` sign steps,
+    """PGD attack with `RESTARTS` random restarts of `ATTACK_ITERS` sign steps,
     keeping per example the delta of the restart with the largest cross-entropy."""
     max_loss = torch.zeros(y.shape[0], device=x.device)
     max_delta = torch.zeros_like(x)

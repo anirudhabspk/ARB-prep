@@ -22,8 +22,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
     OPENBLAS_NUM_THREADS=1 \
     NUMEXPR_NUM_THREADS=1
 
-RUN git config --system user.email "agent@horizon.local" \
-    && git config --system user.name "Horizon Agent"
+RUN git config --system user.email "agent@localhost" \
+    && git config --system user.name "agent"
 
 RUN useradd --create-home --uid 1001 agent
 

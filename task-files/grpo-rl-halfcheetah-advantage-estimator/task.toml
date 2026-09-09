@@ -2,7 +2,6 @@ artifacts = ["/app/output"]
 
 [metadata]
 name = "advantage-estimation-half-cheetah"
-reward_type = "unbounded_continuous"
 task_slug = "grpo-rl-halfcheetah-advantage-estimator"
 expert_time_estimate_hours = 4.0
 title = "Advantage estimation for a frozen PPO-clip harness on HalfCheetah-v4 at a 1M-step budget"

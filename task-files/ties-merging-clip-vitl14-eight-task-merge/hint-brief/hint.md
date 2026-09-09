@@ -1,1 +1,0 @@
-One frozen encoder must serve all eight datasets with no routing, and the metric weights them equally — so gains that come from favouring some datasets over others cancel, and only changes that reduce the conflict between them raise the mean.
