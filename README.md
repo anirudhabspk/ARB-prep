@@ -37,14 +37,14 @@ Run `python3 analysis/general_analysis/build.py` after refreshing `site-data.js`
 
 ## Publishing task files
 
-The public task file browser lists all files for the 29 catalog tasks from commit `ee554d7033ed8d1ea27e95e665fc4bca81ac4972` in `bespokelabsai/AutoResearchExam`. Each published task must contain `hints/hint.md`; the legacy `hint/`, `hint-brief/`, and `val-hints-brief/` directories are rejected.
+The public task file browser lists all files for the 29 catalog tasks from commit `5141c07f7b9b45fa3c8b1bfa66caf86c8238862a` in `bespokelabsai/AutoResearchExam`. Each published task must contain `hints/hint.md`; the legacy `hint/`, `hint-brief/`, and `val-hints-brief/` directories are rejected.
 
 Get explicit public release approval before copying task files. The published copy includes hidden workloads and grader code. Binary arrays, checkpoints, and compressed assets are listed in the browser as unavailable, but their payloads are not copied. A different source commit requires a fresh file review, public release approval, and secret and personal information scan.
 
 Sync from the committed tree, not the source repository working tree:
 
 ```sh
-python build_task_files.py --sync --source-repo /path/to/AutoResearchExam --source-ref ee554d7033ed8d1ea27e95e665fc4bca81ac4972
+python build_task_files.py --sync --source-repo /path/to/AutoResearchExam --source-ref 5141c07f7b9b45fa3c8b1bfa66caf86c8238862a
 ```
 
 Rebuild the metadata manifest after changing the tracked copy:

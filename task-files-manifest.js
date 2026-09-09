@@ -1,6 +1,6 @@
 window.ARB_TASK_FILES = {
   "sourceRepository": "bespokelabsai/AutoResearchExam",
-  "sourceCommit": "ee554d7033ed8d1ea27e95e665fc4bca81ac4972",
+  "sourceCommit": "5141c07f7b9b45fa3c8b1bfa66caf86c8238862a",
   "tasks": {
     "cpu-llm-decode-throughput": {
       "defaultFile": "instruction.md",
@@ -105,8 +105,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 823,
-          "sha256": "439e7ab01506af34570fb09a9f0cc25321c69b8e69604c15ca21e4a3755475f2",
+          "size": 820,
+          "sha256": "51b5bb90ced94191a4b794d74035327fdf3ed9264cfd91b3ded4296934e9f11d",
           "language": "toml",
           "viewer": "text"
         },
@@ -349,8 +349,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 698,
-          "sha256": "8aeffa5b86fa702e869614093225e6f4609f875a1c72514e322bc1bea3b4bab2",
+          "size": 694,
+          "sha256": "c57f9379d0944a4ca33e3de7ad7e78e9f2d56ad84414fbada835551a8a1f05e9",
           "language": "toml",
           "viewer": "text"
         },
@@ -542,8 +542,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 838,
-          "sha256": "e2848049734089df10d33c456803b3e766e48698662f310d89370f0ae86a5fc5",
+          "size": 830,
+          "sha256": "9447804ab51079d8d1bbc4a6277adbe063b1644b0bfcceb2643bce8a4a67c102",
           "language": "toml",
           "viewer": "text"
         },
@@ -817,8 +817,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 839,
-          "sha256": "a35eaf620ad92a3390e4f4d797d8c99da110939b566047df4178a14d7ce93f67",
+          "size": 831,
+          "sha256": "45cd670fc0b1ba87bff26aa6235172b1346fd3724a98f712e78b5404f8301a01",
           "language": "toml",
           "viewer": "text"
         },
@@ -1032,8 +1032,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 858,
-          "sha256": "8fa4f31bc563f1f15da106bd8491e9389c709c7ad152c0187f93014c319b4e7f",
+          "size": 850,
+          "sha256": "7eda35b720d336e1e0ba6a0b3215036ada0605f24442a1a7e083b56ef85c4acd",
           "language": "toml",
           "viewer": "text"
         },
@@ -1512,8 +1512,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 800,
-          "sha256": "d9d014401d70d9509ab9ffa94457c974fd887f023afaf02723d69222a19eab53",
+          "size": 797,
+          "sha256": "1e8bd8e6388b81700abae8007a6245684eefe75d9d5a9881cf52ef6e11a0541a",
           "language": "toml",
           "viewer": "text"
         },
@@ -1870,8 +1870,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 862,
-          "sha256": "feefe2800eaa34677087c713af91bd5e95acec088ca03a9c6bdda2078f47080c",
+          "size": 854,
+          "sha256": "1c8c171293c1cba71aba1c3634befc4ef42475705583f725f44fa2cdbd50f502",
           "language": "toml",
           "viewer": "text"
         },
@@ -2243,8 +2243,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 849,
-          "sha256": "b433f899e22b4a2b4ff884a80749cbf90922a95d6dec97ab63a5e74184d69477",
+          "size": 841,
+          "sha256": "3be776bebace20b57cd530cf72b20f162f9a9c9b41afef084575781c5e02271c",
           "language": "toml",
           "viewer": "text"
         },
@@ -2460,8 +2460,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 910,
-          "sha256": "d96b7829d2834e75cbd9ee01869c0b8c09fda06a469728499bbcf399d05002e5",
+          "size": 912,
+          "sha256": "97604d17c55d46fa9b4c4360bebb38046a5e728421dc46d5bdfbac8ad4d78070",
           "language": "toml",
           "viewer": "text"
         },
@@ -2646,8 +2646,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 732,
-          "sha256": "28fc77f0a785636b1a2378f000c3f1488b9e952867fadcd8a4118679e804e71e",
+          "size": 728,
+          "sha256": "6598799a56773a48f45cd7da22ed2925fc57c8464301140790bc570cf6fc75e0",
           "language": "toml",
           "viewer": "text"
         },
@@ -3550,8 +3550,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 680,
-          "sha256": "5dadfd9729de91e825232bfdb87f51b9f1d9bace49315f1d46ecce8753dd3523",
+          "size": 681,
+          "sha256": "a037192f551e7193b64605d1203a26211a2e90f41d18479f04b5bcc4defb6056",
           "language": "toml",
           "viewer": "text"
         },
@@ -3725,8 +3725,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 993,
-          "sha256": "bd126bf46bfb6787b96375a09e4b17bd8e5150146edb8c6b4a05dc636e40830e",
+          "size": 985,
+          "sha256": "a9e816b99cb6dea6c22dffd255741e620bcdb8ba5a3a3c9442428bc7b7dd7d68",
           "language": "toml",
           "viewer": "text"
         },
@@ -3893,8 +3893,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 868,
-          "sha256": "9b0300ab331b7a857a65094b9c4ad55b9312d7932f2111458c2b56ea0524a18a",
+          "size": 860,
+          "sha256": "54577d43937b4e4ac2619cbabc55b5f2571d754d93a3178951c1cf7703fed5b1",
           "language": "toml",
           "viewer": "text"
         },
@@ -4071,8 +4071,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 839,
-          "sha256": "4b255c0a2f2b92a2baf0f1ce4fd0c184da0c06f3b9a8c831d989c8dc289d8bcb",
+          "size": 831,
+          "sha256": "35618a61e99a4a2e990547796298f008fa71c590b448f78e6188ec8d7d5d96c4",
           "language": "toml",
           "viewer": "text"
         },
@@ -4221,8 +4221,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 860,
-          "sha256": "4e39b20b4dd260ead2823a51738b3b134e2d7f1b12a7255bad49256674c32466",
+          "size": 852,
+          "sha256": "3bc3715685af6823856aff1a05812609c2fe99742967a0a9598b3e5179aa975e",
           "language": "toml",
           "viewer": "text"
         },
@@ -4426,8 +4426,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 823,
-          "sha256": "832561687ec4253faaacd4a1ec58b5a1f2f7da0f83b8bf5a4a8e4f2baef7d39d",
+          "size": 820,
+          "sha256": "d58df7f22c1f56227943c21083d108f1c00d4fe4a10355ef9e7df1efa01744ef",
           "language": "toml",
           "viewer": "text"
         },
@@ -4606,8 +4606,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 870,
-          "sha256": "097ebf5e93ba70313485a3ce93c4b14123e74fd59d5abe3641a7b6657a3f9292",
+          "size": 872,
+          "sha256": "15fef139ef8c85c7d2b9c891acf75c465b72f59c63c8372d414aa2af4f493ce8",
           "language": "toml",
           "viewer": "text"
         },
@@ -4786,8 +4786,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 800,
-          "sha256": "63992996f029c1a8003acba27d86587af903f5403aaae3201ad6b25bfe67153f",
+          "size": 797,
+          "sha256": "4ad7343765e4c3031ca4a877a6a0f0ae76311c45a52a66b9fb84ab1685b7b485",
           "language": "toml",
           "viewer": "text"
         },
@@ -4941,8 +4941,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 860,
-          "sha256": "fc959fe47d5c8b79416ed6cebf6eeb76851bd70f1c34e79fd3397584bda7d054",
+          "size": 852,
+          "sha256": "9bc2f9bd11387efdad096bbdf86347f9087fafa1dbbf13273531d36dd3216d03",
           "language": "toml",
           "viewer": "text"
         },
@@ -5132,8 +5132,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 816,
-          "sha256": "381fdd1d49c2a74702455a54022c072ec1b053532d8fa367a3854ae85e9299e3",
+          "size": 813,
+          "sha256": "15560e3bcb8e6c2201f56bb9b32a50d12df9f9ebbe03e7687c65afefa3bb17e7",
           "language": "toml",
           "viewer": "text"
         },
@@ -5337,8 +5337,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 918,
-          "sha256": "79711a90aa57d55796223fca5bbd71bb531e611c85e4c02038a6d3844710998f",
+          "size": 910,
+          "sha256": "86abf80376b7848c5b96d8cc0a7981be1150ce5dd5ce202a1d403f4ac9f213c2",
           "language": "toml",
           "viewer": "text"
         },
@@ -5528,8 +5528,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 1366,
-          "sha256": "06babbdcd16ad5422e4916af3d50b560fcc430fb32aea27b7004f8bf726c99f4",
+          "size": 1368,
+          "sha256": "59b26c9b78c807d1a79c50683975fdb0e1a2a5376c47a69cf65271a8da397c7a",
           "language": "toml",
           "viewer": "text"
         },
@@ -5687,8 +5687,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 711,
-          "sha256": "8c2e3090ccc8e24ae4929fcdd14e0f69c1139ed2670d9c9df41fb4f99bf46692",
+          "size": 695,
+          "sha256": "799c2aa8df33da96633e346df05afb917ef82bd1484f44b4b7e6e57e510b1326",
           "language": "toml",
           "viewer": "text"
         },
@@ -5825,8 +5825,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 937,
-          "sha256": "c7d3dbd9ec3bfee2e9516a55426e0f27982bbbd0a293dda862d9293db4388ae1",
+          "size": 906,
+          "sha256": "424258bb4b99e7379e312cc407a9aab9ad110749161b94c2168eca3ede58b631",
           "language": "toml",
           "viewer": "text"
         },
@@ -6031,8 +6031,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 753,
-          "sha256": "9efc448dd2d923365b79975b3701795092a3e42287b8fedb578db017b4619a44",
+          "size": 722,
+          "sha256": "7836ec74977e1f6a1e34d3ab7cc2e4d4e948eff7ba01f5b73503e413bb36f32d",
           "language": "toml",
           "viewer": "text"
         },
@@ -6280,8 +6280,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 771,
-          "sha256": "25ece29e60957aa5688241a8abd6ab4804b79c7435c01b1c5e7ff2980ff31393",
+          "size": 740,
+          "sha256": "57d675c78f8668cdb0a27bbdad2c84188304397de611c5fe7c2e464270b3277e",
           "language": "toml",
           "viewer": "text"
         },
@@ -6435,8 +6435,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 1359,
-          "sha256": "a717fd2b240ade44231eff3c27989da07a98dc9b8911e0e94623736a0bdf1975",
+          "size": 1343,
+          "sha256": "aaaeceba553ebce6cddd4880dec56f7821ccd3bd7165d864a59118031967b7b3",
           "language": "toml",
           "viewer": "text"
         },
@@ -6559,8 +6559,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 791,
-          "sha256": "d8346f906cf5c8b0fb69ed367106f6ea01f10cd6b8fffb01098952f61b0f3d20",
+          "size": 760,
+          "sha256": "75ca9d68f50e79b5631a30d04f3f74a817409a37663b03e03d138cf6d85a3fb6",
           "language": "toml",
           "viewer": "text"
         },
@@ -6690,8 +6690,8 @@ window.ARB_TASK_FILES = {
         },
         {
           "path": "task.toml",
-          "size": 1014,
-          "sha256": "defbefc7865e3aba247c7d2dda4381095f2819f33cacafd74c833bd631d5cdec",
+          "size": 983,
+          "sha256": "629a945e536be46c5570196adeb96a5019d34dcb4610cfd69a1760ac849f1cb5",
           "language": "toml",
           "viewer": "text"
         },

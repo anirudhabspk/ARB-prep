@@ -25,7 +25,7 @@ build_timeout_sec = 3600.0
 cpus              = 8
 memory_mb         = 14336
 gpus              = 0
-boot_disk_gb      = 150
+storage_mb = 153600
 network_mode      = "allowlist"
 allowed_hosts = ["api.openai.com", "api.anthropic.com"]
 
@@ -34,5 +34,5 @@ build_timeout_sec = 3600.0
 cpus = 8
 memory_mb = 14336
 gpus = 0
-boot_disk_gb = 150
+storage_mb = 153600
 network_mode = "no-network"

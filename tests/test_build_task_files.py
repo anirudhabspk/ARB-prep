@@ -379,7 +379,7 @@ class BuildTaskFilesTests(unittest.TestCase):
         self.assertEqual(tuple(files_by_task), slugs)
         self.assertEqual({path.name for path in build_task_files.TASK_FILES_ROOT.iterdir()}, set(slugs))
         self.assertEqual(len(files), 620)
-        self.assertEqual(sum(item["size"] for item in files), 3_709_097)
+        self.assertEqual(sum(item["size"] for item in files), 3_708_806)
         self.assertEqual(sum(item["path"].endswith(".py") for item in files), 225)
         self.assertEqual(sum(Path(item["path"]).name == "Dockerfile" for item in files), 58)
         self.assertTrue(all(build_task_files.is_publishable_path(item["path"]) for item in files))
