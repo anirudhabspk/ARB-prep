@@ -341,7 +341,7 @@ main .scoring-prose{max-width:var(--content-measure)}
 .hpo-chart{max-width:var(--content-measure);margin:28px 0 20px;color:var(--ink);font-family:var(--sans)}
 .hpo-chart-row,.hpo-chart-axis{display:grid;grid-template-columns:180px minmax(0,1fr) 58px;gap:16px;align-items:center}
 .hpo-chart-row{min-height:46px}.hpo-chart-name,.hpo-chart-value{font-size:13px;line-height:1.3}.hpo-chart-value{font-variant-numeric:tabular-nums;text-align:right}
-.hpo-chart svg{display:block;width:100%;height:32px;overflow:visible}.hpo-chart-grid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}.hpo-chart-interval{stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.hpo-chart svg{display:block;width:100%;height:32px;overflow:visible;background:linear-gradient(to bottom,transparent 5px,rgba(18,78,84,.035) 5px,rgba(18,78,84,.035) 27px,transparent 27px)}.hpo-chart-bar{opacity:.75}.hpo-chart-interval{stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
 .hpo-chart-scale{display:flex;justify-content:space-between;padding-top:7px;color:var(--muted);font-size:var(--figure-label-size)}.hpo-chart-axis-title{grid-column:2;margin-top:7px;color:var(--muted);font-size:var(--figure-label-size);text-align:center}
 .model-effort{margin:24px 0;color:var(--ink);font-family:var(--sans)}.model-effort-panels{display:grid;grid-template-columns:1fr;max-width:760px;gap:24px}.model-effort svg{display:block;width:100%;height:auto;overflow:visible}.model-effort .dot-label{display:none}.model-effort .model-dot:focus circle,.model-effort .model-dot:hover circle{stroke:var(--ink);stroke-width:2}
 @media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
