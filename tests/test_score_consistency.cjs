@@ -170,7 +170,8 @@ assert.equal(solCostRow.taskCount,29);
 close(solCostRow.cost,137.75671779310345);
 assert.equal(solCostRow.costEstimated,true);
 assert.ok(costHtml.includes('$137.76 (includes estimate)'));
-assert.ok(costHtml.includes("GPT-5.6 Sol's mean includes one estimated task cost of $145."));
+assert.ok(!costHtml.includes("GPT-5.6 Sol's mean includes one estimated task cost of $145."));
+assert.ok(!costHtml.includes('<p class="plot-note"></p>'));
 assert.ok(!costHtml.includes('NaN'));
 
 const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');

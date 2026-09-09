@@ -89,8 +89,8 @@
       </div>
       <h3>Task scoring</h3>
       <div class="prose scoring-prose">
-        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. The task returns a raw score which cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67% worst-group accuracy on <a href="tasks.html#coreset-selection-group-robust-waterbirds">"Selecting Bird Images Across Hidden Background Groups"</a>, and 41.28 dB mean PSNR on <a href="tasks.html#fastercache-budgeted-video-dit-cache-policy">"Accelerating video diffusion by reusing predictions"</a>. Pass/fail tasks can use average pass rate, but open-ended metrics need a common reward scale.</p>
-        <p>We use baseline anchor scores and reward maps to convert a raw score into a final reward. In particular, we distinguish between the raw "score" for the metric achieved by the agent and the resulting tracked "reward" for the mapped value used in the AUARC. A trivial baseline receives reward 0. Some maps reserve the range from 0 to 0.1 for weaker trivial baselines. A strong reference solution receives reward 0.5, or 0.55 for maps with that baseline band.</p>
+        <p>In each task, the agent is asked to optimize a specific metric, such as accuracy, speedup, perplexity, or mean squared error. This metric is a score which cannot be compared directly across tasks. For instance, Opus 5 achieves 70.67% worst-group accuracy on <a href="tasks.html#coreset-selection-group-robust-waterbirds">"Selecting Bird Images Across Hidden Background Groups"</a>, and 41.28 dB mean PSNR on <a href="tasks.html#fastercache-budgeted-video-dit-cache-policy">"Accelerating video diffusion by reusing predictions"</a>. Pass/fail tasks can use average pass rate, but open-ended tasks need a common reward scale.</p>
+        <p>We use baseline anchor scores and reward maps to convert a raw score into a final reward which is given to the agent. In particular, we distinguish between the raw "score" for the metric achieved by the agent and the resulting "reward". Note that the reward is what is optimized by the agent, and tracked in the AUARC. A trivial baseline receives reward 0. Some maps reserve the range from 0 to 0.1 for weaker trivial baselines. A strong reference solution receives reward 0.5.</p>
         <p>Depending on the natural raw score range for a task, we use three maps: bounded scores in [<em>a</em>, <em>b</em>], signed unbounded scores in (&minus;&infin;, &infin;), and unsigned unbounded scores in (0, &infin;). For bounded metrics, the map gives more credit to the same absolute improvement near the known best score, where progress is usually harder. For example, improving accuracy from 0.85 to 0.95 can earn more reward than improving it from 0.10 to 0.20.</p>
       </div>
       <div class="prose" id="reward-normalization">
@@ -126,8 +126,10 @@
                     <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
                     <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
                   </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
                 </details>
               </article>
               <article class="reward-scaling-card reward-scaling-card--unsigned">
@@ -157,8 +159,10 @@
                     <tr><th scope="row"><em>s</em><sub>ref</sub></th><td>Reference raw score.</td></tr>
                     <tr><th scope="row"><em>σ</em></th><td>Direction sign. It is +1 when higher scores are better and −1 when lower scores are better.</td></tr>
                   </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><msub><mi>log</mi><mn>2</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>u</mi><mo>=</mo><msub><mi>log</mi><mn>2</mn></msub><mo>(</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow><mrow><mi>σ</mi><mo>(</mo><msub><mi>s</mi><mtext>ref</mtext></msub><mo>−</mo><msub><mi>s</mi><mn>0</mn></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
                 </details>
               </article>
               <article class="reward-scaling-card reward-scaling-card--bounded">
@@ -190,8 +194,10 @@
                     <tr><th scope="row"><em>d</em></th><td>Distance from <em>s</em><sub>1</sub> at the agent score.</td></tr>
                     <tr><th scope="row"><em>d</em><sub>ref</sub></th><td>Distance from <em>s</em><sub>1</sub> at the reference score.</td></tr>
                   </tbody></table>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
-                  <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>1</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  <div class="reward-scaling-equations">
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>reward</mtext><mo>=</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>+</mo><mo>(</mo><mn>1</mn><mo>−</mo><msub><mtext>reward</mtext><mtext>baseline</mtext></msub><mo>)</mo><mfrac><mi>u</mi><mrow><mn>1</mn><mo>+</mo><mi>u</mi></mrow></mfrac></math>
+                    <math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>d</mi><mo>=</mo><mo>|</mo><mi>s</mi><mo>−</mo><msub><mi>s</mi><mn>1</mn></msub><mo>|</mo><mo>,</mo><mspace width=".5em"/><mi>u</mi><mo>=</mo><mi>max</mi><mo>(</mo><mn>0</mn><mo>,</mo><mfrac><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><mi>d</mi><mo>)</mo></mrow><mrow><mi>log</mi><mo>(</mo><msub><mi>d</mi><mn>0</mn></msub><mo>/</mo><msub><mi>d</mi><mtext>ref</mtext></msub><mo>)</mo></mrow></mfrac><mo>)</mo></math>
+                  </div>
                 </details>
               </article>
             </div>
@@ -204,10 +210,10 @@
       </div>
       <figure class="task-scoring-figure">
         <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
-        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
+        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the "Area Under the AutoResearch Curve" (AUARC). We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
       </figure>
       <div class="prose">
-        <p>We would like to design a metric which captures both the generalization performance of any solution found by the model, whilst simultaneously rewarding early improvements. We argue that the <i>area under the hidden test reward curve</i> provides a suitable measure. This metric is equivalent to the <i>time weighted average</i> hidden test score. Formally, it is defined simply by:</p>
+        <p>We would like to design a metric which captures both the generalization performance of any solution found by the model, whilst simultaneously rewarding early improvements. We argue that the <i>Area Under the AutoResearch Curve</i> (AUARC) provides a suitable measure. This metric is equivalent to the <i>time weighted average</i> hidden test score. Formally, it is defined simply by:</p>
         <div class="auarc-equation">
           <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="AUARC equals the sum over time intervals of hidden test reward times interval length, divided by total run time.">
             <mi>AUARC</mi><mo>=</mo><mfrac><mrow><munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>r</mi><mi>i</mi></msub><mo>&#x0394;</mo><msub><mi>t</mi><mi>i</mi></msub></mrow><mi>T</mi></mfrac>
@@ -353,12 +359,18 @@
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
-      <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
+      <p>First, we give some additional details on our Terminus 2 autoresearch harness:</p>
+      <ul class="harness-details">
+        <li>The model receives the task, persistent workspace, research protocol, previous experiment history, and remaining wall-clock budget.</li>
+        <li>It repeatedly edits and tests in the same terminal; before each new experiment, the default Terminus configuration compacts the prior conversation into a handoff summary.</li>
+        <li>Each submission is snapshotted and graded in a fresh verifier; the model receives only validation scores, errors, output, and the updated time remaining.</li>
+        <li>Anytime the best validation checkpoint is updated, that submission is scored on sealed, hidden tests (never revealed to the agent).</li>
+      </ul>
+      <p class="harness-intro">A natural question is whether our Terminus 2 based autoresearch harness will have significantly different results when compared Codex and Claude Code. To evaluate this, we compared all three harnesses with Opus 5 and GPT-5.6 Sol on a subset of on five tasks over 12 hours.</p>
       <h4 class="figure-heading" id="harness-summary-title">Average harness performance across five tasks</h4>
       <div id="harness-summary" aria-labelledby="harness-summary-title"></div>
-      <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2. Codex’s lower test AUARC is driven by <a href="tasks.html#shortest-valid-ci-l2-ece" style="text-decoration:none"><em>Tight confidence intervals for prediction uncertainty estimation</em></a>, where validation improvements stopped transferring to the hidden test earlier than with Terminus 2.</p>
+      <p id="harness-findings">Although we found that the average rewards differ slightly across the harnesses, the aggregate hidden test <i>ranking between models</i> stays the same. These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison. See the below plots for the individual run information.</p>
       <div id="harness-ablation-plot"></div>
-      <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
     </section>
     <section class="section citation-section" id="citation" aria-labelledby="citation-heading">
       <h2 id="citation-heading">Cite this work</h2>

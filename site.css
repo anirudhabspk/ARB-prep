@@ -326,7 +326,8 @@ main .scoring-prose{max-width:var(--content-measure)}
 .reward-scaling-terms tr+tr{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
 .reward-scaling-terms th{width:34%;padding:4px 8px 4px 0;color:var(--ink);font-weight:600;text-align:left;vertical-align:top}
 .reward-scaling-terms td{padding:4px 0;color:var(--muted);vertical-align:top}
-.reward-scaling-formula math{display:block;overflow-x:auto;margin:5px 0;font-size:1em}
+.reward-scaling-equations{max-width:100%;overflow-x:auto}
+.reward-scaling-formula math{margin:5px 0;font-size:1em}
 .reward-scaling-card>p{margin:10px 0 0;color:var(--muted);font-size:14px;line-height:1.55}
 .reward-scaling-card>p+p{margin-top:8px}
 @media(min-width:1060px){.reward-scaling-grid{gap:0}.reward-scaling-card{padding-right:18px}.reward-scaling-card+.reward-scaling-card{padding-left:18px;border-left:1px solid var(--line)}.reward-scaling-card--bounded{padding-left:0;border-left:0}.reward-scaling-card--signed{padding-left:18px;border-left:1px solid var(--line)}}
@@ -462,4 +463,5 @@ main .scoring-prose{max-width:var(--content-measure)}
 .harness-task-options button[aria-pressed="true"]{font-weight:600}
 .harness-task-check{flex:0 0 16px}
 .harness-task-menu summary:focus-visible,.harness-task-options button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.harness-details{max-width:var(--content-measure)}
 @media(max-width:520px){.harness-task-menu>summary{gap:10px;padding:11px 12px}.harness-task-options button{padding:11px 9px}}
