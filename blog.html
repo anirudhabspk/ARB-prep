@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchExam measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchExam</title>
-<link rel="stylesheet" href="site.css?v=blog-format-system-20260908">
+<link rel="stylesheet" href="site.css?v=hints-comparison-20260909">
 </head>
 <body class="blog-page">
 <section class="hero">
@@ -283,29 +283,48 @@
       <div class="prose">
         <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
       </div>
-      <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
-        <h4 class="hint-lanes-title figure-heading">Average hidden-test reward across 22 CPU tasks</h4>
-        <div class="hint-lanes-axis" aria-hidden="true"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div>
-        <article class="hint-lane hint-lane--opus">
-          <p class="hint-lane-model">Claude Opus 5</p>
-          <div class="hint-lane-plot" role="img" aria-label="Claude Opus 5 average hidden-test reward: 0.441 for the initial AutoResearch iteration, 0.547 with a validation hint, and 0.592 at the end of AutoResearch.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:44.1%"><b>0.441</b><small>Initial AR</small></span>
-            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:54.7%"><b>0.547</b><small>Validation hint</small></span>
-            <span class="hint-lane-marker hint-lane-marker--final" style="--score:59.2%"><b>0.592</b><small>Final AR</small></span>
-          </div>
-        </article>
-        <article class="hint-lane hint-lane--muse">
-          <p class="hint-lane-model">Muse Spark 1.3</p>
-          <div class="hint-lane-plot" role="img" aria-label="Muse Spark 1.3 average hidden-test reward: 0.403 for the initial AutoResearch iteration, 0.447 with a validation hint, and 0.449 at the end of AutoResearch.">
-            <i class="hint-lane-track" aria-hidden="true"></i>
-            <span class="hint-lane-marker hint-lane-marker--initial" style="--score:40.3%"><b>0.403</b><small>Initial AR</small></span>
-            <span class="hint-lane-marker hint-lane-marker--hint" style="--score:44.7%"><b>0.447</b><small>Validation hint</small></span>
-            <span class="hint-lane-marker hint-lane-marker--final" style="--score:44.9%"><b>0.449</b><small>Final AR</small></span>
-          </div>
-        </article>
-      </div>
-      <p class="hint-lift-caption">The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score. This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
+      <figure class="hint-comparison" aria-labelledby="hint-chart-title" aria-describedby="hint-chart-note">
+        <figcaption>
+          <h3 id="hint-chart-title">Hidden-test reward with and without a hint</h3>
+          <p id="hint-chart-note" class="plot-note">Average across 22 CPU tasks. Higher is better.</p>
+        </figcaption>
+        <div class="hint-models">
+          <section class="hint-model hint-model--opus" aria-labelledby="hint-opus-title">
+            <h4 id="hint-opus-title"><img src="https://cdn.simpleicons.org/anthropic/191919" alt="" width="22" height="22">Claude Opus 5</h4>
+            <p class="hint-budget">200 turns</p>
+            <dl class="hint-bars">
+              <div class="hint-bar-row"><dt>Without hint</dt><dd><span class="hint-bar-value">0.441</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.1%"></span></span></dd></div>
+              <div class="hint-bar-row"><dt>With validation hint</dt><dd><span class="hint-bar-value">0.547</span><span class="hint-bar-track" aria-hidden="true"><span style="width:54.7%"></span></span></dd></div>
+            </dl>
+            <div class="hint-reference">
+              <p class="hint-budget">Longer run, for reference</p>
+              <dl class="hint-bars"><div class="hint-bar-row"><dt>Full AutoResearch</dt><dd><span class="hint-bar-value">0.592</span><span class="hint-bar-track" aria-hidden="true"><span style="width:59.2%"></span></span></dd></div></dl>
+            </div>
+            <div class="hint-score-axis" aria-hidden="true"><span>0</span><span>0.5</span><span>1.0</span></div>
+          </section>
+          <section class="hint-model hint-model--muse" aria-labelledby="hint-muse-title">
+            <h4 id="hint-muse-title"><img src="https://cdn.simpleicons.org/meta/0866ff" alt="" width="22" height="22">Muse Spark 1.3</h4>
+            <p class="hint-budget">200 turns</p>
+            <dl class="hint-bars">
+              <div class="hint-bar-row"><dt>Without hint</dt><dd><span class="hint-bar-value">0.403</span><span class="hint-bar-track" aria-hidden="true"><span style="width:40.3%"></span></span></dd></div>
+              <div class="hint-bar-row"><dt>With validation hint</dt><dd><span class="hint-bar-value">0.447</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.7%"></span></span></dd></div>
+            </dl>
+            <div class="hint-reference">
+              <p class="hint-budget">Longer run, for reference</p>
+              <dl class="hint-bars"><div class="hint-bar-row"><dt>Full AutoResearch</dt><dd><span class="hint-bar-value">0.449</span><span class="hint-bar-track" aria-hidden="true"><span style="width:44.9%"></span></span></dd></div></dl>
+            </div>
+            <div class="hint-score-axis" aria-hidden="true"><span>0</span><span>0.5</span><span>1.0</span></div>
+          </section>
+        </div>
+        <p class="plot-note hint-comparison-note">The result without a hint is from the first AutoResearch iteration. Full AutoResearch shows the final reward after the longer run, not another 200-turn result.</p>
+      </figure>
+      <div class="prose hint-takeaway"><p>The hint moves Opus much farther on average than Muse, and gets Muse close to its own final AutoResearch score.</p></div>
+      <details class="hint-method">
+        <summary>Comparison details and limitations</summary>
+        <div class="prose">
+          <p>This is not a fully controlled no-hint experiment: the validation hints may include grader nuances and exploits, and we have one hinted rollout per task for Opus versus two for Muse.</p>
+        </div>
+      </details>
     </section>
     <section class="section" id="harness-ablations">
       <h2>Comparing harnesses</h2>
