@@ -385,25 +385,33 @@ main .scoring-prose{max-width:var(--content-measure)}
 @media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
 @media(max-width:640px){.blog-page{--article-copy-size:16px;--article-subhead-size:26px;--figure-title-size:15px;--figure-caption-size:12px}.hpo-chart-row,.hpo-chart-axis{grid-template-columns:124px minmax(0,1fr) 45px;gap:9px}.hpo-chart-name,.hpo-chart-value{font-size:12px}.hpo-chart-row{min-height:43px}}
 
+/* Hints use the same muted model colors and bar treatment as the leaderboard. */
 .hint-study{padding-bottom:72px}
-.hint-lanes{max-width:var(--content-measure);margin:30px 0 14px;border-top:2px solid var(--ink)}
-.hint-lanes-title{margin:0 0 12px;color:var(--ink)}
-.hint-lanes-axis{display:flex;justify-content:space-between;margin:0 0 6px;padding-left:164px;color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
-.hint-lanes-axis span:last-child{text-align:right}
-.hint-lane{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center;min-height:88px;border-top:1px solid var(--line)}
-.hint-lane--opus{--hint-lane-color:#c83220}
-.hint-lane--muse{--hint-lane-color:#21636a}
-.hint-lane-model{margin:0;color:var(--ink);font-size:14px;font-weight:650;line-height:1.35}
-.hint-lane-plot{position:relative;min-width:0;height:88px}
-.hint-lane-track{position:absolute;top:43px;right:0;left:0;height:2px;background:var(--ink);opacity:.34}
-.hint-lane-marker{position:absolute;z-index:1;left:var(--score);top:43px;display:block;width:0;height:0;color:var(--hint-lane-color);font-variant-numeric:tabular-nums}
-.hint-lane-marker::after{position:absolute;top:-5px;left:-5px;width:10px;height:10px;border-radius:50%;background:var(--hint-lane-color);box-shadow:0 0 0 2px var(--paper);content:""}
-.hint-lane-marker b,.hint-lane-marker small{position:absolute;display:block;left:0;white-space:nowrap;font-weight:400;line-height:1.25}
-.hint-lane-marker b{font-size:15px}
-.hint-lane-marker small{color:var(--muted);font-size:10px}
-.hint-lane-marker--initial b,.hint-lane-marker--initial small{transform:translateX(-100%);text-align:right}
-.hint-lane-marker--initial b{top:-30px}.hint-lane-marker--initial small{top:-16px}
-.hint-lane-marker--hint b{top:11px}.hint-lane-marker--hint small{top:27px}
-.hint-lane-marker--final b{top:-30px}.hint-lane-marker--final small{top:-16px}
-.blog-page main .section>p.hint-lift-caption{max-width:var(--content-measure);margin:0;color:var(--muted);font-size:var(--figure-caption-size);line-height:1.55}
-@media(max-width:640px){.hint-study{padding-bottom:58px}.hint-lanes{margin-top:24px}.hint-lanes-axis{padding-left:0}.hint-lane{grid-template-columns:1fr;gap:0;padding:12px 0;min-height:118px}.hint-lane-model{font-size:13px}.hint-lane-plot{height:78px;margin-top:4px}.hint-lane-track,.hint-lane-marker{top:37px}.hint-lane-marker--initial b,.hint-lane-marker--final b{top:-27px}.hint-lane-marker--initial small,.hint-lane-marker--final small{top:-14px}.hint-lane-marker--hint b{top:10px}.hint-lane-marker--hint small{top:25px}}
+.hint-comparison{max-width:var(--content-measure);margin:30px 0 24px;padding-top:18px;border-top:1px solid var(--line)}
+.blog-page main .hint-comparison figcaption{margin-top:0}
+.blog-page main .hint-comparison figcaption h3{margin:0 0 4px;color:var(--ink);font:600 var(--figure-title-size)/1.35 var(--sans);letter-spacing:0}
+.hint-comparison .plot-note{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.hint-models{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:36px;margin-top:24px}
+.hint-model{min-width:0}
+.hint-model--opus{--hint-color:#D95F02}
+.hint-model--muse{--hint-color:#00A6D6}
+.hint-model h4{display:flex;align-items:center;gap:9px;margin:0 0 20px;font-size:16px;font-weight:500;line-height:1.4}
+.hint-model h4 img{object-fit:contain;flex:none}
+.hint-budget{margin:0 0 10px;color:var(--muted);font-size:12px;line-height:1.4}
+.hint-bars{margin:0}
+.hint-bar-row{position:relative;margin:0 0 15px;font-size:13px;line-height:1.4}
+.hint-bar-row dt{padding-right:56px}
+.hint-bar-row dd{margin:6px 0 0}
+.hint-bar-value{position:absolute;top:0;right:0;font-variant-numeric:tabular-nums;font-size:14px}
+.hint-bar-track{display:block;height:22px;background:rgba(18,78,84,.035)}
+.hint-bar-track>span{display:block;height:100%;background:var(--hint-color);opacity:.75}
+.hint-reference{border-top:1px solid var(--line);margin-top:20px;padding-top:14px}
+.hint-reference .hint-bar-row{margin-bottom:8px}
+.hint-score-axis{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.hint-comparison .hint-comparison-note{margin-top:20px}
+.hint-takeaway p{margin-bottom:20px}
+.hint-method{max-width:var(--content-measure);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.hint-method summary{padding:12px 0;font-size:13px;cursor:pointer}
+.hint-method .prose{padding:0 0 14px;font-size:13px;color:var(--muted)}
+.hint-method .prose p{margin:0}
+@media(max-width:640px){.hint-study{padding-bottom:58px}.hint-models{grid-template-columns:1fr;gap:26px}.hint-model+.hint-model{padding-top:22px;border-top:1px solid var(--line)}.hint-model h4{margin-bottom:16px}.hint-comparison{margin-top:24px}}
