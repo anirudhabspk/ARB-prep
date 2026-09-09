@@ -674,7 +674,7 @@ function taskPairDomain(task){
   return taskDomain(stats,["validation","test"]);
 }
 
-function taskChart(task,title,key,sharedDomain=null,{fillAuarc=false}={}){
+function taskChart(task,title,key,sharedDomain=null,{fillAuarc=false,showOrigin=false}={}){
   const stats=taskStats(task).filter(stat=>stat.points.length&&!hiddenModels.has(stat.key)).map(stat=>({...stat,points:stat.points.map(point=>({...point,plot:difficultyAdjustedPoint(task,point,key)}))}));
   if(!stats.length)return`<div class="chart-card"><h4>${esc(title)}</h4><p class="plot-note">Choose at least one model to show this chart.</p></div>`;
   const domain=sharedDomain||taskDomain(stats,"plot"),W=620,H=338,L=62,R=12,T=12,plotB=267,railTop=229,kinkTop=241,maxHours=Math.max(1,...stats.map(stat=>stat.hours)),x=value=>L+value/maxHours*(W-L-R),y=value=>domain.broken?(value<domain.lo?plotB-(Math.max(0,value)/domain.lo)*(plotB-railTop):T+(domain.hi-value)/(domain.hi-domain.lo)*(railTop-T)):T+(domain.hi-value)/(domain.hi-domain.lo)*(plotB-T),axisLabel="Reward",formatValue=fmt;
@@ -688,7 +688,7 @@ function taskChart(task,title,key,sharedDomain=null,{fillAuarc=false}={}){
   for(const stat of stats){
     const points=stat.points.filter(point=>Number.isFinite(point.plot)),color=MODEL[stat.key].color;
     if(!points.length)continue;
-    let path=`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
+    let path=showOrigin?`M${x(0)} ${y(0)}L${x(points[0].seconds/3600)} ${y(0)}L${x(points[0].seconds/3600)} ${y(points[0].plot)}`:`M${x(points[0].seconds/3600)} ${y(points[0].plot)}`;
     for(let index=1;index<points.length;index++)path+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;
     path+=`L${x(stat.hours)} ${y(points.at(-1).plot)}`;
     if(fillAuarc){let area=`M${x(0)} ${y(0)}L${x(points[0].seconds/3600)} ${y(0)}L${x(points[0].seconds/3600)} ${y(points[0].plot)}`;for(let index=1;index<points.length;index++)area+=`L${x(points[index].seconds/3600)} ${y(points[index-1].plot)}L${x(points[index].seconds/3600)} ${y(points[index].plot)}`;area+=`L${x(stat.hours)} ${y(points.at(-1).plot)}L${x(stat.hours)} ${y(0)}Z`;const auarc=timeAuc(points,"plot",stat.hours*3600),labelX=x(stat.hours*.58),labelY=(y(points.at(-1).plot)+y(0))/2;body+=`<path class="auarc-area" fill="${color}" d="${area}"/><text class="auarc-label" x="${labelX}" y="${labelY}" text-anchor="middle">Hidden test AUARC = ${fmt(auarc)}</text>`}
@@ -704,8 +704,8 @@ function renderTaskScoringExample(){
   if(!target)return;
   const task=DATA.tasks.find(candidate=>candidate.name==="CPU LLM decode throughput"),run=task?.models.find(candidate=>candidate.model==="vesper-pro");
   if(!task||!run){target.innerHTML='<p class="plot-note">Example data is unavailable.</p>';return}
-  const example={...task,models:[run]},sharedDomain=taskPairDomain(example);
-  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#cpu-llm-decode-throughput">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain)}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain,{fillAuarc:true})}</div>`;
+  const example={...task,models:[run]},pairDomain=taskPairDomain(example),sharedDomain={...pairDomain,lo:0,broken:false,ticks:ticks(0,pairDomain.hi,niceStep(pairDomain.hi/6))};
+  target.innerHTML=`<div class="task-scoring-example-head"><span>${modelIdentity("vesper-pro")}</span><a href="tasks.html#cpu-llm-decode-throughput">View the full task results</a></div><div class="charts">${taskChart(example,"Best validation reward so far","bestValidation",sharedDomain,{showOrigin:true})}${taskChart(example,"Hidden test reward at that checkpoint","testAtBest",sharedDomain,{fillAuarc:true,showOrigin:true})}</div>`;
   bindEfficiencyTooltips();
 }
 
