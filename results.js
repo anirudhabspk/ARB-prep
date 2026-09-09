@@ -448,7 +448,7 @@ function costPerformancePlot(rows){
 
 function mainAuarcLeaderboard(rows){
   const ranked=[...rows].sort((a,b)=>b.test-a.test);
-  return `<h3>Leaderboard</h3><p class="plot-note">Measures Area Under the AutoResearch Curve (AUARC), a score that combines solution quality with how quickly the agent achieves it.</p><ol class="auarc-ranking">${ranked.map(row=>{const brand=MODEL_BRANDS[row.key],logo=brand?`<span class="auarc-end-logo" style="left:${row.test*100}%">${companyLogoImage(brand)}</span>`:"";return`<li aria-label="${esc(row.name)}: ${fmt(row.test)}, 95% interval ${fmt(row.test_ci[0])} to ${fmt(row.test_ci[1])}"><span class="auarc-label">${esc(row.name)}</span><span class="auarc-track" aria-hidden="true"><span class="auarc-fill" style="width:${row.test*100}%"></span><span class="auarc-interval" style="left:${row.test_ci[0]*100}%;width:${(row.test_ci[1]-row.test_ci[0])*100}%"></span>${logo}</span><strong>${fmt(row.test)}</strong></li>`}).join('')}</ol><div class="auarc-axis" aria-hidden="true"><span></span><span><i>0</i><i>0.5</i><i>1.0</i></span><span></span></div><p class="plot-note">Lines show 95% confidence intervals.</p>`;
+  return `<h3>Leaderboard</h3><p class="plot-note">Measures Area Under the AutoResearch Curve (AUARC), a score that combines solution quality with how quickly the agent achieves it.</p><ol class="auarc-ranking">${ranked.map(row=>{const brand=MODEL_BRANDS[row.key],logo=brand?`<span class="auarc-end-logo" style="left:${row.test*100}%">${companyLogoImage(brand)}</span>`:"";return`<li aria-label="${esc(row.name)}: ${fmt(row.test)}, 95% interval ${fmt(row.test_ci[0])} to ${fmt(row.test_ci[1])}"><span class="auarc-label">${esc(row.name)}</span><span class="auarc-track" aria-hidden="true"><span class="auarc-fill" style="width:${row.test*100}%;background:${MODEL[row.key].color}"></span><span class="auarc-interval" style="left:${row.test_ci[0]*100}%;width:${(row.test_ci[1]-row.test_ci[0])*100}%"></span>${logo}</span><strong>${fmt(row.test)}</strong></li>`}).join('')}</ol><div class="auarc-axis" aria-hidden="true"><span></span><span><i>0</i><i>0.5</i><i>1.0</i></span><span></span></div><p class="plot-note">Lines show 95% confidence intervals.</p>`;
 }
 
 // Integrate the same normalized checkpoints as the headline AUARC, up to the chosen time.
@@ -802,7 +802,8 @@ function decorateHpoChartBars(){
     const marker=document.createElementNS("http://www.w3.org/2000/svg","g");
     marker.setAttribute("class","hpo-chart-logo");
     marker.setAttribute("aria-hidden","true");
-    marker.innerHTML=modelLogoSvg(key,barEnd,16,15);
+    const brand=MODEL_BRANDS[key],size=20*(brand.scale||1);
+    marker.innerHTML=`<image href="${brand.logo}" x="${barEnd-size/2}" y="${16-size/2}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" pointer-events="none"/>`;
     svg.appendChild(marker);
     const keepSquare=()=>{
       const bounds=svg.getBoundingClientRect(),viewBox=svg.viewBox.baseVal;

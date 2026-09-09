@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=scoring-generalization-20260908">
+<link rel="stylesheet" href="site.css?v=muted-leaderboard-restored-20260908">
 </head>
 <body>
 <section class="hero">
@@ -169,102 +169,30 @@
 .hpo-chart{margin:28px 0 20px;color:var(--ink);font-family:var(--sans)}
 .hpo-chart-row,.hpo-chart-axis{display:grid;grid-template-columns:180px minmax(0,1fr) 58px;gap:16px;align-items:center}
 .hpo-chart-row{min-height:46px}.hpo-chart-name{font-size:14px;line-height:1.3}.hpo-chart-value{font-size:14px;font-variant-numeric:tabular-nums;text-align:right}
-.hpo-chart svg{display:block;width:100%;height:32px;overflow:visible}.hpo-chart-grid{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}.hpo-chart-interval{stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.hpo-chart svg{display:block;width:100%;height:32px;overflow:visible;background:linear-gradient(to bottom,transparent 5px,rgba(18,78,84,.035) 5px,rgba(18,78,84,.035) 27px,transparent 27px)}.hpo-chart-bar{opacity:.75}.hpo-chart-interval{stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
 .hpo-chart-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:7px}.hpo-chart-axis-title{grid-column:2;text-align:center;font-size:12px;color:var(--muted);margin-top:7px}
 .hpo-chart figcaption{font-size:13px;color:var(--muted);margin-top:20px;line-height:1.6}
 @media(max-width:640px){.hpo-chart-row,.hpo-chart-axis{grid-template-columns:124px minmax(0,1fr) 45px;gap:9px}.hpo-chart-name,.hpo-chart-value{font-size:12px}.hpo-chart-row{min-height:43px}}
 </style>
 <figure class="hpo-chart" aria-label="Estimated percentage of HPO-only rounds by model, with 95 percent sampling intervals">
 <div class="hpo-chart-row"><span class="hpo-chart-name">GPT-5.6 Sol</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds."><title>GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="475.7143" height="20" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="475.7143" height="22" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Muse Spark 1.3</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds."><title>Muse Spark 1.3: 47.5% HPO-only; 95% sampling interval 42.0% to 53.1%; 95 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="407.1429" height="20" fill="#00A6D6"/><path class="hpo-chart-interval" fill="none" d="M 359.9677 16 H 455.2058 M 359.9677 11 V 21 M 455.2058 11 V 21"/></svg><span class="hpo-chart-value">47.5%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="407.1429" height="22" fill="#00A6D6"/><path class="hpo-chart-interval" fill="none" d="M 359.9677 16 H 455.2058 M 359.9677 11 V 21 M 455.2058 11 V 21"/></svg><span class="hpo-chart-value">47.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Grok 4.6</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Grok 4.6: 36.0% HPO-only; 95% sampling interval 29.9% to 42.5%; 72 of 200 sampled rounds."><title>Grok 4.6: 36.0% HPO-only; 95% sampling interval 29.9% to 42.5%; 72 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="308.5714" height="20" fill="#4D4D4D"/><path class="hpo-chart-interval" fill="none" d="M 255.9737 16 H 364.2703 M 255.9737 11 V 21 M 364.2703 11 V 21"/></svg><span class="hpo-chart-value">36.0%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="308.5714" height="22" fill="#4D4D4D"/><path class="hpo-chart-interval" fill="none" d="M 255.9737 16 H 364.2703 M 255.9737 11 V 21 M 364.2703 11 V 21"/></svg><span class="hpo-chart-value">36.0%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">GPT-6 Astra</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-6 Astra: 27.5% HPO-only; 95% sampling interval 22.2% to 33.8%; 55 of 200 sampled rounds."><title>GPT-6 Astra: 27.5% HPO-only; 95% sampling interval 22.2% to 33.8%; 55 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="235.7143" height="20" fill="#B2182B"/><path class="hpo-chart-interval" fill="none" d="M 190.4762 16 H 289.8105 M 190.4762 11 V 21 M 289.8105 11 V 21"/></svg><span class="hpo-chart-value">27.5%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="235.7143" height="22" fill="#B2182B"/><path class="hpo-chart-interval" fill="none" d="M 190.4762 16 H 289.8105 M 190.4762 11 V 21 M 289.8105 11 V 21"/></svg><span class="hpo-chart-value">27.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Gemini 3.8 Flash</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Gemini 3.8 Flash: 27.0% HPO-only; 95% sampling interval 21.6% to 33.1%; 54 of 200 sampled rounds."><title>Gemini 3.8 Flash: 27.0% HPO-only; 95% sampling interval 21.6% to 33.1%; 54 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="231.4286" height="20" fill="#A6761D"/><path class="hpo-chart-interval" fill="none" d="M 185.0389 16 H 283.6753 M 185.0389 11 V 21 M 283.6753 11 V 21"/></svg><span class="hpo-chart-value">27.0%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="231.4286" height="22" fill="#A6761D"/><path class="hpo-chart-interval" fill="none" d="M 185.0389 16 H 283.6753 M 185.0389 11 V 21 M 283.6753 11 V 21"/></svg><span class="hpo-chart-value">27.0%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Qwen3.8 Max</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Qwen3.8 Max: 23.5% HPO-only; 95% sampling interval 19.0% to 28.7%; 47 of 200 sampled rounds."><title>Qwen3.8 Max: 23.5% HPO-only; 95% sampling interval 19.0% to 28.7%; 47 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="201.4286" height="20" fill="#1B9E77"/><path class="hpo-chart-interval" fill="none" d="M 162.6457 16 H 245.5950 M 162.6457 11 V 21 M 245.5950 11 V 21"/></svg><span class="hpo-chart-value">23.5%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="201.4286" height="22" fill="#1B9E77"/><path class="hpo-chart-interval" fill="none" d="M 162.6457 16 H 245.5950 M 162.6457 11 V 21 M 245.5950 11 V 21"/></svg><span class="hpo-chart-value">23.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Kimi K3</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Kimi K3: 17.0% HPO-only; 95% sampling interval 12.5% to 22.9%; 34 of 200 sampled rounds."><title>Kimi K3: 17.0% HPO-only; 95% sampling interval 12.5% to 22.9%; 34 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="145.7143" height="20" fill="#E7298A"/><path class="hpo-chart-interval" fill="none" d="M 107.2414 16 H 196.3464 M 107.2414 11 V 21 M 196.3464 11 V 21"/></svg><span class="hpo-chart-value">17.0%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="145.7143" height="22" fill="#E7298A"/><path class="hpo-chart-interval" fill="none" d="M 107.2414 16 H 196.3464 M 107.2414 11 V 21 M 196.3464 11 V 21"/></svg><span class="hpo-chart-value">17.0%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Claude Opus 5</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Claude Opus 5: 7.5% HPO-only; 95% sampling interval 4.8% to 11.1%; 15 of 200 sampled rounds."><title>Claude Opus 5: 7.5% HPO-only; 95% sampling interval 4.8% to 11.1%; 15 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="64.2857" height="20" fill="#D95F02"/><path class="hpo-chart-interval" fill="none" d="M 41.4747 16 H 95.3917 M 41.4747 11 V 21 M 95.3917 11 V 21"/></svg><span class="hpo-chart-value">7.5%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="64.2857" height="22" fill="#D95F02"/><path class="hpo-chart-interval" fill="none" d="M 41.4747 16 H 95.3917 M 41.4747 11 V 21 M 95.3917 11 V 21"/></svg><span class="hpo-chart-value">7.5%</span></div>
 <div class="hpo-chart-row"><span class="hpo-chart-name">Claude Fable 5.1</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="Claude Fable 5.1: 7.0% HPO-only; 95% sampling interval 5.3% to 10.6%; 14 of 200 sampled rounds."><title>Claude Fable 5.1: 7.0% HPO-only; 95% sampling interval 5.3% to 10.6%; 14 of 200 sampled rounds.</title>
-<line class="hpo-chart-grid" x1="0.0000" x2="0.0000" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="85.7143" x2="85.7143" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="171.4286" x2="171.4286" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="257.1429" x2="257.1429" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="342.8571" x2="342.8571" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="428.5714" x2="428.5714" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="514.2857" x2="514.2857" y1="0" y2="32"/>
-<line class="hpo-chart-grid" x1="600.0000" x2="600.0000" y1="0" y2="32"/>
-<rect x="0" y="6" width="60.0000" height="20" fill="#6A3D9A"/><path class="hpo-chart-interval" fill="none" d="M 45.2716 16 H 90.5433 M 45.2716 11 V 21 M 90.5433 11 V 21"/></svg><span class="hpo-chart-value">7.0%</span></div>
+<rect class="hpo-chart-bar" x="0" y="5" width="60.0000" height="22" fill="#6A3D9A"/><path class="hpo-chart-interval" fill="none" d="M 45.2716 16 H 90.5433 M 45.2716 11 V 21 M 90.5433 11 V 21"/></svg><span class="hpo-chart-value">7.0%</span></div>
 <div class="hpo-chart-axis" aria-hidden="true"><span></span><div class="hpo-chart-scale"><span>0%</span><span>35%</span><span>70%</span></div><span></span><div class="hpo-chart-axis-title">HPO-only rounds</div></div>
 <figcaption>200 randomly sampled rounds per model. Lines show 95% confidence intervals.</figcaption>
 </figure>
@@ -296,6 +224,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=submissions-trend-20260908"></script>
+<script src="results.js?v=transparent-hpo-logos-20260908"></script>
 </body>
 </html>
