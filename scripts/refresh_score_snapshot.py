@@ -326,7 +326,7 @@ def main():
         old_run = old_runs.get(eid, {})
         ledger = payload.get('api_ledger')
         cost = api_ledger_cost(ledger, eid) if ledger is not None else old_run.get('apiCost')
-        if cost is None and not args.include_current_runs:
+        if cost is None:
             cost = ESTIMATED_API_COSTS.get(eid)
         ledger_output_tokens = api_ledger_output_tokens(ledger, eid) if ledger is not None else None
         output_tokens = ledger_output_tokens if ledger_output_tokens is not None else ro.get('total_output_tokens')
@@ -334,7 +334,7 @@ def main():
                # Running and completed results use the same verified ledger source.
                # Never substitute rollout total_cost for missing API ledger data.
                'apiCost': cost if eligible else None,
-               'apiCostEstimated': not args.include_current_runs and eid in ESTIMATED_API_COSTS,
+               'apiCostEstimated': eid in ESTIMATED_API_COSTS,
                'apiCostFetchedAt': payload.get('api_ledger_fetched_at', old_run.get('apiCostFetchedAt')),
                'outputTokens': output_tokens, 'evaluationId': eid,
                'sourceStatus': source['manifest_status'], 'sourceFile': source['source_path'],

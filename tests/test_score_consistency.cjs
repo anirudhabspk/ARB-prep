@@ -135,20 +135,27 @@ for(const task of context.window.ARB_DATA.tasks)for(const run of task.models){
   if(run.provisional)assert.ok(Number.isFinite(run.apiCost));
   assert.ok(run.apiCostFetchedAt);
 }
-assert.deepEqual(missingCosts,currentSnapshot?['002958c6-cb2f-46e3-8536-ba8d421083af']:[]);
+assert.deepEqual(missingCosts,[]);
 assert.deepEqual(missingOutputTokens,[]);
 const estimatedSol=evaluate('DATA.tasks.flatMap(t=>t.models).find(r=>r.evaluationId==="002958c6-cb2f-46e3-8536-ba8d421083af")');
-assert.equal(estimatedSol.apiCost,currentSnapshot?null:145);
-assert.equal(estimatedSol.apiCostEstimated,!currentSnapshot);
+assert.equal(estimatedSol.apiCost,145);
+assert.equal(estimatedSol.apiCostEstimated,true);
 const cpuCostHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="CPU LLM decode throughput"),"Performance vs. API cost","apiCost","API cost (USD)",value=>`$${value.toFixed(value<10?2:0)}`)');
-assert.equal(cpuCostHtml.includes('$145 (estimated)'),!currentSnapshot);
+assert.ok(cpuCostHtml.includes('$145 (estimated)'));
 const costRows=evaluate('costPerformanceRows(currentResults().rows)');
 assert.equal(costRows.find(r=>r.key==='vesper-pro').taskCount,effort.find(r=>r.key==='vesper-pro').taskCount);
 for(const row of costRows){
-  if(row.key!=='skylark')close(row.test,result.rows.find(r=>r.key===row.key).test);
-  assert.ok(costHtml.includes('data-resource-value="$'+row.cost.toFixed(2)+'"'));
+  close(row.test,result.rows.find(r=>r.key===row.key).test);
+  const displayCost='$'+row.cost.toFixed(2)+(row.costEstimated?' (includes estimate)':'');
+  assert.ok(costHtml.includes('data-resource-value="'+displayCost+'"'));
   assert.ok(costHtml.includes('data-score-value="'+evaluate('fmt('+row.test+')')+'"'));
 }
+const solCostRow=costRows.find(row=>row.key==='skylark');
+assert.equal(solCostRow.taskCount,29);
+close(solCostRow.cost,134.47917989655172);
+assert.equal(solCostRow.costEstimated,true);
+assert.ok(costHtml.includes('$134.48 (includes estimate)'));
+assert.ok(costHtml.includes("GPT-5.6 Sol's mean includes one estimated task cost of $145."));
 assert.ok(!costHtml.includes('NaN'));
 
 const tokenHtml=evaluate('efficiencyPlot(DATA.tasks.find(task=>task.name==="TIES CLIP model merging"),"Performance vs. output tokens","outputTokens","Output tokens",compactNumber)');

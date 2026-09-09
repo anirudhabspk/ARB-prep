@@ -470,9 +470,9 @@ function costPerformanceRows(rows){
   return rows.flatMap(row=>{
     const paired=DATA.tasks.flatMap(task=>task.models.flatMap(run=>{
       if(run.model!==row.key||!Number.isFinite(run.apiCost))return[];
-      const stats=difficultyAdjustedRunStats(task,run);return stats?[stats]:[];
+      const stats=difficultyAdjustedRunStats(task,run);return stats?[{...stats,costEstimated:Boolean(run.apiCostEstimated)}]:[];
     }));
-    return paired.length?[{...row,taskCount:paired.length,cost:mean(paired.map(run=>run.cost)),test:mean(paired.map(run=>run.test)),test_ci:bootstrap(paired.map(run=>run.test),200+ORDER.indexOf(row.key))}]:[];
+    return paired.length?[{...row,taskCount:paired.length,cost:mean(paired.map(run=>run.cost)),costEstimated:paired.some(run=>run.costEstimated),test:mean(paired.map(run=>run.test)),test_ci:bootstrap(paired.map(run=>run.test),200+ORDER.indexOf(row.key))}]:[];
   });
 }
 
@@ -491,11 +491,12 @@ function costPerformancePlot(rows){
   for(const tick of yTicks){const yy=y(tick);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-9}" y="${yy+4}" text-anchor="end">${tick.toFixed(2)}</text>`}
   body+=`<text class="cost-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Mean API cost per task (USD)</text><text class="cost-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Hidden-test AUARC</text><path class="cost-frontier" d="${frontier.map((row,index)=>`${index?"L":"M"}${x(row.cost)},${y(row.test)}`).join(" ")}"/>`;
   for(const row of rows){
-    const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,score=fmt(row.test),label=`${row.name}: API cost per task ${cost}, hidden-test AUARC ${score}`;
-    body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${cost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
+    const xx=x(row.cost),yy=y(row.test),cost=`$${row.cost.toFixed(2)}`,displayCost=`${cost}${row.costEstimated?" (includes estimate)":""}`,score=fmt(row.test),label=`${row.name}: API cost per task ${displayCost}, hidden-test AUARC ${score}`;
+    body+=`<g class="efficiency-point ${frontierKeys.has(row.key)?"":"cost-dominated"}" role="button" tabindex="0" data-model="${esc(row.name)}" data-resource-label="API cost per task" data-resource-value="${displayCost}" data-score-label="Hidden-test AUARC" data-score-value="${score}" data-left="${(xx/W*100).toFixed(2)}" data-top="${(yy/H*100).toFixed(2)}" data-place-left="${xx>W*.68}" data-place-below="${yy<T+62}" aria-label="Show ${esc(label)}"><circle class="efficiency-hit" cx="${xx}" cy="${yy}" r="13"/>${modelLogoSvg(row.key,xx,yy,18)}</g>`;
   }
   const legend=overviewLegend(rows);
-  return`<article class="metric-plot metric-plot-wide"><h3 class="subsection-heading">Pareto Frontier of Cost &amp; Performance</h3>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div><p class="plot-takeaway">Qwen3.8 Max, Gemini 3.8 Flash and Grok 4.6 offer economical options for research, earning a place on the cost–performance frontier despite ranking below the leading models.</p></article>`;
+  const estimateNote=rows.some(row=>row.costEstimated)?`<p class="plot-note">GPT-5.6 Sol's mean includes one estimated task cost of $145.</p>`:'';
+  return`<article class="metric-plot metric-plot-wide"><h3 class="subsection-heading">Pareto Frontier of Cost &amp; Performance</h3>${legend}<div class="cost-scroll efficiency-chart-wrap cost-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Hidden-test AUARC versus API cost">${body}</svg><div class="efficiency-tooltip" role="tooltip" hidden><strong></strong><span data-resource></span><span data-score></span></div></div>${estimateNote}<p class="plot-takeaway">Qwen3.8 Max, Gemini 3.8 Flash and Grok 4.6 offer economical options for research, earning a place on the cost–performance frontier despite ranking below the leading models.</p></article>`;
 }
 
 function mainAuarcLeaderboard(rows){
