@@ -143,20 +143,40 @@ function comparableCell(cell) {
   };
 }
 
-function assertExclusions(before, after) {
-  const beforeTasks = new Map(before.tasks.map(task => [task.task, task]));
-  const afterTasks = new Map(after.tasks.map(task => [task.task, task]));
-  const excludedTask = 'FasterGCG candidate token ranking';
-  assert(beforeTasks.has(excludedTask), `Missing excluded task: ${excludedTask}`);
-  assert.deepStrictEqual(afterTasks.get(excludedTask), beforeTasks.get(excludedTask), `${excludedTask} changed`);
-
+function assertRefreshScope(before, after) {
+  const fasterGcgTask = 'FasterGCG candidate token ranking';
   const museName = 'Muse Spark 1.3';
-  const muse = snapshot => snapshot.tasks.map(task => {
-    const model = task.models.find(row => row.model === museName);
-    assert(model, `Missing ${museName} for ${task.task}`);
-    return {task: task.task, ...comparableCell(model)};
-  });
-  assert.deepStrictEqual(muse(after), muse(before), `${museName} values changed`);
+  const solName = 'GPT-5.6 Sol';
+  const prior = cellMap(before), current = cellMap(after);
+  assert.deepStrictEqual([...current.keys()].sort(), [...prior.keys()].sort(), 'Task/model cells differ between snapshots');
+
+  const assertUnchanged = (description, predicate) => {
+    const cells = [...prior].filter(([, cell]) => predicate(cell));
+    assert(cells.length, `Missing ${description} cells`);
+    for (const [key, cell] of cells) {
+      assert.deepStrictEqual(comparableCell(current.get(key)), comparableCell(cell), `${description} changed for ${cell.task}`);
+    }
+  };
+  assertUnchanged('FasterGCG other model', cell => cell.task === fasterGcgTask && ![museName, solName].includes(cell.model));
+  assertUnchanged('Muse outside FasterGCG', cell => cell.task !== fasterGcgTask && cell.model === museName);
+
+  const assertChanged = modelName => {
+    const target = [...prior].find(([, cell]) => cell.task === fasterGcgTask && cell.model === modelName);
+    assert(target, `Missing ${modelName} for ${fasterGcgTask}`);
+    assert.notDeepStrictEqual(
+      comparableCell(current.get(target[0])),
+      comparableCell(target[1]),
+      `${modelName} for ${fasterGcgTask} must change`
+    );
+  };
+  assertChanged(solName);
+  assertChanged(museName);
+  return {
+    fastergcg_other_models_unchanged: true,
+    muse_other_tasks_unchanged: true,
+    fastergcg_sol_changed: true,
+    fastergcg_muse_changed: true
+  };
 }
 
 function changedCells(before, after) {
@@ -387,9 +407,9 @@ function renderMarkdown(report) {
   const changedAggregates = Object.entries(report.aggregate_orderings).filter(([, item]) => item.changed);
   const unchangedAggregates = Object.entries(report.aggregate_orderings).filter(([, item]) => !item.changed);
   const lines = [
-    '# Plot ranking changes on 2026-09-09',
+    '# Plot changes on 2026-09-09',
     '',
-    'This report compares the prior blog data with the refreshed 24 hour results. FasterGCG and every Muse Spark 1.3 result are unchanged.',
+    'This report compares the prior blog data with the refreshed 24 hour results.',
     '',
     '## Overall plots',
     '',
@@ -479,14 +499,14 @@ function main() {
     return;
   }
   const before = loadSnapshot(options.before), after = loadSnapshot(options.after);
-  assertExclusions(before, after);
+  const invariants = assertRefreshScope(before, after);
   const output = {
     schema_version: 2,
     before_snapshot: before.snapshot,
     after_snapshot: after.snapshot,
     model_names: Object.fromEntries(after.aggregates.map(row => [row.key, row.model])),
     scoring_inputs: Object.fromEntries(scoringFiles.map(file => [file, {sha256: sha256(file)}])),
-    invariants: {fastergcg_unchanged: true, muse_spark_1_3_unchanged: true},
+    invariants,
     changed_cells: changedCells(before, after),
     aggregate_orderings: aggregateOrderings(before, after),
     cost_frontier: costFrontier(before, after),
@@ -511,9 +531,13 @@ function main() {
   }));
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
 }
+
+module.exports = {assertRefreshScope, loadSnapshot, main};

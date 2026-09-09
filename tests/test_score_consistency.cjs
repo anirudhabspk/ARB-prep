@@ -57,12 +57,12 @@ assert.equal(completedReruns.length,21);
 assert.ok(completedReruns.every(run=>run.hours===24&&run.displayHours===24&&run.extension&&!run.provisional));
 const retainedRunning=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="running")');
 const retainedInvalid=evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.replacementStatus==="invalid")');
-assert.equal(retainedRunning.length,1);
-assert.equal(retainedInvalid.length,2);
+assert.equal(retainedRunning.length,0);
+assert.equal(retainedInvalid.length,1);
 assert.ok([...retainedRunning,...retainedInvalid].every(run=>run.points.length&&run.evaluationId!==run.replacementEvaluationId));
-assert.equal(context.window.ARB_DATA.snapshot.runningRerunCount,1);
-assert.equal(context.window.ARB_DATA.snapshot.invalidRerunCount,2);
-assert.equal(context.window.ARB_DATA.snapshot.completedRerunCount,36);
+assert.equal(context.window.ARB_DATA.snapshot.runningRerunCount,0);
+assert.equal(context.window.ARB_DATA.snapshot.invalidRerunCount,1);
+assert.equal(context.window.ARB_DATA.snapshot.completedRerunCount,38);
 evaluate('var completedRerunTask=DATA.tasks.find(t=>t.name==="Label efficient risk estimator");var completedRerun=completedRerunTask.models.find(r=>r.evaluationId==="942c3b95-5c23-4dae-b6ab-a8b0fa6a5ff1")');
 assert.equal(evaluate('taskStats(completedRerunTask).find(r=>r.key===completedRerun.model).hours'),24);
 close(evaluate('difficultyAdjustedRunStats(completedRerunTask,completedRerun).test'),evaluate('timeAuc(completedRerun.points.map(point=>({...point,test:difficultyAdjustedPoint(completedRerunTask,point,"testAtBest")})),"test",24*3600)'));
@@ -81,14 +81,12 @@ assert.equal(evaluate('DATA.tasks.flatMap(t=>t.models).filter(r=>r.points.length
 assert.equal(evaluate('new Set(DATA.tasks.flatMap(t=>t.models.map(r=>r.evaluationId))).size'),261);
 const allRuns=context.window.ARB_DATA.tasks.flatMap(task=>task.models);
 assert.equal(allRuns.filter(run=>run.points.some(point=>Number.isFinite(point.testAtBest))).length,261);
-assert.equal(allRuns.filter(run=>run.extension).length,49);
+assert.equal(allRuns.filter(run=>run.extension).length,47);
 assert.ok(allRuns.filter(run=>run.extension).every(run=>run.hours===24));
 assert.ok(allRuns.filter(run=>run.points.length).every(run=>run.hours===24));
 const newlyFlattenedIds=new Set([
   '64f07bb3-0573-4287-abcd-bb615ef31cdd',
   '017f8831-67b5-4966-a18a-87b7feca9d2f',
-  '2e7af4a3-bb00-47fe-a600-451dccc6cea9',
-  '322e5f13-314f-436f-9705-cd1e07fa9f51',
 ]);
 const newlyFlattened=allRuns.filter(run=>newlyFlattenedIds.has(run.evaluationId));
 assert.equal(newlyFlattened.length,newlyFlattenedIds.size);
@@ -101,6 +99,17 @@ close(evaluate('fasterOpus.points.at(-1).testAtBest'),.654427897902);
 close(evaluate('fasterQwen.points.at(-1).bestValidation'),.620250324226);
 close(evaluate('fasterQwen.points.at(-1).testAtBest'),.627876388498);
 assert.ok(evaluate('fasterOpus.extension&&fasterQwen.extension&&fasterOpus.hours===24&&fasterQwen.hours===24'));
+evaluate('var fasterSol=faster.models.find(r=>r.evaluationId==="9c000ad2-5285-4528-b999-e2c42c97830e");var fasterMuse=faster.models.find(r=>r.evaluationId==="e259fb6f-9632-4808-9beb-910991c3e9c1")');
+assert.ok(evaluate('fasterSol.status==="completed"&&!fasterSol.extension&&fasterSol.hours===24&&fasterSol.points.length===182'));
+assert.ok(evaluate('fasterMuse.status==="completed"&&!fasterMuse.extension&&fasterMuse.hours===24&&fasterMuse.points.length===55'));
+close(evaluate('fasterSol.apiCost'),199.118547);
+assert.equal(evaluate('fasterSol.outputTokens'),3917840);
+assert.equal(evaluate('fasterSol.submissions'),181);
+close(evaluate('difficultyAdjustedRunStats(faster,fasterSol).test'),.5714291587617952);
+close(evaluate('fasterMuse.apiCost'),88.733714);
+assert.equal(evaluate('fasterMuse.outputTokens'),7988115);
+assert.equal(evaluate('fasterMuse.submissions'),54);
+close(evaluate('difficultyAdjustedRunStats(faster,fasterMuse).test'),.43166010168418445);
 evaluate('var less=DATA.tasks.find(t=>t.name==="Less Is More token budget selection");var lessFinalStats=taskStats(less).map(stat=>({points:[{testAtBest:difficultyAdjustedPoint(less,stat.points.at(-1),"testAtBest")}]}));var lessFinalDomain=taskDomain(lessFinalStats,"testAtBest")');
 assert.ok(evaluate('lessFinalDomain.ticks.at(-1)>=lessFinalDomain.hi-1e-12'));
 assert.ok(evaluate('lessFinalDomain.ticks.length<=8'));
@@ -150,9 +159,9 @@ for(const row of costRows){
 }
 const solCostRow=costRows.find(row=>row.key==='skylark');
 assert.equal(solCostRow.taskCount,29);
-close(solCostRow.cost,134.47917989655172);
+close(solCostRow.cost,137.75671779310345);
 assert.equal(solCostRow.costEstimated,true);
-assert.ok(costHtml.includes('$134.48 (includes estimate)'));
+assert.ok(costHtml.includes('$137.76 (includes estimate)'));
 assert.ok(costHtml.includes("GPT-5.6 Sol's mean includes one estimated task cost of $145."));
 assert.ok(!costHtml.includes('NaN'));
 

@@ -1,8 +1,8 @@
 # Evaluation replacements
 
-The September 9 refresh publishes 15 more completed reruns. Each ran for the full 24 hour research window. The task plots and averages now use these results through hour 24.
+The September 9 refresh publishes 17 more completed reruns. Each ran for the full 24 hour research window. The task plots and averages now use these results through hour 24.
 
-Audit time: 2026-09-09 07:19 UTC. All 15 included reruns completed. FasterGCG was excluded from this refresh. Its GPT-5.6 Sol rerun completed, and its Muse Spark 1.3 rerun remains in progress. The prior FasterGCG results remain in the calculations.
+Initial audit time: 2026-09-09 07:19 UTC. The FasterGCG follow-up was fetched at 2026-09-09 12:49 UTC. All 17 included reruns completed.
 
 | Task | Model | Prior recorded evaluation | Current rerun | Status |
 | --- | --- | --- | --- | --- |
@@ -11,7 +11,8 @@ Audit time: 2026-09-09 07:19 UTC. All 15 included reruns completed. FasterGCG wa
 | CPU decoder graph executor | Claude Fable 5.1 | [`2b730410`](https://horizon.bespokelabs.ai/evaluations/2b730410-8262-4506-aef8-29417c1b216e) | [`7178da7e`](https://horizon.bespokelabs.ai/evaluations/7178da7e-f29a-468a-8e86-a90e6612d4b2) | Completed |
 | DCTabEval pooled categorical statistics | Claude Fable 5.1 | [`05b263bf`](https://horizon.bespokelabs.ai/evaluations/05b263bf-72b5-4dad-919d-c83d4676f51f) | [`e0b67b40`](https://horizon.bespokelabs.ai/evaluations/e0b67b40-d4f7-4a62-ab8a-c0a592db2f18) | Completed |
 | FastAdv budgeted PGD50 | Claude Fable 5.1 | [`d52b8c71`](https://horizon.bespokelabs.ai/evaluations/d52b8c71-bf11-4f24-97f0-3ea02cfd9585) | [`ff9dc2b8`](https://horizon.bespokelabs.ai/evaluations/ff9dc2b8-eb18-4904-8145-3e8f315c02f1) | Completed |
-| FasterGCG candidate token ranking | GPT-5.6 Sol | [`2e7af4a3`](https://horizon.bespokelabs.ai/evaluations/2e7af4a3-bb00-47fe-a600-451dccc6cea9) | [`9c000ad2`](https://horizon.bespokelabs.ai/evaluations/9c000ad2-5285-4528-b999-e2c42c97830e) | Excluded |
+| FasterGCG candidate token ranking | GPT-5.6 Sol | [`2e7af4a3`](https://horizon.bespokelabs.ai/evaluations/2e7af4a3-bb00-47fe-a600-451dccc6cea9) | [`9c000ad2`](https://horizon.bespokelabs.ai/evaluations/9c000ad2-5285-4528-b999-e2c42c97830e) | Completed |
+| FasterGCG candidate token ranking | Muse Spark 1.3 | [`322e5f13`](https://horizon.bespokelabs.ai/evaluations/322e5f13-314f-436f-9705-cd1e07fa9f51) | [`e259fb6f`](https://horizon.bespokelabs.ai/evaluations/e259fb6f-9632-4808-9beb-910991c3e9c1) | Completed |
 | HalfCheetah advantage estimator | Claude Fable 5.1 | [`da924561`](https://horizon.bespokelabs.ai/evaluations/da924561-f719-4c77-8189-e8e469efced5) | [`686ad98b`](https://horizon.bespokelabs.ai/evaluations/686ad98b-4a09-4744-9dde-b5bf8dcca42e) | Completed |
 | COCO 16 bit hash head | Claude Fable 5.1 | [`303e69fd`](https://horizon.bespokelabs.ai/evaluations/303e69fd-4225-4732-8c60-db5c24cc7492) | [`075ee367`](https://horizon.bespokelabs.ai/evaluations/075ee367-cea7-4d53-b7c6-fe88ac855871) | Completed |
 | RePPO reliable on policy control | Claude Fable 5.1 | [`ea9da3f0`](https://horizon.bespokelabs.ai/evaluations/ea9da3f0-acfa-4945-b54d-be5265c8eff5) | [`73e9f3e9`](https://horizon.bespokelabs.ai/evaluations/73e9f3e9-1b2d-4802-a41c-99a021d46182) | Completed |
@@ -23,10 +24,10 @@ Audit time: 2026-09-09 07:19 UTC. All 15 included reruns completed. FasterGCG wa
 | TGAT MILP branching | Claude Fable 5.1 | [`858d9128`](https://horizon.bespokelabs.ai/evaluations/858d9128-6593-4f95-8767-cccc6b818812) | [`36275123`](https://horizon.bespokelabs.ai/evaluations/36275123-21ca-4d62-b398-23dffae0051f) | Completed |
 | VAS maskless deployment feasibility | Claude Fable 5.1 | [`bd8d9679`](https://horizon.bespokelabs.ai/evaluations/bd8d9679-ce6b-4cc2-a492-3936d33c2708) | [`4ea33f66`](https://horizon.bespokelabs.ai/evaluations/4ea33f66-5f04-4201-aa2c-91b2d57162c4) | Completed |
 
-## Invalid replacements
+## Invalid and superseded replacements
 
 - FasterGCG with Claude Fable 5.1 evaluation [`7ba9d329`](https://horizon.bespokelabs.ai/evaluations/7ba9d329-f3a4-493b-8aae-bccd03d9e72f) completed without a selected score. The prior published result remains.
-- FasterGCG with Muse Spark 1.3 evaluation [`b31d44de`](https://horizon.bespokelabs.ai/evaluations/b31d44de-b355-410e-bbc1-b2b99cd92a03) stopped with an agent error. The prior published result remains.
+- FasterGCG with Muse Spark 1.3 evaluation [`b31d44de`](https://horizon.bespokelabs.ai/evaluations/b31d44de-b355-410e-bbc1-b2b99cd92a03) stopped with an agent error. It was superseded by completed evaluation [`e259fb6f`](https://horizon.bespokelabs.ai/evaluations/e259fb6f-9632-4808-9beb-910991c3e9c1).
 
 ## Fixed selection exceptions
 
