@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchExam measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchExam</title>
-<link rel="stylesheet" href="site.css?v=task-chart-intro-removed-20260908">
+<link rel="stylesheet" href="site.css?v=blog-format-system-20260908">
 </head>
 <body class="blog-page">
 <section class="hero">
@@ -16,7 +16,8 @@
 <div class="page">
   <aside class="contents" aria-label="Contents">
     <strong>Contents</strong>
-    <a href="#benchmark">Overview</a>
+    <a href="#leaderboard">Leaderboard</a>
+    <a href="#benchmark">Overview and Motivation</a>
     <a href="#tasks">Tasks</a>
     <a href="#setup">Experimental setup</a>
     <a href="#general-analysis">Analyzing agent behavior</a>
@@ -24,8 +25,12 @@
     <a href="#harness-ablations">Comparing harnesses</a>
   </aside>
   <main>
-    <section class="section" id="benchmark">
+    <section class="section" id="leaderboard">
+      <h2>Leaderboard</h2>
       <div id="main-leaderboard" class="main-leaderboard"></div>
+    </section>
+    <section class="section" id="benchmark">
+      <h2>Overview and Motivation</h2>
       <div id="results">
         <p id="fable-results-notice" style="color:#B2182B;font-weight:600">Results remain provisional while replacement runs finish.</p>
       </div>
@@ -105,27 +110,7 @@
           <p>When available, we use two guide "anchor scores" to perform the transformation to [0, 1]. These are the baseline and the reference solution. The baseline is the score of a simple method that the agent should beat. The reference is the score of a strong known method applied to the problem. If the agent submits the baseline, it usually receives a reward of 0. If it submits the reference, it receives a reward of 0.5.<sup><a href="#scoring-footnote-1" aria-label="Footnote 1">1</a></sup> Results above the reference continue to earn more reward and approach the maximum score of 1.</p>
           <aside class="scoring-sidenote" id="scoring-footnote-1" aria-label="Footnote 1"><sup>1</sup> Some tasks reserve rewards from 0 to 0.1 for results below the main baseline. Their reference receives 0.55.</aside>
         </div>
-        <div class="scoring-note-row">
-          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores.<sup><a href="#scoring-footnote-2" aria-label="Footnote 2">2</a></sup> The agent can then get useful feedback without viewing the validation data directly.</p>
-          <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
-        </div>
-      </div>
-      <h3>Main evaluation metric: hidden-test AUARC</h3>
-      <div class="prose">
-        <p>As an example, the charts below show Claude Fable 5.1 working on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores or the curve on the right. The hidden test curve is not necessarily monotonic. If the agent is overfitting on the validation set, the hidden test score may drop relative to a prior submission.</p>
-      </div>
-      <figure class="task-scoring-figure">
-        <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
-        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
-      </figure>
-      <div class="prose">
-        <p><strong>Choosing the curve.</strong> At each point in time, the validation score selects the best submission so far. The hidden test curve shows the hidden test reward for that same submission. The hidden test result does not help select it.</p>
-        <p><strong>Area under the curve.</strong> We calculate the area under the Auto Research Curve, or AUARC, across the run. This metric is equivalent to the time weighted average hidden test score. A score held for more time contributes more area. An improvement made early therefore adds more than the same improvement made near the end.</p>
-        <p><strong>Combining tasks.</strong> Hidden test AUARC is our main measure of progress on one task. We compare models within each task, then combine those comparisons into a task relative Elo rating. This rating rises when a model has a higher hidden test AUARC than other models across tasks. We also report the final hidden test result so that a large improvement near the end remains visible.</p>
-      </div>
-      <div class="prose" id="reward-normalization">
-        <p>We turn each task's raw score into a reward from 0 to 1. The score's mathematical limits determine the mapping.</p>
-        <details class="reward-formula">
+        <details class="reward-formula" id="reward-normalization">
           <summary>Reward formula</summary>
           <div class="reward-scaling" id="reward-scaling">
             <p class="reward-scaling-lead">The sketches show higher scores as better. For a lower-is-better metric, the same idea applies with the horizontal direction reversed.</p>
@@ -207,6 +192,27 @@
           <p>The value <em>c</em> is the reward at the baseline. It is either 0 or 0.1. Results below the baseline receive no more than <em>c</em>. A perfect result receives 1.</p>
           <p>Some tasks do not have a fixed best possible result. For these tasks, <em>u</em> is the improvement beyond the baseline divided by the improvement from the baseline to the reference. When a useful reference does not exist, we count reductions in the remaining error instead. The exact calculation is chosen to match meaningful progress on that task.</p>
         </details>
+        <div class="scoring-note-row">
+          <p>Recall that the agent receives a validation reward after each submission. It never receives the hidden test reward. Most tasks use the <em>same</em> "anchor scores" to compute the resulting validation and hidden test scores.<sup><a href="#scoring-footnote-2" aria-label="Footnote 2">2</a></sup> The agent can then get useful feedback without viewing the validation data directly.</p>
+          <aside class="scoring-sidenote" id="scoring-footnote-2" aria-label="Footnote 2"><sup>2</sup> A few use different guide points because their two data sets have different levels of difficulty. Describe why? This seems like a validation and test distribution mismatch.</aside>
+        </div>
+      </div>
+      <h3 id="hidden-test-auarc">Main evaluation metric: hidden-test AUARC</h3>
+      <div class="prose">
+        <p>To motivate our main evaluation metric, we begin by considering the validation and hidden test score plots below. These plots show the performance of Claude Fable 5.1 working on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The left curve plots the best submission up to time step <em>t</em>, as selected by the best observed validation score. The right curve plots the test score of the submission with the best validation score so far. The agent never sees the hidden test scores nor the curve on the right. Note that the hidden test curve is not necessarily monotonic; if the agent is overfitting on the validation set, the hidden test score may experience a drop relative to a prior submission (indeed, this is observed in the below plot).</p>
+      </div>
+      <figure class="task-scoring-figure">
+        <div id="task-scoring-example" class="task-scoring-example" aria-live="polite"></div>
+        <figcaption>Claude Fable 5.1 on <a href="tasks.html#cpu-llm-decode-throughput">Faster language model generation on CPUs</a>. The shaded area is the area under the hidden test reward curve. We divide this area by the run time to get hidden test AUARC. Time is shown on a linear scale.</figcaption>
+      </figure>
+      <div class="prose">
+        <p>We would like to design a metric which captures both the generalization performance of any solution found by the model, whilst simultaneously rewarding early improvements. We argue that the <i>area under the hidden test reward curve</i> provides a suitable measure. This metric is equivalent to the <i>time weighted average</i> hidden test score. Formally, it is defined simply by:</p>
+        <div class="auarc-equation">
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" aria-label="AUARC equals the sum over time intervals of hidden test reward times interval length, divided by total run time.">
+            <mi>AUARC</mi><mo>=</mo><mfrac><mrow><munderover><mo>&#x2211;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><msub><mi>r</mi><mi>i</mi></msub><mo>&#x0394;</mo><msub><mi>t</mi><mi>i</mi></msub></mrow><mi>T</mi></mfrac>
+          </math>
+        </div>
+        <p>Here, <em>r<sub>i</sub></em> is the hidden test reward held during interval <em>i</em>, <em>&#x0394;t<sub>i</sub></em> is the length of that interval, and <em>T</em> is the total run time. A score held for more time contributes more area. An improvement made early therefore adds more than the same improvement made near the end.</p>
       </div>
     </section>
     <section class="section" id="general-analysis">
@@ -278,7 +284,7 @@
         <p>We tested whether the tasks measure an agent's ability to apply a useful research idea, not only to discover one. For each task, we compare a 200-turn Terminus run given a validation hint with the first 200-turn iteration of the same model's ordinary AutoResearch run. Both scores are evaluated on the hidden test set.</p>
       </div>
       <div class="hint-lanes" aria-label="Average hidden-test rewards with and without validation hints">
-        <p class="hint-lanes-title">Average hidden-test reward across 22 CPU tasks</p>
+        <h4 class="hint-lanes-title figure-heading">Average hidden-test reward across 22 CPU tasks</h4>
         <div class="hint-lanes-axis" aria-hidden="true"><span>0.0</span><span>0.25</span><span>0.50</span><span>0.75</span><span>1.0</span></div>
         <article class="hint-lane hint-lane--opus">
           <p class="hint-lane-model">Claude Opus 5</p>

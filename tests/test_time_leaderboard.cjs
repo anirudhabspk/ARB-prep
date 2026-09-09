@@ -17,3 +17,18 @@ console.log('Leaderboard checks passed: all 9 endpoints, 29 tasks each, partial-
 const html=read('mainAuarcLeaderboard(currentResults().rows)');
 assert.equal((html.match(/class="auarc-interval"/g)||[]).length,9);
 for(const row of headline)assert.ok(html.includes(`>${row.test.toFixed(3)}</strong>`));
+assert.ok(html.indexOf('Measures Area Under the AutoResearch Curve')>html.indexOf('class="auarc-axis"'));
+assert.ok(html.includes('<a href="#hidden-test-auarc">Main evaluation metric: hidden-test AUARC</a>'));
+assert.ok(!html.includes('<h1>Overview</h1>'));
+const blog=fs.readFileSync(path.join(root,'blog.html'),'utf8');
+const css=fs.readFileSync(path.join(root,'site.css'),'utf8');
+assert.ok(blog.includes('<h3 id="hidden-test-auarc">Main evaluation metric: hidden-test AUARC</h3>'));
+assert.ok(blog.includes('<a href="#leaderboard">Leaderboard</a>\n    <a href="#benchmark">Overview and Motivation</a>'));
+assert.ok(blog.includes('<section class="section" id="leaderboard">\n      <h2>Leaderboard</h2>\n      <div id="main-leaderboard" class="main-leaderboard"></div>\n    </section>'));
+assert.ok(blog.includes('<section class="section" id="benchmark">\n      <h2>Overview and Motivation</h2>'));
+assert.match(css,/\.blog-page p\.plot-takeaway\{[^}]*max-width:var\(--content-measure\)[^}]*color:var\(--ink\)[^}]*font-size:var\(--article-copy-size\)/);
+assert.ok(css.includes('.time-leaderboard{max-width:var(--content-measure)'));
+assert.ok(css.includes('.main-leaderboard{max-width:var(--content-measure)'));
+assert.ok(css.includes('.blog-page main #results{max-width:var(--content-measure);font-size:var(--article-copy-size)'));
+assert.ok(css.includes('.blog-page main .section>p.hint-lift-caption'));
+assert.ok(!css.includes('#benchmark{padding-bottom:0}'));
