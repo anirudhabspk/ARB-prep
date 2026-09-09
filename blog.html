@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=muted-leaderboard-restored-20260908">
+<link rel="stylesheet" href="site.css?v=uniform-type-muted-hpo-20260908">
 </head>
-<body>
+<body class="blog-page">
 <section class="hero">
   <h1><span>AutoResearchBench</span></h1>
   <p class="deck">Measuring agents' ability to improve and generalize on open ended ML research tasks.</p>
@@ -144,7 +144,17 @@
     </section>
     <section class="section" id="general-analysis">
       <h2>Analyzing agent behavior</h2>
+      <div class="prose">
+        <p>In this section, we examine the set of 24-hour rollouts we collect in order to obtain insights into the approaches taken by different models.</p>
+        <h3 class="analysis-subheading">Understanding continual model improvement</h3>
+        <p>Our first question is: Do models continue improving over longer runs? To investigate this, we construct the two plots. The first, below on the left, plots the average hidden-test set reward at each hour interval, for each model. This plot demonstrates that agents continue improving throughout the 24h time period, following a similar pattern to the results from EdgeBench on long-horizon tasks <a class="cite" href="https://edge-bench.org/">[4]</a>. The second plot, on the right, shows what fraction of results (on the y-axis) result in improvements on the test-set across time (x-axis).</p>
+      </div>
+
       <div id="trajectory-overview"></div>
+      <div class="prose">
+        <p>These plots demonstrate a few key points. First, Astra often starts with a strong solution. In particular, it obtains better hidden-test reward on average for the first 2-3 hours of evaluation. After this "critical" threshold, Fable 5.1 begins to outperform on average. By the 24-hour mark, this allows Fable 5.1 to acheive the largest average hidden-test reward (equivalent to the hidden-test AUARC metric we use), and obtain the top spot on our leaderboard.</p>
+      </div>
+
       <div class="todo-items">
         <p style="color:#B2182B;font-weight:600">Sid, please fill out.</p>
         <p><strong>1)</strong> If something interesting is happening across rollouts (other than HPO).</p>
@@ -165,15 +175,6 @@
 </details>
 <h3 id="analysis-2b">How much of agents' research is hyperparameter tuning?</h3>
 <p>We measure the share of rounds spent only on hyperparameter optimization (HPO), meaning parameter changes within an existing method.</p>
-<style>
-.hpo-chart{margin:28px 0 20px;color:var(--ink);font-family:var(--sans)}
-.hpo-chart-row,.hpo-chart-axis{display:grid;grid-template-columns:180px minmax(0,1fr) 58px;gap:16px;align-items:center}
-.hpo-chart-row{min-height:46px}.hpo-chart-name{font-size:14px;line-height:1.3}.hpo-chart-value{font-size:14px;font-variant-numeric:tabular-nums;text-align:right}
-.hpo-chart svg{display:block;width:100%;height:32px;overflow:visible;background:linear-gradient(to bottom,transparent 5px,rgba(18,78,84,.035) 5px,rgba(18,78,84,.035) 27px,transparent 27px)}.hpo-chart-bar{opacity:.75}.hpo-chart-interval{stroke:var(--ink);stroke-width:1.4;vector-effect:non-scaling-stroke}
-.hpo-chart-scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding-top:7px}.hpo-chart-axis-title{grid-column:2;text-align:center;font-size:12px;color:var(--muted);margin-top:7px}
-.hpo-chart figcaption{font-size:13px;color:var(--muted);margin-top:20px;line-height:1.6}
-@media(max-width:640px){.hpo-chart-row,.hpo-chart-axis{grid-template-columns:124px minmax(0,1fr) 45px;gap:9px}.hpo-chart-name,.hpo-chart-value{font-size:12px}.hpo-chart-row{min-height:43px}}
-</style>
 <figure class="hpo-chart" aria-label="Estimated percentage of HPO-only rounds by model, with 95 percent sampling intervals">
 <div class="hpo-chart-row"><span class="hpo-chart-name">GPT-5.6 Sol</span><svg viewBox="0 0 600 32" preserveAspectRatio="none" role="img" aria-label="GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds."><title>GPT-5.6 Sol: 55.5% HPO-only; 95% sampling interval 48.9% to 62.0%; 111 of 200 sampled rounds.</title>
 <rect class="hpo-chart-bar" x="0" y="5" width="475.7143" height="22" fill="#1F78B4"/><path class="hpo-chart-interval" fill="none" d="M 418.7665 16 H 531.3653 M 418.7665 11 V 21 M 531.3653 11 V 21"/></svg><span class="hpo-chart-value">55.5%</span></div>
@@ -200,9 +201,6 @@
 <h3 id="analysis-2d">Do models that submit more perform better?</h3>
 <p id="scoring-refresh-todo" style="color:#B2182B;font-weight:600">TODO: Refresh these results when the remaining Fable runs finish.</p>
 <p>We see only a weak association between submission count and test AUARC across models. We don’t see evidence that simply submitting more leads to higher scores on this benchmark. This suggests that naïve hill climbing through more submissions alone is insufficient, and that the quality of research steps matters.</p>
-<style>
-.model-effort{margin:24px 0;color:var(--ink);font-family:var(--sans)}.model-effort-panels{display:grid;grid-template-columns:1fr;max-width:760px;gap:24px}.model-effort h4{font-size:15px;margin:0 0 12px;font-weight:600}.model-effort svg{display:block;width:100%;height:auto;overflow:visible}.model-effort text{font-family:var(--sans);fill:var(--muted);font-size:11px}.model-effort .dot-label{display:none}.model-effort .model-dot:focus circle,.model-effort .model-dot:hover circle{stroke:var(--ink);stroke-width:2}.model-effort figcaption{font-size:13px;color:var(--muted);line-height:1.6;margin-top:16px}@media(max-width:760px){.model-effort-panels{grid-template-columns:1fr;gap:28px}}
-</style>
 <figure class="model-effort" id="model-effort-plots"></figure></div>
     </section>
     <section class="section" id="harness-ablations">
@@ -224,6 +222,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=transparent-hpo-logos-20260908"></script>
+<script src="results.js?v=trajectory-transparent-hpo-20260908"></script>
 </body>
 </html>

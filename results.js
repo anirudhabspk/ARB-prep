@@ -250,13 +250,42 @@ function overviewLine(series,path,detail){
 }
 
 function logTimeTestPlot(overview){
-  const W=940,H=430,L=72,R=24,T=20,B=58,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
+  const W=760,H=430,L=72,R=24,T=20,B=58,plotB=H-B,yMax=.8,x=hour=>L+Math.log(hour)/Math.log(overview.maxHours)*(W-L-R),y=value=>plotB-value/yMax*(plotB-T),hourTicks=[1,2,4,8,16,overview.maxHours].filter((hour,index,array)=>hour<=overview.maxHours&&array.indexOf(hour)===index),scoreTicks=ticks(0,yMax,.2);
   let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
   for(const hour of hourTicks){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
   for(const value of scoreTicks){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value.toFixed(1)}</text>`}
   body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Elapsed evaluation time (hours, log scale)</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Mean hidden-test reward</text>`;
   for(const series of overview.series){for(const point of series.points.filter(point=>point.hour>0))body+=`<circle class="fit-observation" fill="${series.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.4"/>`;const path=series.points.filter(point=>point.hour>0).map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(series.fit.predict(point.hour))}`).join(" ");body+=overviewLine(series,path,`Monotone test fit: ceiling ${series.fit.ceiling.toFixed(3)}, midpoint ${series.fit.tmid.toFixed(1)} h, β ${series.fit.beta.toFixed(2)}, R² ${series.fit.r2?.toFixed(3)??"n/a"}.`)}
   return`<div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Log-time hidden-test trajectories by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div>`;
+}
+
+function lateImprovementSeries(){
+  const hours=Array.from({length:13},(_,index)=>index*2);
+  return ORDER.map(key=>{
+    const lastHours=DATA.tasks.flatMap(task=>task.models.filter(run=>run.model===key).flatMap(run=>{
+      let best=-Infinity,last=0;
+      const points=run.points.filter(point=>Number.isFinite(point.testAtBest));
+      if(!points.length)return[];
+      for(const point of points)if(point.testAtBest>best+1e-9){best=point.testAtBest;last=point.seconds/3600;}
+      return[last];
+    }));
+    return{key,name:MODEL[key].name,color:MODEL[key].color,count:lastHours.length,points:hours.map(hour=>({hour,value:100*lastHours.filter(last=>last>hour).length/lastHours.length}))};
+  }).filter(series=>series.count);
+}
+
+function lateImprovementPlot(series){
+  const W=760,H=430,L=72,R=24,T=20,B=58,plotB=H-B,x=hour=>L+hour/24*(W-L-R),y=value=>plotB-value/100*(plotB-T);
+  let body=`<rect class="plot-frame" x="${L}" y="${T}" width="${W-L-R}" height="${plotB-T}"/>`;
+  for(const hour of [0,4,8,12,16,20,24]){const xx=x(hour);body+=`<line class="grid" x1="${xx}" x2="${xx}" y1="${T}" y2="${plotB}"/><text class="plot-tick" x="${xx}" y="${plotB+20}" text-anchor="middle">${hour}</text>`}
+  for(const value of [0,25,50,75,100]){const yy=y(value);body+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="plot-tick" x="${L-8}" y="${yy+3}" text-anchor="end">${value}</text>`}
+  body+=`<text class="overview-axis-title" x="${(L+W-R)/2}" y="${H-8}" text-anchor="middle">Hours into the run</text><text class="overview-axis-title" x="15" y="${(T+plotB)/2}" text-anchor="middle" transform="rotate(-90 15 ${(T+plotB)/2})">Runs with a later improvement (%)</text>`;
+  for(const item of series){
+    const path=item.points.map((point,index)=>`${index?"L":"M"}${x(point.hour)} ${y(point.value)}`).join(" ");
+    for(const point of item.points)body+=`<circle class="fit-observation" fill="${item.color}" cx="${x(point.hour)}" cy="${y(point.value)}" r="2.8"/>`;
+    const after12=item.points.find(point=>point.hour===12)?.value;
+    body+=overviewLine(item,path,`${after12.toFixed(0)}% of ${item.count} runs improved after hour 12.`);
+  }
+  return`<div class="overview-chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of runs that still improve later by model">${body}</svg><div class="overview-tooltip" role="tooltip" hidden><i></i><strong></strong><span></span></div></div>`;
 }
 
 function performanceProfilePlot(profile){
@@ -305,8 +334,8 @@ function bindOverviewTooltips(target){
 function renderTrajectoryOverview(){
   const target=document.getElementById("trajectory-overview");
   if(!target)return;
-  const testOverview=overviewTrajectories();
-  target.innerHTML=`<section class="trajectory-summary" aria-labelledby="trajectory-overview-title"><h3 id="trajectory-overview-title">Do models keep improving over longer runs?</h3><p class="trajectory-takeaway">Astra performs remarkably well from the start, but Fable and Opus close the gap over time, with Fable showing more sustained improvement.</p><p>This plot shows hidden-test reward, not AUARC. Dots show adjusted hourly averages.</p>${overviewLegend(testOverview.series)}${logTimeTestPlot(testOverview)}<details class="trajectory-method"><summary>How we compute these curves</summary><p>We use the normalized hidden-test reward of the checkpoint selected by validation. For each run, we replace each reward with the lowest reward observed at that time or later. This makes the curve nondecreasing, so a temporary gain followed by a decline does not appear as sustained progress.</p><p>We average these adjusted rewards across tasks at each hour. The dots show those averages. We fit a nondecreasing sigmoid curve against log time to draw each line. These adjustments are used for this plot, not the AUARC leaderboard.</p></details></section>`;
+  const testOverview=overviewTrajectories(),lateSeries=lateImprovementSeries();
+  target.innerHTML=`<section class="trajectory-summary" aria-label="Long-run model improvement"><div class="trajectory-plot-panel">${overviewLegend(testOverview.series)}<div class="trajectory-plot-grid"><article><h4>Mean hidden-test reward</h4>${logTimeTestPlot(testOverview)}</article><article><h4>Fraction of runs which improve hidden-test performance by time passed</h4>${lateImprovementPlot(lateSeries)}</article></div></div><details class="trajectory-method"><summary>How we compute these curves</summary><p>For the left plot, we use the normalized hidden-test reward of the checkpoint selected by validation. For each run, we replace each reward with the lowest reward observed at that time or later. This makes the curve nondecreasing, so a temporary gain followed by a decline does not appear as sustained progress.</p><p>We average these adjusted rewards across tasks at each hour. The dots show those averages. We fit a nondecreasing sigmoid curve against log time to draw each line. These adjustments are used for this plot, not the AUARC leaderboard.</p><p>For the right plot, a run counts at an hour when its hidden-test reward later rises above every earlier selected reward.</p></details></section>`;
   bindOverviewTooltips(target);
 }
 
