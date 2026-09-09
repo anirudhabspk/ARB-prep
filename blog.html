@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="AutoResearchBench measures agents' ability to improve and generalize on open ended ML research tasks.">
 <title>AutoResearchBench</title>
-<link rel="stylesheet" href="site.css?v=hint-study-20260908">
+<link rel="stylesheet" href="site.css?v=task-chart-intro-removed-20260908">
 </head>
 <body class="blog-page">
 <section class="hero">
@@ -46,7 +46,6 @@
     </section>
     <section class="section" id="tasks">
       <h2>Tasks</h2>
-      <p class="task-intro">Explore the kinds of research problems represented in the benchmark.</p>
       <div class="taxonomy-wheel">
         <figure>
           <svg id="taxonomy-wheel-svg" viewBox="0 0 420 420" role="img" aria-label="Interactive task taxonomy wheel"></svg>
@@ -294,7 +293,7 @@
       <h2>Comparing harnesses</h2>
       <p class="harness-intro">We compared Codex and Claude Code with Terminus 2 on five tasks, using the same models over 12 hours.</p>
       <div id="harness-summary"></div>
-      <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2. Codex’s lower test AUARC is driven by Shortest CI, where validation improvements stopped transferring to the hidden test earlier than with Terminus 2.</p>
+      <p id="harness-findings">Average rewards differ across harnesses, but the aggregate hidden test ranking stays the same. Codex and Claude Code submit more than Terminus 2. Codex’s lower test AUARC is driven by <a href="tasks.html#shortest-valid-ci-l2-ece" style="text-decoration:none"><em>Tight confidence intervals for prediction uncertainty estimation</em></a>, where validation improvements stopped transferring to the hidden test earlier than with Terminus 2.</p>
       <div id="harness-ablation-plot"></div>
       <p id="harness-conclusion">These results support our choice to use Terminus 2 for all models. It provides a consistent setup and preserves the aggregate model ranking seen with native harnesses in this comparison.</p>
     </section>
@@ -309,6 +308,6 @@
 <script src="task-catalog.js?v=private-task-links-20260908"></script>
 <script src="raw-score-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
 <script src="difficulty-reward-maps.js?v=difficulty-adjusted-sitewide-20260907"></script>
-<script src="results.js?v=auarc-origin-20260908"></script>
+<script src="results.js?v=harness-task-card-names-20260908"></script>
 </body>
 </html>
